@@ -37,6 +37,7 @@
 #include "log.h"
 #include "settings.h"
 #include "stack_allocation.h"
+#include "vk_command_name_hashes.h"
 #include "vk_loader_extensions.h"
 #include "vk_loader_platform.h"
 #include "wsi.h"
@@ -119,25 +120,25 @@ LOADER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetInstanceProcAddr(VkI
 //    If device is valid, returns a device relative entry point for device level
 //    entry points both core and extensions.
 //    Device relative means call down the device chain.
-LOADER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice device, const char *pName) {
-    if (!pName || pName[0] != 'v' || pName[1] != 'k') return NULL;
+LOADER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice device, const char *name) {
+    if (!name || name[0] != 'v' || name[1] != 'k') return NULL;
+
+    uint64_t nameHash = XXH3_64bits(name, strlen(name));
 
     // For entrypoints that loader must handle (ie non-dispatchable or create object)
     // make sure the loader entrypoint is returned
-    const char *name = pName;
-    name += 2;
-    if (!strcmp(name, "GetDeviceProcAddr")) return (PFN_vkVoidFunction)vkGetDeviceProcAddr;
-    if (!strcmp(name, "DestroyDevice")) return (PFN_vkVoidFunction)vkDestroyDevice;
-    if (!strcmp(name, "GetDeviceQueue")) return (PFN_vkVoidFunction)vkGetDeviceQueue;
-    if (!strcmp(name, "AllocateCommandBuffers")) return (PFN_vkVoidFunction)vkAllocateCommandBuffers;
+    if (nameHash == XXH3_vkGetDeviceProcAddr && !strcmp(name, "vkGetDeviceProcAddr")) return (PFN_vkVoidFunction)vkGetDeviceProcAddr;
+    if (nameHash == XXH3_vkDestroyDevice && !strcmp(name, "vkDestroyDevice")) return (PFN_vkVoidFunction)vkDestroyDevice;
+    if (nameHash == XXH3_vkGetDeviceQueue && !strcmp(name, "vkGetDeviceQueue")) return (PFN_vkVoidFunction)vkGetDeviceQueue;
+    if (nameHash == XXH3_vkAllocateCommandBuffers && !strcmp(name, "vkAllocateCommandBuffers")) return (PFN_vkVoidFunction)vkAllocateCommandBuffers;
 
     // Although CreateDevice is on device chain it's dispatchable object isn't
     // a VkDevice or child of VkDevice so return NULL.
-    if (!strcmp(pName, "CreateDevice")) return NULL;
+    if (nameHash == XXH3_vkCreateDevice && !strcmp(name, "vkCreateDevice")) return NULL;
 
     // Because vkGetDeviceQueue2 is a 1.1 entry point, we need to check if the apiVersion provided during instance creation is
     // sufficient
-    if (!strcmp(name, "GetDeviceQueue2")) {
+    if (nameHash == XXH3_vkGetDeviceQueue2 && !strcmp(name, "vkGetDeviceQueue2")) {
         struct loader_device *dev = NULL;
         struct loader_icd_term *icd_term = loader_get_icd_and_device(device, &dev);
         if (NULL != icd_term && dev != NULL) {
@@ -155,11 +156,11 @@ LOADER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDev
     if (disp_table == NULL) return NULL;
 
     bool found_name = false;
-    void *addr = loader_lookup_device_dispatch_table(disp_table, pName, &found_name);
+    void *addr = loader_lookup_device_dispatch_table(disp_table, name, nameHash, &found_name);
     if (found_name) return addr;
 
     if (disp_table->GetDeviceProcAddr == NULL) return NULL;
-    return disp_table->GetDeviceProcAddr(device, pName);
+    return disp_table->GetDeviceProcAddr(device, name);
 }
 
 LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceExtensionProperties(const char *pLayerName,

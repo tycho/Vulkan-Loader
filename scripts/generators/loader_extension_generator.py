@@ -225,6 +225,8 @@ class LoaderExtensionGenerator(BaseGenerator):
         out.append('#include "wsi.h"\n')
         out.append('#include "debug_utils.h"\n')
         out.append('#include "extension_manual.h"\n')
+        out.append('#include "vk_command_name_hashes.h"\n')
+        out.append('#include "vk_extension_name_hashes.h"\n')
         self.OutputUtilitiesInSource(out)
         self.OutputIcdDispatchTableInit(out)
         self.OutputLoaderDispatchTables(out)
@@ -275,7 +277,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev);
 
 // Extension interception for vkGetInstanceProcAddr function, so we can return
 // the appropriate information for any instance extensions we know about.
-bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *name, void **addr);
+bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *name, uint64_t nameHash, void **addr);
 
 struct loader_instance_extension_enable_list; // Forward declaration
 
@@ -287,7 +289,7 @@ void fill_out_enabled_instance_extensions(uint32_t extension_count, const char *
 // Extension interception for vkGetDeviceProcAddr function, so we can return
 // an appropriate terminator if this is one of those few device commands requiring
 // a terminator.
-PFN_vkVoidFunction get_extension_device_proc_terminator(struct loader_device *dev, const char *name, bool* found_name);
+PFN_vkVoidFunction get_extension_device_proc_terminator(struct loader_device *dev, const char *name, uint64_t nameHash, bool* found_name);
 
 // Dispatch table properly filled in with appropriate terminators for the
 // supported extensions.
@@ -318,10 +320,11 @@ VKAPI_ATTR void VKAPI_CALL loader_init_instance_extension_dispatch_table(VkLayer
                                                                          VkInstance inst);
 
 // Device command lookup function
-VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDispatchTable *table, const char *name, bool* name_found);
+VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDispatchTable *table, const char *name, uint64_t nameHash,
+                                                                bool* name_found);
 
 // Instance command lookup function
-VKAPI_ATTR void* VKAPI_CALL loader_lookup_instance_dispatch_table(const VkLayerInstanceDispatchTable *table, const char *name,
+VKAPI_ATTR void* VKAPI_CALL loader_lookup_instance_dispatch_table(const VkLayerInstanceDispatchTable *table, const char *name, uint64_t nameHash,
                                                                   bool *found_name);
 
 ''')
@@ -693,13 +696,12 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
                 cur_type = 'device'
 
                 out.append('// Device command lookup function\n')
-                out.append('VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDispatchTable *table, const char *name, bool* found_name) {\n')
+                out.append('VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDispatchTable *table, const char *name, uint64_t nameHash, bool* found_name) {\n')
                 out.append('    if (!name || name[0] != \'v\' || name[1] != \'k\') {\n')
                 out.append('        *found_name = false;\n')
                 out.append('        return NULL;\n')
                 out.append('    }\n')
                 out.append('\n')
-                out.append('    name += 2;\n')
                 out.append('    *found_name = true;\n')
                 out.append('    struct loader_device* dev = (struct loader_device *)table;\n')
                 out.append('    const struct loader_instance* inst = dev->phys_dev_term->this_icd_term->this_instance;\n')
@@ -710,14 +712,13 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
 
                 out.append('// Instance command lookup function\n')
                 out.append('VKAPI_ATTR void* VKAPI_CALL loader_lookup_instance_dispatch_table(const VkLayerInstanceDispatchTable *table, const char *name,\n')
-                out.append('                                                                 bool *found_name) {\n')
+                out.append('                                                                  uint64_t nameHash, bool *found_name) {\n')
                 out.append('    if (!name || name[0] != \'v\' || name[1] != \'k\') {\n')
                 out.append('        *found_name = false;\n')
                 out.append('        return NULL;\n')
                 out.append('    }\n')
                 out.append('\n')
                 out.append('    *found_name = true;\n')
-                out.append('    name += 2;\n')
 
 
             for command_list in [self.core_commands, self.extension_commands]:
@@ -750,7 +751,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
                         if command.protect is not None:
                             out.append(f'#if defined({command.protect})\n')
 
-                        out.append(f'    if (!strcmp(name, "{base_name}")) ')
+                        out.append(f'    if (nameHash == XXH3_{command.name} && !strcmp(name, "{command.name}")) ')
                         if command.name in DEVICE_CMDS_MUST_USE_TRAMP:
                             if version_check != '':
                                 out.append(f'{{\n{version_check}        return dev->layer_extensions.{command.extensions[0][3:].lower()}_enabled ? (void *){base_name} : NULL;\n    }}\n')
@@ -1187,8 +1188,8 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
         cur_extension_name = ''
 
         out.append( '// GPA helpers for extensions\n')
-        out.append( 'bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *name, void **addr) {\n')
-        out.append( '    *addr = NULL;\n\n')
+        out.append( 'bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *name, uint64_t nameHash, void **addr) {\n')
+        out.append( '    *addr = NULL;\n')
 
         for command in [x for x in self.vk.commands.values() if x.extensions]:
             if (command.version or
@@ -1208,7 +1209,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
             base_name = SHARED_ALIASES[command.name] if command.name in SHARED_ALIASES else command.name[2:]
 
             if len(command.extensions) > 0 and self.vk.extensions[command.extensions[0]].instance:
-                out.append( f'    if (!strcmp("{command.name}", name)) {{\n')
+                out.append( f'    if (nameHash == XXH3_{command.name} && !strcmp(name, "{command.name}")) {{\n')
                 out.append( '        *addr = (ptr_instance->enabled_extensions.')
                 out.append( command.extensions[0][3:].lower())
                 out.append( ' == 1)\n')
@@ -1217,7 +1218,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
                 out.append( '        return true;\n')
                 out.append( '    }\n')
             else:
-                out.append( f'    if (!strcmp("{command.name}", name)) {{\n')
+                out.append( f'    if (nameHash == XXH3_{command.name} && !strcmp(name, "{command.name}")) {{\n')
                 out.append( f'        *addr = (void *){base_name};\n')
                 out.append( '        return true;\n')
                 out.append( '    }\n')
@@ -1237,6 +1238,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
         out.append( '// Used to keep track of all enabled instance extensions\n')
         out.append( 'void fill_out_enabled_instance_extensions(uint32_t extension_count, const char *const * extension_list, struct loader_instance_extension_enable_list* enables) {\n')
         out.append( '    for (uint32_t i = 0; i < extension_count; i++) {\n')
+        out.append( '        uint64_t extNameHash =  XXH3_64bits(extension_list[i], strlen(extension_list[i]));\n');
         e = ''
         cur_extension_name = ''
         for extension in self.instance_extensions:
@@ -1247,7 +1249,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
             if extension.protect is not None:
                 out.append( f'#if defined({extension.protect})\n')
 
-            out.append(f'        {e}if (0 == strcmp(extension_list[i], ')
+            out.append(f'        {e}if (extNameHash == XXH3_{extension.name} && !strcmp(extension_list[i], ')
 
             out.append( f'{extension.nameString})) {{ enables->{extension.name[3:].lower()} = 1; }}\n')
 
@@ -1265,12 +1267,11 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
         out.append('// Some device commands still need a terminator because the loader needs to unwrap something about them.\n')
         out.append('// In many cases, the item needing unwrapping is a VkPhysicalDevice or VkSurfaceKHR object.  But there may be other items\n')
         out.append('// in the future.\n')
-        out.append('PFN_vkVoidFunction get_extension_device_proc_terminator(struct loader_device *dev, const char *name, bool* found_name) {\n')
+        out.append('PFN_vkVoidFunction get_extension_device_proc_terminator(struct loader_device *dev, const char *name, uint64_t nameHash, bool* found_name) {\n')
         out.append('''    *found_name = false;
     if (!name || name[0] != 'v' || name[1] != 'k') {
         return NULL;
     }
-    name += 2;
 ''')
         last_protect = None
         last_ext = None
@@ -1287,7 +1288,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
                         out.append(f'    // ---- {command.extensions[0]} extension commands\n')
                         last_ext = command.extensions[0]
 
-                out.append(f'    if (!strcmp(name, "{command.name[2:]}")) {{\n')
+                out.append(f'    if (nameHash == XXH3_{command.name} && !strcmp(name, "{command.name}")) {{\n')
                 out.append('        *found_name = true;\n')
                 enable_extension_expressions = []
                 for ext in command.extensions:

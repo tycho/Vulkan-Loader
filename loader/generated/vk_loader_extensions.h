@@ -45,7 +45,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev);
 
 // Extension interception for vkGetInstanceProcAddr function, so we can return
 // the appropriate information for any instance extensions we know about.
-bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *name, void **addr);
+bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *name, uint64_t nameHash, void **addr);
 
 struct loader_instance_extension_enable_list; // Forward declaration
 
@@ -57,7 +57,7 @@ void fill_out_enabled_instance_extensions(uint32_t extension_count, const char *
 // Extension interception for vkGetDeviceProcAddr function, so we can return
 // an appropriate terminator if this is one of those few device commands requiring
 // a terminator.
-PFN_vkVoidFunction get_extension_device_proc_terminator(struct loader_device *dev, const char *name, bool* found_name);
+PFN_vkVoidFunction get_extension_device_proc_terminator(struct loader_device *dev, const char *name, uint64_t nameHash, bool* found_name);
 
 // Dispatch table properly filled in with appropriate terminators for the
 // supported extensions.
@@ -88,10 +88,11 @@ VKAPI_ATTR void VKAPI_CALL loader_init_instance_extension_dispatch_table(VkLayer
                                                                          VkInstance inst);
 
 // Device command lookup function
-VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDispatchTable *table, const char *name, bool* name_found);
+VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDispatchTable *table, const char *name, uint64_t nameHash,
+                                                                bool* name_found);
 
 // Instance command lookup function
-VKAPI_ATTR void* VKAPI_CALL loader_lookup_instance_dispatch_table(const VkLayerInstanceDispatchTable *table, const char *name,
+VKAPI_ATTR void* VKAPI_CALL loader_lookup_instance_dispatch_table(const VkLayerInstanceDispatchTable *table, const char *name, uint64_t nameHash,
                                                                   bool *found_name);
 
 // Loader core instance terminators
