@@ -4482,8 +4482,10 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL loader_gpdpa_instance_terminator(VkInst
         disp_table = &loader_inst->terminator_dispatch;
     }
 
+    const uint64_t name_hash = loader_hash_string(pName);
+
     bool found_name;
-    void *addr = loader_lookup_instance_dispatch_table(disp_table, pName, &found_name);
+    void *addr = loader_lookup_instance_dispatch_table(disp_table, pName, name_hash, &found_name);
     if (found_name) {
         return addr;
     }
@@ -4498,35 +4500,57 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL loader_gpdpa_instance_terminator(VkInst
 }
 
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL loader_gpa_instance_terminator(VkInstance inst, const char *pName) {
+    const uint64_t name_hash = loader_hash_string(pName);
+
     // Global functions - Do not need a valid instance handle to query
-    if (!strcmp(pName, "vkGetInstanceProcAddr")) {
-        return (PFN_vkVoidFunction)loader_gpa_instance_terminator;
-    }
-    if (!strcmp(pName, "vk_layerGetPhysicalDeviceProcAddr")) {
-        return (PFN_vkVoidFunction)loader_gpdpa_instance_terminator;
-    }
-    if (!strcmp(pName, "vkCreateInstance")) {
-        return (PFN_vkVoidFunction)terminator_CreateInstance;
-    }
-    // If a layer is querying pre-instance functions using vkGetInstanceProcAddr, we need to return function pointers that match the
-    // Vulkan API
-    if (!strcmp(pName, "vkEnumerateInstanceLayerProperties")) {
-        return (PFN_vkVoidFunction)terminator_EnumerateInstanceLayerProperties;
-    }
-    if (!strcmp(pName, "vkEnumerateInstanceExtensionProperties")) {
-        return (PFN_vkVoidFunction)terminator_EnumerateInstanceExtensionProperties;
-    }
-    if (!strcmp(pName, "vkEnumerateInstanceVersion")) {
-        return (PFN_vkVoidFunction)terminator_EnumerateInstanceVersion;
-    }
+    switch (name_hash) {
+        case XXH3_vkGetInstanceProcAddr:
+            if (!strcmp(pName, "vkGetInstanceProcAddr")) {
+                return (PFN_vkVoidFunction)loader_gpa_instance_terminator;
+            }
+            break;
+        case XXH3_vk_layerGetPhysicalDeviceProcAddr:
+            if (!strcmp(pName, "vk_layerGetPhysicalDeviceProcAddr")) {
+                return (PFN_vkVoidFunction)loader_gpdpa_instance_terminator;
+            }
+            break;
+        case XXH3_vkCreateInstance:
+            if (!strcmp(pName, "vkCreateInstance")) {
+                return (PFN_vkVoidFunction)terminator_CreateInstance;
+            }
+            break;
 
-    // While the spec is very clear that querying vkCreateDevice requires a valid VkInstance, because the loader allowed querying
-    // with a NULL VkInstance handle for a long enough time, it is impractical to fix this bug in the loader
+        // If a layer is querying pre-instance functions using vkGetInstanceProcAddr, we need to return function pointers that match
+        // the Vulkan API
+        case XXH3_vkEnumerateInstanceLayerProperties:
+            if (!strcmp(pName, "vkEnumerateInstanceLayerProperties")) {
+                return (PFN_vkVoidFunction)terminator_EnumerateInstanceLayerProperties;
+            }
+            break;
+        case XXH3_vkEnumerateInstanceExtensionProperties:
+            if (!strcmp(pName, "vkEnumerateInstanceExtensionProperties")) {
+                return (PFN_vkVoidFunction)terminator_EnumerateInstanceExtensionProperties;
+            }
+            break;
+        case XXH3_vkEnumerateInstanceVersion:
+            if (!strcmp(pName, "vkEnumerateInstanceVersion")) {
+                return (PFN_vkVoidFunction)terminator_EnumerateInstanceVersion;
+            }
+            break;
 
-    // As such, this is a bug to maintain compatibility for the RTSS layer (Riva Tuner Statistics Server) but may
-    // be depended upon by other layers out in the wild.
-    if (!strcmp(pName, "vkCreateDevice")) {
-        return (PFN_vkVoidFunction)terminator_CreateDevice;
+        // While the spec is very clear that querying vkCreateDevice requires a valid VkInstance, because the loader allowed
+        // querying with a NULL VkInstance handle for a long enough time, it is impractical to fix this bug in the loader
+
+        // As such, this is a bug to maintain compatibility for the RTSS layer (Riva Tuner Statistics Server) but may
+        // be depended upon by other layers out in the wild.
+        case XXH3_vkCreateDevice:
+            if (!strcmp(pName, "vkCreateDevice")) {
+                return (PFN_vkVoidFunction)terminator_CreateDevice;
+            }
+            break;
+
+        default:
+            break;
     }
 
     // inst is not wrapped
@@ -4544,30 +4568,59 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL loader_gpa_instance_terminator(VkInstan
     // is 'supported' by the loader.
     // These functions need a terminator to handle the case of a driver not supporting VK_EXT_debug_utils when there are layers
     // present which not check for NULL before calling the function.
-    if (!strcmp(pName, "vkSetDebugUtilsObjectNameEXT")) {
-        return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_SetDebugUtilsObjectNameEXT : NULL;
-    }
-    if (!strcmp(pName, "vkSetDebugUtilsObjectTagEXT")) {
-        return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_SetDebugUtilsObjectTagEXT : NULL;
-    }
-    if (!strcmp(pName, "vkQueueBeginDebugUtilsLabelEXT")) {
-        return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_QueueBeginDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(pName, "vkQueueEndDebugUtilsLabelEXT")) {
-        return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_QueueEndDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(pName, "vkQueueInsertDebugUtilsLabelEXT")) {
-        return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_QueueInsertDebugUtilsLabelEXT
-                                                               : NULL;
-    }
-    if (!strcmp(pName, "vkCmdBeginDebugUtilsLabelEXT")) {
-        return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_CmdBeginDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(pName, "vkCmdEndDebugUtilsLabelEXT")) {
-        return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_CmdEndDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(pName, "vkCmdInsertDebugUtilsLabelEXT")) {
-        return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_CmdInsertDebugUtilsLabelEXT : NULL;
+    switch (name_hash) {
+        case XXH3_vkSetDebugUtilsObjectNameEXT:
+            if (!strcmp(pName, "vkSetDebugUtilsObjectNameEXT")) {
+                return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_SetDebugUtilsObjectNameEXT
+                                                                       : NULL;
+            }
+            break;
+        case XXH3_vkSetDebugUtilsObjectTagEXT:
+            if (!strcmp(pName, "vkSetDebugUtilsObjectTagEXT")) {
+                return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_SetDebugUtilsObjectTagEXT
+                                                                       : NULL;
+            }
+            break;
+        case XXH3_vkQueueBeginDebugUtilsLabelEXT:
+            if (!strcmp(pName, "vkQueueBeginDebugUtilsLabelEXT")) {
+                return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_QueueBeginDebugUtilsLabelEXT
+                                                                       : NULL;
+            }
+            break;
+        case XXH3_vkQueueEndDebugUtilsLabelEXT:
+            if (!strcmp(pName, "vkQueueEndDebugUtilsLabelEXT")) {
+                return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_QueueEndDebugUtilsLabelEXT
+                                                                       : NULL;
+            }
+            break;
+        case XXH3_vkQueueInsertDebugUtilsLabelEXT:
+            if (!strcmp(pName, "vkQueueInsertDebugUtilsLabelEXT")) {
+                return loader_inst->enabled_extensions.ext_debug_utils
+                           ? (PFN_vkVoidFunction)terminator_QueueInsertDebugUtilsLabelEXT
+                           : NULL;
+            }
+            break;
+        case XXH3_vkCmdBeginDebugUtilsLabelEXT:
+            if (!strcmp(pName, "vkCmdBeginDebugUtilsLabelEXT")) {
+                return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_CmdBeginDebugUtilsLabelEXT
+                                                                       : NULL;
+            }
+            break;
+        case XXH3_vkCmdEndDebugUtilsLabelEXT:
+            if (!strcmp(pName, "vkCmdEndDebugUtilsLabelEXT")) {
+                return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_CmdEndDebugUtilsLabelEXT
+                                                                       : NULL;
+            }
+            break;
+        case XXH3_vkCmdInsertDebugUtilsLabelEXT:
+            if (!strcmp(pName, "vkCmdInsertDebugUtilsLabelEXT")) {
+                return loader_inst->enabled_extensions.ext_debug_utils ? (PFN_vkVoidFunction)terminator_CmdInsertDebugUtilsLabelEXT
+                                                                       : NULL;
+            }
+            break;
+
+        default:
+            break;
     }
 
     if (loader_inst->instance_finished_creation) {
@@ -4575,7 +4628,7 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL loader_gpa_instance_terminator(VkInstan
     }
 
     bool found_name;
-    void *addr = loader_lookup_instance_dispatch_table(disp_table, pName, &found_name);
+    void *addr = loader_lookup_instance_dispatch_table(disp_table, pName, name_hash, &found_name);
     if (found_name) {
         return addr;
     }
@@ -4600,10 +4653,11 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL loader_gpa_instance_terminator(VkInstan
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL loader_gpa_device_terminator(VkDevice device, const char *pName) {
     struct loader_device *dev;
     struct loader_icd_term *icd_term = loader_get_icd_and_device(device, &dev);
+    const uint64_t name_hash = loader_hash_string(pName);
 
     // Return this function if a layer above here is asking for the vkGetDeviceProcAddr.
     // This is so we can properly intercept any device commands needing a terminator.
-    if (!strcmp(pName, "vkGetDeviceProcAddr")) {
+    if (name_hash == XXH3_vkGetDeviceProcAddr && !strcmp(pName, "vkGetDeviceProcAddr")) {
         return (PFN_vkVoidFunction)loader_gpa_device_terminator;
     }
 
@@ -4620,7 +4674,7 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL loader_gpa_device_terminator(VkDevice d
     // return NULL and not call down to the driver's GetDeviceProcAddr.
     if (NULL != dev) {
         bool found_name = false;
-        PFN_vkVoidFunction addr = get_extension_device_proc_terminator(dev, pName, &found_name);
+        PFN_vkVoidFunction addr = get_extension_device_proc_terminator(dev, pName, name_hash, &found_name);
         if (found_name) {
             return addr;
         }

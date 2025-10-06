@@ -33,6 +33,7 @@
 #include "log.h"
 #include "stack_allocation.h"
 #include "vk_loader_platform.h"
+#include "vk_command_name_hashes.h"
 #include "wsi.h"
 
 // The first ICD/Loader interface that support querying the SurfaceKHR from
@@ -2865,283 +2866,386 @@ VKAPI_ATTR VkResult VKAPI_CALL terminator_GetPhysicalDeviceSurfaceFormats2KHR(Vk
     }
 }
 
-bool wsi_swapchain_instance_gpa(struct loader_instance *loader_inst, const char *name, void **addr) {
+bool wsi_swapchain_instance_gpa(struct loader_instance *loader_inst, const char *name, uint64_t name_hash, void **addr) {
     *addr = NULL;
+    (void)name;
 
     // Functions for the VK_KHR_surface extension:
-    if (!strcmp("vkDestroySurfaceKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkDestroySurfaceKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceSurfaceSupportKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceSupportKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceCapabilitiesKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceSurfaceFormatsKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceFormatsKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceSurfacePresentModesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfacePresentModesKHR : NULL;
-        return true;
-    }
+    switch (name_hash) {
+        case XXH3_vkDestroySurfaceKHR:
+            if (!strcmp(name, "vkDestroySurfaceKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkDestroySurfaceKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceSurfaceSupportKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceSurfaceSupportKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceSupportKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceSurfaceCapabilitiesKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceCapabilitiesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceSurfaceFormatsKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceSurfaceFormatsKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceFormatsKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceSurfacePresentModesKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceSurfacePresentModesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfacePresentModesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetDeviceGroupPresentCapabilitiesKHR:
+            if (!strcmp(name, "vkGetDeviceGroupPresentCapabilitiesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetDeviceGroupPresentCapabilitiesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetDeviceGroupSurfacePresentModesKHR:
+            if (!strcmp(name, "vkGetDeviceGroupSurfacePresentModesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetDeviceGroupSurfacePresentModesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDevicePresentRectanglesKHR:
+            if (!strcmp(name, "vkGetPhysicalDevicePresentRectanglesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDevicePresentRectanglesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceSurfaceCapabilities2KHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceSurfaceCapabilities2KHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceCapabilities2KHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceSurfaceFormats2KHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceSurfaceFormats2KHR")) {
+                *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceFormats2KHR : NULL;
+                return true;
+            }
+            break;
 
-    if (!strcmp("vkGetDeviceGroupPresentCapabilitiesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetDeviceGroupPresentCapabilitiesKHR : NULL;
-        return true;
-    }
+        // Functions for the VK_KHR_swapchain extension:
 
-    if (!strcmp("vkGetDeviceGroupSurfacePresentModesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetDeviceGroupSurfacePresentModesKHR : NULL;
-        return true;
-    }
-
-    if (!strcmp("vkGetPhysicalDevicePresentRectanglesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDevicePresentRectanglesKHR : NULL;
-        return true;
-    }
-
-    // Functions for VK_KHR_get_surface_capabilities2 extension:
-    if (!strcmp("vkGetPhysicalDeviceSurfaceCapabilities2KHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceCapabilities2KHR : NULL;
-        return true;
-    }
-
-    if (!strcmp("vkGetPhysicalDeviceSurfaceFormats2KHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_surface ? (void *)vkGetPhysicalDeviceSurfaceFormats2KHR : NULL;
-        return true;
-    }
-
-    // Functions for the VK_KHR_swapchain extension:
-
-    // Note: This is a device extension, and its functions are statically
-    // exported from the loader.  Per Khronos decisions, the loader's GIPA
-    // function will return the trampoline function for such device-extension
-    // functions, regardless of whether the extension has been enabled.
-    if (!strcmp("vkCreateSwapchainKHR", name)) {
-        *addr = (void *)vkCreateSwapchainKHR;
-        return true;
-    }
-    if (!strcmp("vkDestroySwapchainKHR", name)) {
-        *addr = (void *)vkDestroySwapchainKHR;
-        return true;
-    }
-    if (!strcmp("vkGetSwapchainImagesKHR", name)) {
-        *addr = (void *)vkGetSwapchainImagesKHR;
-        return true;
-    }
-    if (!strcmp("vkAcquireNextImageKHR", name)) {
-        *addr = (void *)vkAcquireNextImageKHR;
-        return true;
-    }
-    if (!strcmp("vkQueuePresentKHR", name)) {
-        *addr = (void *)vkQueuePresentKHR;
-        return true;
-    }
-    if (!strcmp("vkAcquireNextImage2KHR", name)) {
-        *addr = (void *)vkAcquireNextImage2KHR;
-        return true;
-    }
+        // Note: This is a device extension, and its functions are statically
+        // exported from the loader.  Per Khronos decisions, the loader's GIPA
+        // function will return the trampoline function for such device-extension
+        // functions, regardless of whether the extension has been enabled.
+        case XXH3_vkCreateSwapchainKHR:
+            if (!strcmp(name, "vkCreateSwapchainKHR")) {
+                *addr = (void *)vkCreateSwapchainKHR;
+                return true;
+            }
+            break;
+        case XXH3_vkDestroySwapchainKHR:
+            if (!strcmp(name, "vkDestroySwapchainKHR")) {
+                *addr = (void *)vkDestroySwapchainKHR;
+                return true;
+            }
+            break;
+        case XXH3_vkGetSwapchainImagesKHR:
+            if (!strcmp(name, "vkGetSwapchainImagesKHR")) {
+                *addr = (void *)vkGetSwapchainImagesKHR;
+                return true;
+            }
+            break;
+        case XXH3_vkAcquireNextImageKHR:
+            if (!strcmp(name, "vkAcquireNextImageKHR")) {
+                *addr = (void *)vkAcquireNextImageKHR;
+                return true;
+            }
+            break;
+        case XXH3_vkQueuePresentKHR:
+            if (!strcmp(name, "vkQueuePresentKHR")) {
+                *addr = (void *)vkQueuePresentKHR;
+                return true;
+            }
+            break;
+        case XXH3_vkAcquireNextImage2KHR:
+            if (!strcmp(name, "vkAcquireNextImage2KHR")) {
+                *addr = (void *)vkAcquireNextImage2KHR;
+                return true;
+            }
+            break;
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
 
-    // Functions for the VK_KHR_win32_surface extension:
-    if (!strcmp("vkCreateWin32SurfaceKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_win32_surface ? (void *)vkCreateWin32SurfaceKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceWin32PresentationSupportKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_win32_surface ? (void *)vkGetPhysicalDeviceWin32PresentationSupportKHR : NULL;
-        return true;
-    }
+        // Functions for the VK_KHR_win32_surface extension:
+        case XXH3_vkCreateWin32SurfaceKHR:
+            if (!strcmp(name, "vkCreateWin32SurfaceKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_win32_surface ? (void *)vkCreateWin32SurfaceKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceWin32PresentationSupportKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceWin32PresentationSupportKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_win32_surface ? (void *)vkGetPhysicalDeviceWin32PresentationSupportKHR
+                                                                          : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
 
-    // Functions for the VK_KHR_wayland_surface extension:
-    if (!strcmp("vkCreateWaylandSurfaceKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_wayland_surface ? (void *)vkCreateWaylandSurfaceKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceWaylandPresentationSupportKHR", name)) {
-        *addr =
-            loader_inst->enabled_extensions.khr_wayland_surface ? (void *)vkGetPhysicalDeviceWaylandPresentationSupportKHR : NULL;
-        return true;
-    }
+        // Functions for the VK_KHR_wayland_surface extension:
+        case XXH3_vkCreateWaylandSurfaceKHR:
+            if (!strcmp(name, "vkCreateWaylandSurfaceKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_wayland_surface ? (void *)vkCreateWaylandSurfaceKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceWaylandPresentationSupportKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceWaylandPresentationSupportKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_wayland_surface
+                            ? (void *)vkGetPhysicalDeviceWaylandPresentationSupportKHR
+                            : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_WAYLAND_KHR
 #if defined(VK_USE_PLATFORM_XCB_KHR)
 
-    // Functions for the VK_KHR_xcb_surface extension:
-    if (!strcmp("vkCreateXcbSurfaceKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_xcb_surface ? (void *)vkCreateXcbSurfaceKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceXcbPresentationSupportKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_xcb_surface ? (void *)vkGetPhysicalDeviceXcbPresentationSupportKHR : NULL;
-        return true;
-    }
+        // Functions for the VK_KHR_xcb_surface extension:
+        case XXH3_vkCreateXcbSurfaceKHR:
+            if (!strcmp(name, "vkCreateXcbSurfaceKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_xcb_surface ? (void *)vkCreateXcbSurfaceKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceXcbPresentationSupportKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceXcbPresentationSupportKHR")) {
+                *addr =
+                    loader_inst->enabled_extensions.khr_xcb_surface ? (void *)vkGetPhysicalDeviceXcbPresentationSupportKHR : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_XCB_KHR
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
 
-    // Functions for the VK_KHR_xlib_surface extension:
-    if (!strcmp("vkCreateXlibSurfaceKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_xlib_surface ? (void *)vkCreateXlibSurfaceKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceXlibPresentationSupportKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_xlib_surface ? (void *)vkGetPhysicalDeviceXlibPresentationSupportKHR : NULL;
-        return true;
-    }
+        // Functions for the VK_KHR_xlib_surface extension:
+        case XXH3_vkCreateXlibSurfaceKHR:
+            if (!strcmp(name, "vkCreateXlibSurfaceKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_xlib_surface ? (void *)vkCreateXlibSurfaceKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceXlibPresentationSupportKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceXlibPresentationSupportKHR")) {
+                *addr =
+                    loader_inst->enabled_extensions.khr_xlib_surface ? (void *)vkGetPhysicalDeviceXlibPresentationSupportKHR : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_XLIB_KHR
 #if defined(VK_USE_PLATFORM_DIRECTFB_EXT)
 
-    // Functions for the VK_EXT_directfb_surface extension:
-    if (!strcmp("vkCreateDirectFBSurfaceEXT", name)) {
-        *addr = loader_inst->enabled_extensions.ext_directfb_surface ? (void *)vkCreateDirectFBSurfaceEXT : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceDirectFBPresentationSupportEXT", name)) {
-        *addr =
-            loader_inst->enabled_extensions.ext_directfb_surface ? (void *)vkGetPhysicalDeviceDirectFBPresentationSupportEXT : NULL;
-        return true;
-    }
+        // Functions for the VK_EXT_directfb_surface extension:
+        case XXH3_vkCreateDirectFBSurfaceEXT:
+            if (!strcmp(name, "vkCreateDirectFBSurfaceEXT")) {
+                *addr = loader_inst->enabled_extensions.ext_directfb_surface ? (void *)vkCreateDirectFBSurfaceEXT : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceDirectFBPresentationSupportEXT:
+            if (!strcmp(name, "vkGetPhysicalDeviceDirectFBPresentationSupportEXT")) {
+                *addr = loader_inst->enabled_extensions.ext_directfb_surface
+                            ? (void *)vkGetPhysicalDeviceDirectFBPresentationSupportEXT
+                            : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_DIRECTFB_EXT
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
 
-    // Functions for the VK_KHR_android_surface extension:
-    if (!strcmp("vkCreateAndroidSurfaceKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_android_surface ? (void *)vkCreateAndroidSurfaceKHR : NULL;
-        return true;
-    }
+        // Functions for the VK_KHR_android_surface extension:
+        case XXH3_vkCreateAndroidSurfaceKHR:
+            if (!strcmp(name, "vkCreateAndroidSurfaceKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_android_surface ? (void *)vkCreateAndroidSurfaceKHR : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_ANDROID_KHR
 
 #if defined(VK_USE_PLATFORM_MACOS_MVK)
 
-    // Functions for the VK_MVK_macos_surface extension:
-    if (!strcmp("vkCreateMacOSSurfaceMVK", name)) {
-        *addr = loader_inst->enabled_extensions.mvk_macos_surface ? (void *)vkCreateMacOSSurfaceMVK : NULL;
-        return true;
-    }
+        // Functions for the VK_MVK_macos_surface extension:
+        case XXH3_vkCreateMacOSSurfaceMVK:
+            if (!strcmp(name, "vkCreateMacOSSurfaceMVK")) {
+                *addr = loader_inst->enabled_extensions.mvk_macos_surface ? (void *)vkCreateMacOSSurfaceMVK : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_MACOS_MVK
 #if defined(VK_USE_PLATFORM_IOS_MVK)
 
-    // Functions for the VK_MVK_ios_surface extension:
-    if (!strcmp("vkCreateIOSSurfaceMVK", name)) {
-        *addr = loader_inst->enabled_extensions.mvk_ios_surface ? (void *)vkCreateIOSSurfaceMVK : NULL;
-        return true;
-    }
+        // Functions for the VK_MVK_ios_surface extension:
+        case XXH3_vkCreateIOSSurfaceMVK:
+            if (!strcmp(name, "vkCreateIOSSurfaceMVK")) {
+                *addr = loader_inst->enabled_extensions.mvk_ios_surface ? (void *)vkCreateIOSSurfaceMVK : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_IOS_MVK
 #if defined(VK_USE_PLATFORM_GGP)
 
-    // Functions for the VK_GGP_stream_descriptor_surface extension:
-    if (!strcmp("vkCreateStreamDescriptorSurfaceGGP", name)) {
-        *addr = loader_inst->enabled_extensions.wsi_ggp_surface_enabled ? (void *)vkCreateStreamDescriptorSurfaceGGP : NULL;
-        return true;
-    }
+        // Functions for the VK_GGP_stream_descriptor_surface extension:
+        case XXH3_vkCreateStreamDescriptorSurfaceGGP:
+            if (!strcmp(name, "vkCreateStreamDescriptorSurfaceGGP")) {
+                *addr = loader_inst->enabled_extensions.wsi_ggp_surface_enabled ? (void *)vkCreateStreamDescriptorSurfaceGGP : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_GGP
 #if defined(VK_USE_PLATFORM_FUCHSIA)
 
-    // Functions for the VK_FUCHSIA_imagepipe_surface extension:
-    if (!strcmp("vkCreateImagePipeSurfaceFUCHSIA", name)) {
-        *addr = loader_inst->enabled_extensions.fuchsia_imagepipe_surface ? (void *)vkCreateImagePipeSurfaceFUCHSIA : NULL;
-        return true;
-    }
-
+        // Functions for the VK_FUCHSIA_imagepipe_surface extension:
+        case XXH3_vkCreateImagePipeSurfaceFUCHSIA:
+            if (!strcmp(name, "vkCreateImagePipeSurfaceFUCHSIA")) {
+                *addr = loader_inst->enabled_extensions.fuchsia_imagepipe_surface ? (void *)vkCreateImagePipeSurfaceFUCHSIA : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_FUCHSIA
 
-    // Functions for the VK_EXT_headless_surface extension:
-    if (!strcmp("vkCreateHeadlessSurfaceEXT", name)) {
-        *addr = loader_inst->enabled_extensions.ext_headless_surface ? (void *)vkCreateHeadlessSurfaceEXT : NULL;
-        return true;
-    }
+        // Functions for the VK_EXT_headless_surface extension:
+        case XXH3_vkCreateHeadlessSurfaceEXT:
+            if (!strcmp(name, "vkCreateHeadlessSurfaceEXT")) {
+                *addr = loader_inst->enabled_extensions.ext_headless_surface ? (void *)vkCreateHeadlessSurfaceEXT : NULL;
+                return true;
+            }
+            break;
 
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-    // Functions for the VK_MVK_macos_surface extension:
-    if (!strcmp("vkCreateMetalSurfaceEXT", name)) {
-        *addr = loader_inst->enabled_extensions.ext_metal_surface ? (void *)vkCreateMetalSurfaceEXT : NULL;
-        return true;
-    }
+        // Functions for the VK_MVK_macos_surface extension:
+        case XXH3_vkCreateMetalSurfaceEXT:
+            if (!strcmp(name, "vkCreateMetalSurfaceEXT")) {
+                *addr = loader_inst->enabled_extensions.ext_metal_surface ? (void *)vkCreateMetalSurfaceEXT : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_METAL_EXT
 
 #if defined(VK_USE_PLATFORM_SCREEN_QNX)
 
-    // Functions for the VK_QNX_screen_surface extension:
-    if (!strcmp("vkCreateScreenSurfaceQNX", name)) {
-        *addr = loader_inst->enabled_extensions.qnx_screen_surface ? (void *)vkCreateScreenSurfaceQNX : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceScreenPresentationSupportQNX", name)) {
-        *addr = loader_inst->enabled_extensions.qnx_screen_surface ? (void *)vkGetPhysicalDeviceScreenPresentationSupportQNX : NULL;
-        return true;
-    }
+        // Functions for the VK_QNX_screen_surface extension:
+        case XXH3_vkCreateScreenSurfaceQNX:
+            if (!strcmp(name, "vkCreateScreenSurfaceQNX")) {
+                *addr = loader_inst->enabled_extensions.qnx_screen_surface ? (void *)vkCreateScreenSurfaceQNX : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceScreenPresentationSupportQNX:
+            if (!strcmp(name, "vkGetPhysicalDeviceScreenPresentationSupportQNX")) {
+                *addr = loader_inst->enabled_extensions.qnx_screen_surface ? (void *)vkGetPhysicalDeviceScreenPresentationSupportQNX
+                                                                           : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_SCREEN_QNX
 
 #if defined(VK_USE_PLATFORM_VI_NN)
 
-    // Functions for the VK_NN_vi_surface extension:
-    if (!strcmp("vkCreateViSurfaceNN", name)) {
-        *addr = loader_inst->enabled_extensions.nn_vi_surface ? (void *)vkCreateViSurfaceNN : NULL;
-        return true;
-    }
+        // Functions for the VK_NN_vi_surface extension:
+        case XXH3_vkCreateViSurfaceNN:
+            if (!strcmp(name, "vkCreateViSurfaceNN")) {
+                *addr = loader_inst->enabled_extensions.nn_vi_surface ? (void *)vkCreateViSurfaceNN : NULL;
+                return true;
+            }
+            break;
 #endif  // VK_USE_PLATFORM_VI_NN
 
-    // Functions for VK_KHR_display extension:
-    if (!strcmp("vkGetPhysicalDeviceDisplayPropertiesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetPhysicalDeviceDisplayPropertiesKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceDisplayPlanePropertiesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetPhysicalDeviceDisplayPlanePropertiesKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetDisplayPlaneSupportedDisplaysKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetDisplayPlaneSupportedDisplaysKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetDisplayModePropertiesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetDisplayModePropertiesKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkCreateDisplayModeKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkCreateDisplayModeKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetDisplayPlaneCapabilitiesKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetDisplayPlaneCapabilitiesKHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkCreateDisplayPlaneSurfaceKHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkCreateDisplayPlaneSurfaceKHR : NULL;
-        return true;
-    }
+        // Functions for VK_KHR_display extension:
+        case XXH3_vkGetPhysicalDeviceDisplayPropertiesKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceDisplayPropertiesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetPhysicalDeviceDisplayPropertiesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceDisplayPlanePropertiesKHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceDisplayPlanePropertiesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetPhysicalDeviceDisplayPlanePropertiesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetDisplayPlaneSupportedDisplaysKHR:
+            if (!strcmp(name, "vkGetDisplayPlaneSupportedDisplaysKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetDisplayPlaneSupportedDisplaysKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetDisplayModePropertiesKHR:
+            if (!strcmp(name, "vkGetDisplayModePropertiesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetDisplayModePropertiesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkCreateDisplayModeKHR:
+            if (!strcmp(name, "vkCreateDisplayModeKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkCreateDisplayModeKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetDisplayPlaneCapabilitiesKHR:
+            if (!strcmp(name, "vkGetDisplayPlaneCapabilitiesKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkGetDisplayPlaneCapabilitiesKHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkCreateDisplayPlaneSurfaceKHR:
+            if (!strcmp(name, "vkCreateDisplayPlaneSurfaceKHR")) {
+                *addr = loader_inst->enabled_extensions.khr_display ? (void *)vkCreateDisplayPlaneSurfaceKHR : NULL;
+                return true;
+            }
+            break;
 
-    // Functions for KHR_display_swapchain extension:
-    if (!strcmp("vkCreateSharedSwapchainsKHR", name)) {
-        *addr = (void *)vkCreateSharedSwapchainsKHR;
-        return true;
-    }
+        // Functions for KHR_display_swapchain extension:
+        case XXH3_vkCreateSharedSwapchainsKHR:
+            if (!strcmp(name, "vkCreateSharedSwapchainsKHR")) {
+                *addr = (void *)vkCreateSharedSwapchainsKHR;
+                return true;
+            }
+            break;
 
-    // Functions for KHR_get_display_properties2
-    if (!strcmp("vkGetPhysicalDeviceDisplayProperties2KHR", name)) {
-        *addr =
-            loader_inst->enabled_extensions.khr_get_display_properties2 ? (void *)vkGetPhysicalDeviceDisplayProperties2KHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetPhysicalDeviceDisplayPlaneProperties2KHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_get_display_properties2 ? (void *)vkGetPhysicalDeviceDisplayPlaneProperties2KHR
-                                                                            : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetDisplayModeProperties2KHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_get_display_properties2 ? (void *)vkGetDisplayModeProperties2KHR : NULL;
-        return true;
-    }
-    if (!strcmp("vkGetDisplayPlaneCapabilities2KHR", name)) {
-        *addr = loader_inst->enabled_extensions.khr_get_display_properties2 ? (void *)vkGetDisplayPlaneCapabilities2KHR : NULL;
-        return true;
+        // Functions for KHR_get_display_properties2
+        case XXH3_vkGetPhysicalDeviceDisplayProperties2KHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceDisplayProperties2KHR")) {
+                *addr = loader_inst->enabled_extensions.khr_get_display_properties2
+                            ? (void *)vkGetPhysicalDeviceDisplayProperties2KHR
+                            : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetPhysicalDeviceDisplayPlaneProperties2KHR:
+            if (!strcmp(name, "vkGetPhysicalDeviceDisplayPlaneProperties2KHR")) {
+                *addr = loader_inst->enabled_extensions.khr_get_display_properties2
+                            ? (void *)vkGetPhysicalDeviceDisplayPlaneProperties2KHR
+                            : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetDisplayModeProperties2KHR:
+            if (!strcmp(name, "vkGetDisplayModeProperties2KHR")) {
+                *addr = loader_inst->enabled_extensions.khr_get_display_properties2 ? (void *)vkGetDisplayModeProperties2KHR : NULL;
+                return true;
+            }
+            break;
+        case XXH3_vkGetDisplayPlaneCapabilities2KHR:
+            if (!strcmp(name, "vkGetDisplayPlaneCapabilities2KHR")) {
+                *addr =
+                    loader_inst->enabled_extensions.khr_get_display_properties2 ? (void *)vkGetDisplayPlaneCapabilities2KHR : NULL;
+                return true;
+            }
+            break;
+        default:
+            break;
     }
 
     return false;

@@ -31,6 +31,8 @@
 
 extern "C" {
 #include "loader_common.h"
+#include "vk_extension_name_hashes.h"
+#include "vk_command_name_hashes.h"
 }
 
 // loader_hash_string() is a plain 32-bit FNV-1a hash used purely as a cheap pre-filter in front of every
@@ -46,8 +48,6 @@ TEST(HashString, Deterministic) {
     ASSERT_EQ(loader_hash_string("vkCreateInstance"), loader_hash_string("vkCreateInstance"));
     ASSERT_EQ(loader_hash_string(""), loader_hash_string(""));
 }
-
-TEST(HashString, EmptyStringIsFNVOffsetBasis) { ASSERT_EQ(2166136261u, loader_hash_string("")); }
 
 TEST(HashString, DifferentStringsUsuallyHashDifferently) {
     ASSERT_NE(loader_hash_string("vkCreateInstance"), loader_hash_string("vkDestroyInstance"));
@@ -69,73 +69,32 @@ TEST(HashString, DifferentStringsUsuallyHashDifferently) {
 TEST(HashString, MatchesGeneratorEmbeddedConstants) {
     struct NameAndHash {
         const char *name;
-        uint32_t expected_hash;
+        uint64_t expected_hash;
     };
     const NameAndHash pairs[] = {
-        // extension_instance_gpa() (loader/generated/vk_loader_extensions.c) - full command name.
-        {"vkGetPhysicalDeviceVideoCapabilitiesKHR", 0x5a670229u},
-        {"vkGetPhysicalDeviceVideoFormatPropertiesKHR", 0x9bb9b67du},
-        {"vkCreateVideoSessionKHR", 0x05ff253eu},
-        {"vkDestroyVideoSessionKHR", 0xc7cb956cu},
-        {"vkGetVideoSessionMemoryRequirementsKHR", 0xf1b97187u},
-        // trampoline_get_proc_addr() (loader/gpa_helper.c, hand-written) - full command name.
-        {"vkGetInstanceProcAddr", 0x9d4599a6u},
-        {"vkDestroyInstance", 0xa64dcfc3u},
-        {"vkEnumeratePhysicalDevices", 0x09612094u},
-        {"vkGetPhysicalDeviceFeatures", 0x3407e5aau},
-        // loader_lookup_device_dispatch_table() (generated) - "vk" prefix already stripped before hashing.
-        {"GetDeviceProcAddr", 0x556f3e66u},
-        {"DestroyDevice", 0xc3c245f3u},
-        {"GetDeviceQueue", 0xe828e700u},
-        {"QueueSubmit", 0xf634aeb0u},
-        // loader_lookup_instance_dispatch_table() (generated) - "vk" prefix already stripped before hashing.
-        {"DestroyInstance", 0x72bac092u},
-        {"EnumeratePhysicalDevices", 0x47707f5bu},
-        {"GetPhysicalDeviceFeatures", 0x1f85ee93u},
-        {"GetPhysicalDeviceFormatProperties", 0x74a5d8deu},
-        {"GetPhysicalDeviceImageFormatProperties", 0x8451aa6bu},
-        {"GetPhysicalDeviceProperties", 0x1de4f4b9u},
-        {"GetPhysicalDeviceQueueFamilyProperties", 0x027f4f12u},
-        {"GetPhysicalDeviceMemoryProperties", 0x1c0f4f2eu},
+        {"vkGetPhysicalDeviceVideoCapabilitiesKHR", XXH3_vkGetPhysicalDeviceVideoCapabilitiesKHR},
+        {"vkGetPhysicalDeviceVideoFormatPropertiesKHR", XXH3_vkGetPhysicalDeviceVideoFormatPropertiesKHR},
+        {"vkCreateVideoSessionKHR", XXH3_vkCreateVideoSessionKHR},
+        {"vkDestroyVideoSessionKHR", XXH3_vkDestroyVideoSessionKHR},
+        {"vkGetVideoSessionMemoryRequirementsKHR", XXH3_vkGetVideoSessionMemoryRequirementsKHR},
+        {"vkGetInstanceProcAddr", XXH3_vkGetInstanceProcAddr},
+        {"vkDestroyInstance", XXH3_vkDestroyInstance},
+        {"vkEnumeratePhysicalDevices", XXH3_vkEnumeratePhysicalDevices},
+        {"vkGetPhysicalDeviceFeatures", XXH3_vkGetPhysicalDeviceFeatures},
+        {"vkGetDeviceProcAddr", XXH3_vkGetDeviceProcAddr},
+        {"vkDestroyDevice", XXH3_vkDestroyDevice},
+        {"vkGetDeviceQueue", XXH3_vkGetDeviceQueue},
+        {"vkQueueSubmit", XXH3_vkQueueSubmit},
+        {"vkDestroyInstance", XXH3_vkDestroyInstance},
+        {"vkEnumeratePhysicalDevices", XXH3_vkEnumeratePhysicalDevices},
+        {"vkGetPhysicalDeviceFeatures", XXH3_vkGetPhysicalDeviceFeatures},
+        {"vkGetPhysicalDeviceFormatProperties", XXH3_vkGetPhysicalDeviceFormatProperties},
+        {"vkGetPhysicalDeviceImageFormatProperties", XXH3_vkGetPhysicalDeviceImageFormatProperties},
+        {"vkGetPhysicalDeviceProperties", XXH3_vkGetPhysicalDeviceProperties},
+        {"vkGetPhysicalDeviceQueueFamilyProperties", XXH3_vkGetPhysicalDeviceQueueFamilyProperties},
+        {"vkGetPhysicalDeviceMemoryProperties", XXH3_vkGetPhysicalDeviceMemoryProperties},
     };
     for (const auto &pair : pairs) {
         ASSERT_EQ(pair.expected_hash, loader_hash_string(pair.name));
-    }
-}
-
-// A handful of strings engineered offline to collide under this exact FNV-1a implementation (offset basis
-// 2166136261, prime 16777619). None of these are real Vulkan command names - they exist purely to
-// demonstrate that a hash collision is handled safely by construction.
-TEST(HashString, SyntheticCollisionsAreHandledSafelyByConstruction) {
-    struct CollidingPair {
-        const char *a;
-        const char *b;
-        uint32_t expected_hash;
-    };
-    const CollidingPair pairs[] = {
-        {"WrvAi", "jI3i", 0x612ea33cu},
-        {"I3US", "WWngS", 0x7431e3c9u},
-        {"TOc9", "h8y0", 0xe7227ef4u},
-    };
-    for (const auto &pair : pairs) {
-        // The two strings really are different...
-        ASSERT_NE(0, strcmp(pair.a, pair.b));
-
-        // ...yet their hashes really do collide...
-        uint32_t hash_a = loader_hash_string(pair.a);
-        uint32_t hash_b = loader_hash_string(pair.b);
-        ASSERT_EQ(pair.expected_hash, hash_a);
-        ASSERT_EQ(pair.expected_hash, hash_b);
-        ASSERT_EQ(hash_a, hash_b);
-
-        // ...which is exactly why every generated/hand-written lookup site guards its `switch (name_hash)`
-        // case body with a strcmp() before returning, rather than trusting the hash match alone: looking up
-        // `a` must match itself but must not be fooled into matching `b`, even though the hash alone can't
-        // tell them apart. The `&&` below is just this test's local stand-in for that same guard.
-        uint32_t query_hash = loader_hash_string(pair.a);
-        bool matches_a = (query_hash == hash_a) && !strcmp(pair.a, pair.a);
-        bool matches_b = (query_hash == hash_b) && !strcmp(pair.a, pair.b);
-        ASSERT_TRUE(matches_a);
-        ASSERT_FALSE(matches_b);
     }
 }

@@ -35,6 +35,8 @@
 #include "wsi.h"
 #include "debug_utils.h"
 #include "extension_manual.h"
+#include "vk_command_name_hashes.h"
+#include "vk_extension_name_hashes.h"
 
 // Device extension error function
 VKAPI_ATTR VkResult VKAPI_CALL vkDevExtError(VkDevice dev) {
@@ -1851,7 +1853,7 @@ VKAPI_ATTR VkResult VKAPI_CALL SetDebugUtilsObjectTagEXT(
     const VkDebugUtilsObjectTagInfoEXT*         pTagInfo);
 
 // Device command lookup function
-VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDispatchTable *table, const char *name, bool* found_name) {
+VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDispatchTable *table, const char *name, uint64_t name_hash, bool* found_name) {
     if (!name || name[0] != 'v' || name[1] != 'k') {
         *found_name = false;
         return NULL;
@@ -1862,732 +1864,731 @@ VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDis
     struct loader_device* dev = (struct loader_device *)table;
     const struct loader_instance* inst = dev->phys_dev_term->this_icd_term->this_instance;
     uint32_t api_version = VK_MAKE_API_VERSION(0, inst->app_api_version.major, inst->app_api_version.minor, inst->app_api_version.patch);
-    const uint32_t name_hash = loader_hash_string(name);
 
     switch (name_hash) {
 
         // ---- Core Vulkan 1.0 commands
-        case 0x556f3e66u:
+        case XXH3_vkGetDeviceProcAddr:
             if (!strcmp(name, "GetDeviceProcAddr")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetDeviceProcAddr;
             }
             break;
-        case 0xc3c245f3u:
+        case XXH3_vkDestroyDevice:
             if (!strcmp(name, "DestroyDevice")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyDevice;
             }
             break;
-        case 0xe828e700u:
+        case XXH3_vkGetDeviceQueue:
             if (!strcmp(name, "GetDeviceQueue")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetDeviceQueue;
             }
             break;
-        case 0xf634aeb0u:
+        case XXH3_vkQueueSubmit:
             if (!strcmp(name, "QueueSubmit")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->QueueSubmit;
             }
             break;
-        case 0x30e5a4dfu:
+        case XXH3_vkQueueWaitIdle:
             if (!strcmp(name, "QueueWaitIdle")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->QueueWaitIdle;
             }
             break;
-        case 0x97ad82bcu:
+        case XXH3_vkDeviceWaitIdle:
             if (!strcmp(name, "DeviceWaitIdle")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DeviceWaitIdle;
             }
             break;
-        case 0x1a48a22du:
+        case XXH3_vkAllocateMemory:
             if (!strcmp(name, "AllocateMemory")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->AllocateMemory;
             }
             break;
-        case 0xff032fd4u:
+        case XXH3_vkFreeMemory:
             if (!strcmp(name, "FreeMemory")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->FreeMemory;
             }
             break;
-        case 0x2b4a440au:
+        case XXH3_vkMapMemory:
             if (!strcmp(name, "MapMemory")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->MapMemory;
             }
             break;
-        case 0xdd78dd07u:
+        case XXH3_vkUnmapMemory:
             if (!strcmp(name, "UnmapMemory")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->UnmapMemory;
             }
             break;
-        case 0x04c06873u:
+        case XXH3_vkFlushMappedMemoryRanges:
             if (!strcmp(name, "FlushMappedMemoryRanges")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->FlushMappedMemoryRanges;
             }
             break;
-        case 0x42e40ec6u:
+        case XXH3_vkInvalidateMappedMemoryRanges:
             if (!strcmp(name, "InvalidateMappedMemoryRanges")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->InvalidateMappedMemoryRanges;
             }
             break;
-        case 0xb58c2237u:
+        case XXH3_vkGetDeviceMemoryCommitment:
             if (!strcmp(name, "GetDeviceMemoryCommitment")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetDeviceMemoryCommitment;
             }
             break;
-        case 0xf9d3e8bbu:
+        case XXH3_vkBindBufferMemory:
             if (!strcmp(name, "BindBufferMemory")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->BindBufferMemory;
             }
             break;
-        case 0xa6ad4e7cu:
+        case XXH3_vkBindImageMemory:
             if (!strcmp(name, "BindImageMemory")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->BindImageMemory;
             }
             break;
-        case 0xdbd8f14eu:
+        case XXH3_vkGetBufferMemoryRequirements:
             if (!strcmp(name, "GetBufferMemoryRequirements")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetBufferMemoryRequirements;
             }
             break;
-        case 0xadd404fbu:
+        case XXH3_vkGetImageMemoryRequirements:
             if (!strcmp(name, "GetImageMemoryRequirements")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetImageMemoryRequirements;
             }
             break;
-        case 0x02f07be3u:
+        case XXH3_vkGetImageSparseMemoryRequirements:
             if (!strcmp(name, "GetImageSparseMemoryRequirements")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetImageSparseMemoryRequirements;
             }
             break;
-        case 0x446723b3u:
+        case XXH3_vkQueueBindSparse:
             if (!strcmp(name, "QueueBindSparse")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->QueueBindSparse;
             }
             break;
-        case 0xb85cb06eu:
+        case XXH3_vkCreateFence:
             if (!strcmp(name, "CreateFence")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateFence;
             }
             break;
-        case 0xee059b16u:
+        case XXH3_vkDestroyFence:
             if (!strcmp(name, "DestroyFence")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyFence;
             }
             break;
-        case 0x49e2bbfeu:
+        case XXH3_vkResetFences:
             if (!strcmp(name, "ResetFences")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->ResetFences;
             }
             break;
-        case 0x27219372u:
+        case XXH3_vkGetFenceStatus:
             if (!strcmp(name, "GetFenceStatus")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetFenceStatus;
             }
             break;
-        case 0x2701d8c1u:
+        case XXH3_vkWaitForFences:
             if (!strcmp(name, "WaitForFences")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->WaitForFences;
             }
             break;
-        case 0x72a17f35u:
+        case XXH3_vkCreateSemaphore:
             if (!strcmp(name, "CreateSemaphore")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateSemaphore;
             }
             break;
-        case 0x7a900dbdu:
+        case XXH3_vkDestroySemaphore:
             if (!strcmp(name, "DestroySemaphore")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroySemaphore;
             }
             break;
-        case 0x1d052b99u:
+        case XXH3_vkCreateQueryPool:
             if (!strcmp(name, "CreateQueryPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateQueryPool;
             }
             break;
-        case 0xa2679271u:
+        case XXH3_vkDestroyQueryPool:
             if (!strcmp(name, "DestroyQueryPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyQueryPool;
             }
             break;
-        case 0x2acc2043u:
+        case XXH3_vkGetQueryPoolResults:
             if (!strcmp(name, "GetQueryPoolResults")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetQueryPoolResults;
             }
             break;
-        case 0x594c57f3u:
+        case XXH3_vkCreateBuffer:
             if (!strcmp(name, "CreateBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateBuffer;
             }
             break;
-        case 0x74b0eb7bu:
+        case XXH3_vkDestroyBuffer:
             if (!strcmp(name, "DestroyBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyBuffer;
             }
             break;
-        case 0x1052ae42u:
+        case XXH3_vkCreateImage:
             if (!strcmp(name, "CreateImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateImage;
             }
             break;
-        case 0xe4d58afau:
+        case XXH3_vkDestroyImage:
             if (!strcmp(name, "DestroyImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyImage;
             }
             break;
-        case 0x5bec9c60u:
+        case XXH3_vkGetImageSubresourceLayout:
             if (!strcmp(name, "GetImageSubresourceLayout")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetImageSubresourceLayout;
             }
             break;
-        case 0x98d3880bu:
+        case XXH3_vkCreateImageView:
             if (!strcmp(name, "CreateImageView")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateImageView;
             }
             break;
-        case 0x3ac8cdd3u:
+        case XXH3_vkDestroyImageView:
             if (!strcmp(name, "DestroyImageView")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyImageView;
             }
             break;
-        case 0x5b4c1778u:
+        case XXH3_vkCreateCommandPool:
             if (!strcmp(name, "CreateCommandPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateCommandPool;
             }
             break;
-        case 0xfca6d900u:
+        case XXH3_vkDestroyCommandPool:
             if (!strcmp(name, "DestroyCommandPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyCommandPool;
             }
             break;
-        case 0xd1984e7fu:
+        case XXH3_vkResetCommandPool:
             if (!strcmp(name, "ResetCommandPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->ResetCommandPool;
             }
             break;
-        case 0x46e1a59eu:
+        case XXH3_vkAllocateCommandBuffers:
             if (!strcmp(name, "AllocateCommandBuffers")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->AllocateCommandBuffers;
             }
             break;
-        case 0x92a01f53u:
+        case XXH3_vkFreeCommandBuffers:
             if (!strcmp(name, "FreeCommandBuffers")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->FreeCommandBuffers;
             }
             break;
-        case 0xd6878265u:
+        case XXH3_vkBeginCommandBuffer:
             if (!strcmp(name, "BeginCommandBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->BeginCommandBuffer;
             }
             break;
-        case 0x00b4c891u:
+        case XXH3_vkEndCommandBuffer:
             if (!strcmp(name, "EndCommandBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->EndCommandBuffer;
             }
             break;
-        case 0xb4c6737fu:
+        case XXH3_vkResetCommandBuffer:
             if (!strcmp(name, "ResetCommandBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->ResetCommandBuffer;
             }
             break;
-        case 0x0c36d35cu:
+        case XXH3_vkCmdCopyBuffer:
             if (!strcmp(name, "CmdCopyBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdCopyBuffer;
             }
             break;
-        case 0xc56ce137u:
+        case XXH3_vkCmdCopyImage:
             if (!strcmp(name, "CmdCopyImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdCopyImage;
             }
             break;
-        case 0x37f8b1cau:
+        case XXH3_vkCmdCopyBufferToImage:
             if (!strcmp(name, "CmdCopyBufferToImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdCopyBufferToImage;
             }
             break;
-        case 0xdd6c206cu:
+        case XXH3_vkCmdCopyImageToBuffer:
             if (!strcmp(name, "CmdCopyImageToBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdCopyImageToBuffer;
             }
             break;
-        case 0x004dd694u:
+        case XXH3_vkCmdUpdateBuffer:
             if (!strcmp(name, "CmdUpdateBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdUpdateBuffer;
             }
             break;
-        case 0x9c272074u:
+        case XXH3_vkCmdFillBuffer:
             if (!strcmp(name, "CmdFillBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdFillBuffer;
             }
             break;
-        case 0x99bb3b50u:
+        case XXH3_vkCmdPipelineBarrier:
             if (!strcmp(name, "CmdPipelineBarrier")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdPipelineBarrier;
             }
             break;
-        case 0x847b49f8u:
+        case XXH3_vkCmdBeginQuery:
             if (!strcmp(name, "CmdBeginQuery")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdBeginQuery;
             }
             break;
-        case 0xa38ee8bcu:
+        case XXH3_vkCmdEndQuery:
             if (!strcmp(name, "CmdEndQuery")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdEndQuery;
             }
             break;
-        case 0x4cd9424cu:
+        case XXH3_vkCmdResetQueryPool:
             if (!strcmp(name, "CmdResetQueryPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdResetQueryPool;
             }
             break;
-        case 0x36056986u:
+        case XXH3_vkCmdWriteTimestamp:
             if (!strcmp(name, "CmdWriteTimestamp")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdWriteTimestamp;
             }
             break;
-        case 0x03cfd77au:
+        case XXH3_vkCmdCopyQueryPoolResults:
             if (!strcmp(name, "CmdCopyQueryPoolResults")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdCopyQueryPoolResults;
             }
             break;
-        case 0xfc3b9de4u:
+        case XXH3_vkCmdExecuteCommands:
             if (!strcmp(name, "CmdExecuteCommands")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdExecuteCommands;
             }
             break;
-        case 0x45545f97u:
+        case XXH3_vkCreateEvent:
             if (!strcmp(name, "CreateEvent")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateEvent;
             }
             break;
-        case 0x2fb5259fu:
+        case XXH3_vkDestroyEvent:
             if (!strcmp(name, "DestroyEvent")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyEvent;
             }
             break;
-        case 0x30fcfaffu:
+        case XXH3_vkGetEventStatus:
             if (!strcmp(name, "GetEventStatus")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetEventStatus;
             }
             break;
-        case 0x519d96f1u:
+        case XXH3_vkSetEvent:
             if (!strcmp(name, "SetEvent")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->SetEvent;
             }
             break;
-        case 0x068fe748u:
+        case XXH3_vkResetEvent:
             if (!strcmp(name, "ResetEvent")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->ResetEvent;
             }
             break;
-        case 0xe8d8b0f6u:
+        case XXH3_vkCreateBufferView:
             if (!strcmp(name, "CreateBufferView")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateBufferView;
             }
             break;
-        case 0x4ccdf76eu:
+        case XXH3_vkDestroyBufferView:
             if (!strcmp(name, "DestroyBufferView")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyBufferView;
             }
             break;
-        case 0x31b2bef8u:
+        case XXH3_vkCreateShaderModule:
             if (!strcmp(name, "CreateShaderModule")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateShaderModule;
             }
             break;
-        case 0x9d5a9360u:
+        case XXH3_vkDestroyShaderModule:
             if (!strcmp(name, "DestroyShaderModule")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyShaderModule;
             }
             break;
-        case 0x192270cfu:
+        case XXH3_vkCreatePipelineCache:
             if (!strcmp(name, "CreatePipelineCache")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreatePipelineCache;
             }
             break;
-        case 0x902ac897u:
+        case XXH3_vkDestroyPipelineCache:
             if (!strcmp(name, "DestroyPipelineCache")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyPipelineCache;
             }
             break;
-        case 0xc16e21f1u:
+        case XXH3_vkGetPipelineCacheData:
             if (!strcmp(name, "GetPipelineCacheData")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetPipelineCacheData;
             }
             break;
-        case 0x561dbd46u:
+        case XXH3_vkMergePipelineCaches:
             if (!strcmp(name, "MergePipelineCaches")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->MergePipelineCaches;
             }
             break;
-        case 0xd2393b0du:
+        case XXH3_vkCreateComputePipelines:
             if (!strcmp(name, "CreateComputePipelines")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateComputePipelines;
             }
             break;
-        case 0x3a781083u:
+        case XXH3_vkDestroyPipeline:
             if (!strcmp(name, "DestroyPipeline")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyPipeline;
             }
             break;
-        case 0x386cb351u:
+        case XXH3_vkCreatePipelineLayout:
             if (!strcmp(name, "CreatePipelineLayout")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreatePipelineLayout;
             }
             break;
-        case 0x24a65109u:
+        case XXH3_vkDestroyPipelineLayout:
             if (!strcmp(name, "DestroyPipelineLayout")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyPipelineLayout;
             }
             break;
-        case 0x22611e57u:
+        case XXH3_vkCreateSampler:
             if (!strcmp(name, "CreateSampler")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateSampler;
             }
             break;
-        case 0x66efd24fu:
+        case XXH3_vkDestroySampler:
             if (!strcmp(name, "DestroySampler")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroySampler;
             }
             break;
-        case 0x0c59900eu:
+        case XXH3_vkCreateDescriptorSetLayout:
             if (!strcmp(name, "CreateDescriptorSetLayout")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateDescriptorSetLayout;
             }
             break;
-        case 0xcdc1f4b6u:
+        case XXH3_vkDestroyDescriptorSetLayout:
             if (!strcmp(name, "DestroyDescriptorSetLayout")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyDescriptorSetLayout;
             }
             break;
-        case 0xe154a866u:
+        case XXH3_vkCreateDescriptorPool:
             if (!strcmp(name, "CreateDescriptorPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateDescriptorPool;
             }
             break;
-        case 0xcb4caf9eu:
+        case XXH3_vkDestroyDescriptorPool:
             if (!strcmp(name, "DestroyDescriptorPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyDescriptorPool;
             }
             break;
-        case 0xbd10cdc7u:
+        case XXH3_vkResetDescriptorPool:
             if (!strcmp(name, "ResetDescriptorPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->ResetDescriptorPool;
             }
             break;
-        case 0x8783e9eau:
+        case XXH3_vkAllocateDescriptorSets:
             if (!strcmp(name, "AllocateDescriptorSets")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->AllocateDescriptorSets;
             }
             break;
-        case 0xf6ab6a4bu:
+        case XXH3_vkFreeDescriptorSets:
             if (!strcmp(name, "FreeDescriptorSets")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->FreeDescriptorSets;
             }
             break;
-        case 0x796a4db0u:
+        case XXH3_vkUpdateDescriptorSets:
             if (!strcmp(name, "UpdateDescriptorSets")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->UpdateDescriptorSets;
             }
             break;
-        case 0x0fea12b2u:
+        case XXH3_vkCmdBindPipeline:
             if (!strcmp(name, "CmdBindPipeline")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdBindPipeline;
             }
             break;
-        case 0xbdecba10u:
+        case XXH3_vkCmdBindDescriptorSets:
             if (!strcmp(name, "CmdBindDescriptorSets")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdBindDescriptorSets;
             }
             break;
-        case 0x68e97180u:
+        case XXH3_vkCmdClearColorImage:
             if (!strcmp(name, "CmdClearColorImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdClearColorImage;
             }
             break;
-        case 0x0b58a221u:
+        case XXH3_vkCmdDispatch:
             if (!strcmp(name, "CmdDispatch")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdDispatch;
             }
             break;
-        case 0x023cf383u:
+        case XXH3_vkCmdDispatchIndirect:
             if (!strcmp(name, "CmdDispatchIndirect")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdDispatchIndirect;
             }
             break;
-        case 0xe0c49af3u:
+        case XXH3_vkCmdSetEvent:
             if (!strcmp(name, "CmdSetEvent")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetEvent;
             }
             break;
-        case 0xab60a1d6u:
+        case XXH3_vkCmdResetEvent:
             if (!strcmp(name, "CmdResetEvent")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdResetEvent;
             }
             break;
-        case 0x41fbe8a7u:
+        case XXH3_vkCmdWaitEvents:
             if (!strcmp(name, "CmdWaitEvents")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdWaitEvents;
             }
             break;
-        case 0xef4f8998u:
+        case XXH3_vkCmdPushConstants:
             if (!strcmp(name, "CmdPushConstants")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdPushConstants;
             }
             break;
-        case 0x49120077u:
+        case XXH3_vkCreateGraphicsPipelines:
             if (!strcmp(name, "CreateGraphicsPipelines")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateGraphicsPipelines;
             }
             break;
-        case 0xee253c88u:
+        case XXH3_vkCreateFramebuffer:
             if (!strcmp(name, "CreateFramebuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateFramebuffer;
             }
             break;
-        case 0x4edbdb50u:
+        case XXH3_vkDestroyFramebuffer:
             if (!strcmp(name, "DestroyFramebuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyFramebuffer;
             }
             break;
-        case 0xc3352a08u:
+        case XXH3_vkCreateRenderPass:
             if (!strcmp(name, "CreateRenderPass")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CreateRenderPass;
             }
             break;
-        case 0xea8843a0u:
+        case XXH3_vkDestroyRenderPass:
             if (!strcmp(name, "DestroyRenderPass")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->DestroyRenderPass;
             }
             break;
-        case 0xbd702976u:
+        case XXH3_vkGetRenderAreaGranularity:
             if (!strcmp(name, "GetRenderAreaGranularity")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->GetRenderAreaGranularity;
             }
             break;
-        case 0x60223eafu:
+        case XXH3_vkCmdSetViewport:
             if (!strcmp(name, "CmdSetViewport")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetViewport;
             }
             break;
-        case 0x06645d65u:
+        case XXH3_vkCmdSetScissor:
             if (!strcmp(name, "CmdSetScissor")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetScissor;
             }
             break;
-        case 0x028ebdd5u:
+        case XXH3_vkCmdSetLineWidth:
             if (!strcmp(name, "CmdSetLineWidth")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetLineWidth;
             }
             break;
-        case 0x84edaf93u:
+        case XXH3_vkCmdSetDepthBias:
             if (!strcmp(name, "CmdSetDepthBias")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetDepthBias;
             }
             break;
-        case 0x12c65e99u:
+        case XXH3_vkCmdSetBlendConstants:
             if (!strcmp(name, "CmdSetBlendConstants")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetBlendConstants;
             }
             break;
-        case 0xa6c6ccffu:
+        case XXH3_vkCmdSetDepthBounds:
             if (!strcmp(name, "CmdSetDepthBounds")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetDepthBounds;
             }
             break;
-        case 0xed6fff6eu:
+        case XXH3_vkCmdSetStencilCompareMask:
             if (!strcmp(name, "CmdSetStencilCompareMask")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetStencilCompareMask;
             }
             break;
-        case 0x1b99fe4au:
+        case XXH3_vkCmdSetStencilWriteMask:
             if (!strcmp(name, "CmdSetStencilWriteMask")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetStencilWriteMask;
             }
             break;
-        case 0x43a8794cu:
+        case XXH3_vkCmdSetStencilReference:
             if (!strcmp(name, "CmdSetStencilReference")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdSetStencilReference;
             }
             break;
-        case 0x6113c7aau:
+        case XXH3_vkCmdBindIndexBuffer:
             if (!strcmp(name, "CmdBindIndexBuffer")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdBindIndexBuffer;
             }
             break;
-        case 0x8480280du:
+        case XXH3_vkCmdBindVertexBuffers:
             if (!strcmp(name, "CmdBindVertexBuffers")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdBindVertexBuffers;
             }
             break;
-        case 0x8c1fc0d9u:
+        case XXH3_vkCmdDraw:
             if (!strcmp(name, "CmdDraw")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdDraw;
             }
             break;
-        case 0xb1da916eu:
+        case XXH3_vkCmdDrawIndexed:
             if (!strcmp(name, "CmdDrawIndexed")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdDrawIndexed;
             }
             break;
-        case 0x44bd488bu:
+        case XXH3_vkCmdDrawIndirect:
             if (!strcmp(name, "CmdDrawIndirect")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdDrawIndirect;
             }
             break;
-        case 0xf026b8a0u:
+        case XXH3_vkCmdDrawIndexedIndirect:
             if (!strcmp(name, "CmdDrawIndexedIndirect")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdDrawIndexedIndirect;
             }
             break;
-        case 0x203c55edu:
+        case XXH3_vkCmdBlitImage:
             if (!strcmp(name, "CmdBlitImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdBlitImage;
             }
             break;
-        case 0x0a1abe14u:
+        case XXH3_vkCmdClearDepthStencilImage:
             if (!strcmp(name, "CmdClearDepthStencilImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdClearDepthStencilImage;
             }
             break;
-        case 0xf8912576u:
+        case XXH3_vkCmdClearAttachments:
             if (!strcmp(name, "CmdClearAttachments")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdClearAttachments;
             }
             break;
-        case 0x7d6ce9fau:
+        case XXH3_vkCmdResolveImage:
             if (!strcmp(name, "CmdResolveImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdResolveImage;
             }
             break;
-        case 0x97aa36c5u:
+        case XXH3_vkCmdBeginRenderPass:
             if (!strcmp(name, "CmdBeginRenderPass")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdBeginRenderPass;
             }
             break;
-        case 0x65711319u:
+        case XXH3_vkCmdNextSubpass:
             if (!strcmp(name, "CmdNextSubpass")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdNextSubpass;
             }
             break;
-        case 0x21535791u:
+        case XXH3_vkCmdEndRenderPass:
             if (!strcmp(name, "CmdEndRenderPass")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_0) return NULL;
                 return (void *)table->CmdEndRenderPass;
@@ -2595,97 +2596,97 @@ VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDis
             break;
 
         // ---- Core Vulkan 1.1 commands
-        case 0xd1970fabu:
+        case XXH3_vkBindBufferMemory2:
             if (!strcmp(name, "BindBufferMemory2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->BindBufferMemory2;
             }
             break;
-        case 0xb0d244cau:
+        case XXH3_vkBindImageMemory2:
             if (!strcmp(name, "BindImageMemory2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->BindImageMemory2;
             }
             break;
-        case 0x76cc3b34u:
+        case XXH3_vkGetDeviceGroupPeerMemoryFeatures:
             if (!strcmp(name, "GetDeviceGroupPeerMemoryFeatures")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->GetDeviceGroupPeerMemoryFeatures;
             }
             break;
-        case 0x7ce530b3u:
+        case XXH3_vkCmdSetDeviceMask:
             if (!strcmp(name, "CmdSetDeviceMask")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->CmdSetDeviceMask;
             }
             break;
-        case 0x6dc3886bu:
+        case XXH3_vkGetImageMemoryRequirements2:
             if (!strcmp(name, "GetImageMemoryRequirements2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->GetImageMemoryRequirements2;
             }
             break;
-        case 0x92842634u:
+        case XXH3_vkGetBufferMemoryRequirements2:
             if (!strcmp(name, "GetBufferMemoryRequirements2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->GetBufferMemoryRequirements2;
             }
             break;
-        case 0x7192ea03u:
+        case XXH3_vkGetImageSparseMemoryRequirements2:
             if (!strcmp(name, "GetImageSparseMemoryRequirements2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->GetImageSparseMemoryRequirements2;
             }
             break;
-        case 0x136bedacu:
+        case XXH3_vkTrimCommandPool:
             if (!strcmp(name, "TrimCommandPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->TrimCommandPool;
             }
             break;
-        case 0xaa63f3b6u:
+        case XXH3_vkGetDeviceQueue2:
             if (!strcmp(name, "GetDeviceQueue2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->GetDeviceQueue2;
             }
             break;
-        case 0xc39e3e2cu:
+        case XXH3_vkCmdDispatchBase:
             if (!strcmp(name, "CmdDispatchBase")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->CmdDispatchBase;
             }
             break;
-        case 0xb229937fu:
+        case XXH3_vkCreateDescriptorUpdateTemplate:
             if (!strcmp(name, "CreateDescriptorUpdateTemplate")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->CreateDescriptorUpdateTemplate;
             }
             break;
-        case 0xa73acec7u:
+        case XXH3_vkDestroyDescriptorUpdateTemplate:
             if (!strcmp(name, "DestroyDescriptorUpdateTemplate")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->DestroyDescriptorUpdateTemplate;
             }
             break;
-        case 0xe9a3c1f9u:
+        case XXH3_vkUpdateDescriptorSetWithTemplate:
             if (!strcmp(name, "UpdateDescriptorSetWithTemplate")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->UpdateDescriptorSetWithTemplate;
             }
             break;
-        case 0x74e1f8cfu:
+        case XXH3_vkGetDescriptorSetLayoutSupport:
             if (!strcmp(name, "GetDescriptorSetLayoutSupport")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->GetDescriptorSetLayoutSupport;
             }
             break;
-        case 0x452314aeu:
+        case XXH3_vkCreateSamplerYcbcrConversion:
             if (!strcmp(name, "CreateSamplerYcbcrConversion")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->CreateSamplerYcbcrConversion;
             }
             break;
-        case 0xa5a844d6u:
+        case XXH3_vkDestroySamplerYcbcrConversion:
             if (!strcmp(name, "DestroySamplerYcbcrConversion")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_1) return NULL;
                 return (void *)table->DestroySamplerYcbcrConversion;
@@ -2693,79 +2694,79 @@ VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDis
             break;
 
         // ---- Core Vulkan 1.2 commands
-        case 0xb0cc2abau:
+        case XXH3_vkResetQueryPool:
             if (!strcmp(name, "ResetQueryPool")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->ResetQueryPool;
             }
             break;
-        case 0x5a94735eu:
+        case XXH3_vkGetSemaphoreCounterValue:
             if (!strcmp(name, "GetSemaphoreCounterValue")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->GetSemaphoreCounterValue;
             }
             break;
-        case 0xec14fdebu:
+        case XXH3_vkWaitSemaphores:
             if (!strcmp(name, "WaitSemaphores")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->WaitSemaphores;
             }
             break;
-        case 0x53897c39u:
+        case XXH3_vkSignalSemaphore:
             if (!strcmp(name, "SignalSemaphore")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->SignalSemaphore;
             }
             break;
-        case 0x58b83869u:
+        case XXH3_vkGetBufferDeviceAddress:
             if (!strcmp(name, "GetBufferDeviceAddress")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->GetBufferDeviceAddress;
             }
             break;
-        case 0x7878eaa4u:
+        case XXH3_vkGetBufferOpaqueCaptureAddress:
             if (!strcmp(name, "GetBufferOpaqueCaptureAddress")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->GetBufferOpaqueCaptureAddress;
             }
             break;
-        case 0x9a0eb25fu:
+        case XXH3_vkGetDeviceMemoryOpaqueCaptureAddress:
             if (!strcmp(name, "GetDeviceMemoryOpaqueCaptureAddress")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->GetDeviceMemoryOpaqueCaptureAddress;
             }
             break;
-        case 0xe62a3a1au:
+        case XXH3_vkCmdDrawIndirectCount:
             if (!strcmp(name, "CmdDrawIndirectCount")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->CmdDrawIndirectCount;
             }
             break;
-        case 0xf9fd358fu:
+        case XXH3_vkCmdDrawIndexedIndirectCount:
             if (!strcmp(name, "CmdDrawIndexedIndirectCount")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->CmdDrawIndexedIndirectCount;
             }
             break;
-        case 0x86b1794eu:
+        case XXH3_vkCreateRenderPass2:
             if (!strcmp(name, "CreateRenderPass2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->CreateRenderPass2;
             }
             break;
-        case 0xb7f486d5u:
+        case XXH3_vkCmdBeginRenderPass2:
             if (!strcmp(name, "CmdBeginRenderPass2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->CmdBeginRenderPass2;
             }
             break;
-        case 0xdc012cb1u:
+        case XXH3_vkCmdNextSubpass2:
             if (!strcmp(name, "CmdNextSubpass2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->CmdNextSubpass2;
             }
             break;
-        case 0x1932f599u:
+        case XXH3_vkCmdEndRenderPass2:
             if (!strcmp(name, "CmdEndRenderPass2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_2) return NULL;
                 return (void *)table->CmdEndRenderPass2;
@@ -2773,217 +2774,217 @@ VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDis
             break;
 
         // ---- Core Vulkan 1.3 commands
-        case 0x177d5920u:
+        case XXH3_vkCreatePrivateDataSlot:
             if (!strcmp(name, "CreatePrivateDataSlot")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CreatePrivateDataSlot;
             }
             break;
-        case 0x7f21ff68u:
+        case XXH3_vkDestroyPrivateDataSlot:
             if (!strcmp(name, "DestroyPrivateDataSlot")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->DestroyPrivateDataSlot;
             }
             break;
-        case 0xe7f3b50eu:
+        case XXH3_vkSetPrivateData:
             if (!strcmp(name, "SetPrivateData")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->SetPrivateData;
             }
             break;
-        case 0xe2ac6662u:
+        case XXH3_vkGetPrivateData:
             if (!strcmp(name, "GetPrivateData")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->GetPrivateData;
             }
             break;
-        case 0x63be7b46u:
+        case XXH3_vkCmdPipelineBarrier2:
             if (!strcmp(name, "CmdPipelineBarrier2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdPipelineBarrier2;
             }
             break;
-        case 0xbe85665cu:
+        case XXH3_vkCmdWriteTimestamp2:
             if (!strcmp(name, "CmdWriteTimestamp2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdWriteTimestamp2;
             }
             break;
-        case 0x16eeb6a6u:
+        case XXH3_vkQueueSubmit2:
             if (!strcmp(name, "QueueSubmit2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->QueueSubmit2;
             }
             break;
-        case 0xa84ed62au:
+        case XXH3_vkCmdCopyBuffer2:
             if (!strcmp(name, "CmdCopyBuffer2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdCopyBuffer2;
             }
             break;
-        case 0xcf663adfu:
+        case XXH3_vkCmdCopyImage2:
             if (!strcmp(name, "CmdCopyImage2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdCopyImage2;
             }
             break;
-        case 0x14802968u:
+        case XXH3_vkCmdCopyBufferToImage2:
             if (!strcmp(name, "CmdCopyBufferToImage2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdCopyBufferToImage2;
             }
             break;
-        case 0xef36f3fau:
+        case XXH3_vkCmdCopyImageToBuffer2:
             if (!strcmp(name, "CmdCopyImageToBuffer2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdCopyImageToBuffer2;
             }
             break;
-        case 0xb708741cu:
+        case XXH3_vkGetDeviceBufferMemoryRequirements:
             if (!strcmp(name, "GetDeviceBufferMemoryRequirements")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->GetDeviceBufferMemoryRequirements;
             }
             break;
-        case 0xca328b99u:
+        case XXH3_vkGetDeviceImageMemoryRequirements:
             if (!strcmp(name, "GetDeviceImageMemoryRequirements")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->GetDeviceImageMemoryRequirements;
             }
             break;
-        case 0x3fe21ac5u:
+        case XXH3_vkGetDeviceImageSparseMemoryRequirements:
             if (!strcmp(name, "GetDeviceImageSparseMemoryRequirements")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->GetDeviceImageSparseMemoryRequirements;
             }
             break;
-        case 0x967f9dd3u:
+        case XXH3_vkCmdSetEvent2:
             if (!strcmp(name, "CmdSetEvent2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetEvent2;
             }
             break;
-        case 0xad1ed9ecu:
+        case XXH3_vkCmdResetEvent2:
             if (!strcmp(name, "CmdResetEvent2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdResetEvent2;
             }
             break;
-        case 0x748f228fu:
+        case XXH3_vkCmdWaitEvents2:
             if (!strcmp(name, "CmdWaitEvents2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdWaitEvents2;
             }
             break;
-        case 0x9dfb2e0du:
+        case XXH3_vkCmdBlitImage2:
             if (!strcmp(name, "CmdBlitImage2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdBlitImage2;
             }
             break;
-        case 0x3a7405d8u:
+        case XXH3_vkCmdResolveImage2:
             if (!strcmp(name, "CmdResolveImage2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdResolveImage2;
             }
             break;
-        case 0xaa8fee8cu:
+        case XXH3_vkCmdBeginRendering:
             if (!strcmp(name, "CmdBeginRendering")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdBeginRendering;
             }
             break;
-        case 0xee0f67d0u:
+        case XXH3_vkCmdEndRendering:
             if (!strcmp(name, "CmdEndRendering")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdEndRendering;
             }
             break;
-        case 0x20a446deu:
+        case XXH3_vkCmdSetCullMode:
             if (!strcmp(name, "CmdSetCullMode")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetCullMode;
             }
             break;
-        case 0x414443d5u:
+        case XXH3_vkCmdSetFrontFace:
             if (!strcmp(name, "CmdSetFrontFace")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetFrontFace;
             }
             break;
-        case 0x1a103db7u:
+        case XXH3_vkCmdSetPrimitiveTopology:
             if (!strcmp(name, "CmdSetPrimitiveTopology")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetPrimitiveTopology;
             }
             break;
-        case 0xcba6442eu:
+        case XXH3_vkCmdSetViewportWithCount:
             if (!strcmp(name, "CmdSetViewportWithCount")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetViewportWithCount;
             }
             break;
-        case 0x9d1ae5f0u:
+        case XXH3_vkCmdSetScissorWithCount:
             if (!strcmp(name, "CmdSetScissorWithCount")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetScissorWithCount;
             }
             break;
-        case 0xd4bf5b2du:
+        case XXH3_vkCmdBindVertexBuffers2:
             if (!strcmp(name, "CmdBindVertexBuffers2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdBindVertexBuffers2;
             }
             break;
-        case 0xfdeb3f45u:
+        case XXH3_vkCmdSetDepthTestEnable:
             if (!strcmp(name, "CmdSetDepthTestEnable")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetDepthTestEnable;
             }
             break;
-        case 0xeedd9e22u:
+        case XXH3_vkCmdSetDepthWriteEnable:
             if (!strcmp(name, "CmdSetDepthWriteEnable")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetDepthWriteEnable;
             }
             break;
-        case 0x56561e4au:
+        case XXH3_vkCmdSetDepthCompareOp:
             if (!strcmp(name, "CmdSetDepthCompareOp")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetDepthCompareOp;
             }
             break;
-        case 0x7948f434u:
+        case XXH3_vkCmdSetDepthBoundsTestEnable:
             if (!strcmp(name, "CmdSetDepthBoundsTestEnable")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetDepthBoundsTestEnable;
             }
             break;
-        case 0xad756094u:
+        case XXH3_vkCmdSetStencilTestEnable:
             if (!strcmp(name, "CmdSetStencilTestEnable")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetStencilTestEnable;
             }
             break;
-        case 0x1d9ffdc0u:
+        case XXH3_vkCmdSetStencilOp:
             if (!strcmp(name, "CmdSetStencilOp")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetStencilOp;
             }
             break;
-        case 0xc64b8095u:
+        case XXH3_vkCmdSetRasterizerDiscardEnable:
             if (!strcmp(name, "CmdSetRasterizerDiscardEnable")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetRasterizerDiscardEnable;
             }
             break;
-        case 0x4e9b6cfcu:
+        case XXH3_vkCmdSetDepthBiasEnable:
             if (!strcmp(name, "CmdSetDepthBiasEnable")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetDepthBiasEnable;
             }
             break;
-        case 0xd45e7f8eu:
+        case XXH3_vkCmdSetPrimitiveRestartEnable:
             if (!strcmp(name, "CmdSetPrimitiveRestartEnable")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_3) return NULL;
                 return (void *)table->CmdSetPrimitiveRestartEnable;
@@ -2991,115 +2992,115 @@ VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDis
             break;
 
         // ---- Core Vulkan 1.4 commands
-        case 0x5de96428u:
+        case XXH3_vkMapMemory2:
             if (!strcmp(name, "MapMemory2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->MapMemory2;
             }
             break;
-        case 0xda443a6fu:
+        case XXH3_vkUnmapMemory2:
             if (!strcmp(name, "UnmapMemory2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->UnmapMemory2;
             }
             break;
-        case 0x31e492fau:
+        case XXH3_vkGetDeviceImageSubresourceLayout:
             if (!strcmp(name, "GetDeviceImageSubresourceLayout")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->GetDeviceImageSubresourceLayout;
             }
             break;
-        case 0x077a1516u:
+        case XXH3_vkGetImageSubresourceLayout2:
             if (!strcmp(name, "GetImageSubresourceLayout2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->GetImageSubresourceLayout2;
             }
             break;
-        case 0xa305dfb7u:
+        case XXH3_vkCopyMemoryToImage:
             if (!strcmp(name, "CopyMemoryToImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CopyMemoryToImage;
             }
             break;
-        case 0xc7c58193u:
+        case XXH3_vkCopyImageToMemory:
             if (!strcmp(name, "CopyImageToMemory")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CopyImageToMemory;
             }
             break;
-        case 0x07cb5f2du:
+        case XXH3_vkCopyImageToImage:
             if (!strcmp(name, "CopyImageToImage")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CopyImageToImage;
             }
             break;
-        case 0x311876ddu:
+        case XXH3_vkTransitionImageLayout:
             if (!strcmp(name, "TransitionImageLayout")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->TransitionImageLayout;
             }
             break;
-        case 0xe6f62546u:
+        case XXH3_vkCmdPushDescriptorSet:
             if (!strcmp(name, "CmdPushDescriptorSet")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdPushDescriptorSet;
             }
             break;
-        case 0x4c799004u:
+        case XXH3_vkCmdPushDescriptorSetWithTemplate:
             if (!strcmp(name, "CmdPushDescriptorSetWithTemplate")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdPushDescriptorSetWithTemplate;
             }
             break;
-        case 0x1da90386u:
+        case XXH3_vkCmdBindDescriptorSets2:
             if (!strcmp(name, "CmdBindDescriptorSets2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdBindDescriptorSets2;
             }
             break;
-        case 0x6435b69eu:
+        case XXH3_vkCmdPushConstants2:
             if (!strcmp(name, "CmdPushConstants2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdPushConstants2;
             }
             break;
-        case 0x097cf59cu:
+        case XXH3_vkCmdPushDescriptorSet2:
             if (!strcmp(name, "CmdPushDescriptorSet2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdPushDescriptorSet2;
             }
             break;
-        case 0x995e0502u:
+        case XXH3_vkCmdPushDescriptorSetWithTemplate2:
             if (!strcmp(name, "CmdPushDescriptorSetWithTemplate2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdPushDescriptorSetWithTemplate2;
             }
             break;
-        case 0x3e320cccu:
+        case XXH3_vkCmdSetLineStipple:
             if (!strcmp(name, "CmdSetLineStipple")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdSetLineStipple;
             }
             break;
-        case 0x6a233448u:
+        case XXH3_vkCmdBindIndexBuffer2:
             if (!strcmp(name, "CmdBindIndexBuffer2")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdBindIndexBuffer2;
             }
             break;
-        case 0xe26f5990u:
+        case XXH3_vkGetRenderingAreaGranularity:
             if (!strcmp(name, "GetRenderingAreaGranularity")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->GetRenderingAreaGranularity;
             }
             break;
-        case 0xa1d575eeu:
+        case XXH3_vkCmdSetRenderingAttachmentLocations:
             if (!strcmp(name, "CmdSetRenderingAttachmentLocations")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdSetRenderingAttachmentLocations;
             }
             break;
-        case 0xf6408f2du:
+        case XXH3_vkCmdSetRenderingInputAttachmentIndices:
             if (!strcmp(name, "CmdSetRenderingInputAttachmentIndices")) {
                 if (dev->should_ignore_device_commands_from_newer_version && api_version < VK_API_VERSION_1_4) return NULL;
                 return (void *)table->CmdSetRenderingInputAttachmentIndices;
@@ -3107,1916 +3108,1916 @@ VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDis
             break;
 
         // ---- VK_KHR_swapchain extension commands
-        case 0xe67ad416u:
+        case XXH3_vkCreateSwapchainKHR:
             if (!strcmp(name, "CreateSwapchainKHR")) return (void *)table->CreateSwapchainKHR;
             break;
-        case 0xb16c7d8eu:
+        case XXH3_vkDestroySwapchainKHR:
             if (!strcmp(name, "DestroySwapchainKHR")) return (void *)table->DestroySwapchainKHR;
             break;
-        case 0x1beb0af2u:
+        case XXH3_vkGetSwapchainImagesKHR:
             if (!strcmp(name, "GetSwapchainImagesKHR")) return (void *)table->GetSwapchainImagesKHR;
             break;
-        case 0x3cfee58au:
+        case XXH3_vkAcquireNextImageKHR:
             if (!strcmp(name, "AcquireNextImageKHR")) return (void *)table->AcquireNextImageKHR;
             break;
-        case 0xe1fb6286u:
+        case XXH3_vkQueuePresentKHR:
             if (!strcmp(name, "QueuePresentKHR")) return (void *)table->QueuePresentKHR;
             break;
-        case 0x50feefb4u:
+        case XXH3_vkGetDeviceGroupPresentCapabilitiesKHR:
             if (!strcmp(name, "GetDeviceGroupPresentCapabilitiesKHR")) return (void *)table->GetDeviceGroupPresentCapabilitiesKHR;
             break;
-        case 0x75cc4ee9u:
+        case XXH3_vkGetDeviceGroupSurfacePresentModesKHR:
             if (!strcmp(name, "GetDeviceGroupSurfacePresentModesKHR")) return (void *)table->GetDeviceGroupSurfacePresentModesKHR;
             break;
-        case 0x89ecd932u:
+        case XXH3_vkAcquireNextImage2KHR:
             if (!strcmp(name, "AcquireNextImage2KHR")) return (void *)table->AcquireNextImage2KHR;
             break;
 
         // ---- VK_KHR_display_swapchain extension commands
-        case 0x65d55da4u:
+        case XXH3_vkCreateSharedSwapchainsKHR:
             if (!strcmp(name, "CreateSharedSwapchainsKHR")) return (void *)table->CreateSharedSwapchainsKHR;
             break;
 
         // ---- VK_KHR_video_queue extension commands
-        case 0x8755b43bu:
+        case XXH3_vkCreateVideoSessionKHR:
             if (!strcmp(name, "CreateVideoSessionKHR")) return (void *)table->CreateVideoSessionKHR;
             break;
-        case 0xba6a9c23u:
+        case XXH3_vkDestroyVideoSessionKHR:
             if (!strcmp(name, "DestroyVideoSessionKHR")) return (void *)table->DestroyVideoSessionKHR;
             break;
-        case 0x99a36c94u:
+        case XXH3_vkGetVideoSessionMemoryRequirementsKHR:
             if (!strcmp(name, "GetVideoSessionMemoryRequirementsKHR")) return (void *)table->GetVideoSessionMemoryRequirementsKHR;
             break;
-        case 0x8eb592f3u:
+        case XXH3_vkBindVideoSessionMemoryKHR:
             if (!strcmp(name, "BindVideoSessionMemoryKHR")) return (void *)table->BindVideoSessionMemoryKHR;
             break;
-        case 0xdaba1587u:
+        case XXH3_vkCreateVideoSessionParametersKHR:
             if (!strcmp(name, "CreateVideoSessionParametersKHR")) return (void *)table->CreateVideoSessionParametersKHR;
             break;
-        case 0x8134ab64u:
+        case XXH3_vkUpdateVideoSessionParametersKHR:
             if (!strcmp(name, "UpdateVideoSessionParametersKHR")) return (void *)table->UpdateVideoSessionParametersKHR;
             break;
-        case 0xa3e5ec1fu:
+        case XXH3_vkDestroyVideoSessionParametersKHR:
             if (!strcmp(name, "DestroyVideoSessionParametersKHR")) return (void *)table->DestroyVideoSessionParametersKHR;
             break;
-        case 0x2ffc3be0u:
+        case XXH3_vkCmdBeginVideoCodingKHR:
             if (!strcmp(name, "CmdBeginVideoCodingKHR")) return (void *)table->CmdBeginVideoCodingKHR;
             break;
-        case 0xb0826eccu:
+        case XXH3_vkCmdEndVideoCodingKHR:
             if (!strcmp(name, "CmdEndVideoCodingKHR")) return (void *)table->CmdEndVideoCodingKHR;
             break;
-        case 0xa3bded00u:
+        case XXH3_vkCmdControlVideoCodingKHR:
             if (!strcmp(name, "CmdControlVideoCodingKHR")) return (void *)table->CmdControlVideoCodingKHR;
             break;
 
         // ---- VK_KHR_video_decode_queue extension commands
-        case 0x6929c567u:
+        case XXH3_vkCmdDecodeVideoKHR:
             if (!strcmp(name, "CmdDecodeVideoKHR")) return (void *)table->CmdDecodeVideoKHR;
             break;
 
         // ---- VK_KHR_dynamic_rendering extension commands
-        case 0xb25ed13fu:
+        case XXH3_vkCmdBeginRenderingKHR:
             if (!strcmp(name, "CmdBeginRenderingKHR")) return (void *)table->CmdBeginRenderingKHR;
             break;
-        case 0xa1e8da3bu:
+        case XXH3_vkCmdEndRenderingKHR:
             if (!strcmp(name, "CmdEndRenderingKHR")) return (void *)table->CmdEndRenderingKHR;
             break;
 
         // ---- VK_KHR_device_group extension commands
-        case 0x4ed71617u:
+        case XXH3_vkGetDeviceGroupPeerMemoryFeaturesKHR:
             if (!strcmp(name, "GetDeviceGroupPeerMemoryFeaturesKHR")) return (void *)table->GetDeviceGroupPeerMemoryFeaturesKHR;
             break;
-        case 0x08800ab6u:
+        case XXH3_vkCmdSetDeviceMaskKHR:
             if (!strcmp(name, "CmdSetDeviceMaskKHR")) return (void *)table->CmdSetDeviceMaskKHR;
             break;
-        case 0xd63b031fu:
+        case XXH3_vkCmdDispatchBaseKHR:
             if (!strcmp(name, "CmdDispatchBaseKHR")) return (void *)table->CmdDispatchBaseKHR;
             break;
 
         // ---- VK_KHR_maintenance1 extension commands
-        case 0xb633ed9fu:
+        case XXH3_vkTrimCommandPoolKHR:
             if (!strcmp(name, "TrimCommandPoolKHR")) return (void *)table->TrimCommandPoolKHR;
             break;
 
         // ---- VK_KHR_external_memory_win32 extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x20d23800u:
+        case XXH3_vkGetMemoryWin32HandleKHR:
             if (!strcmp(name, "GetMemoryWin32HandleKHR")) return (void *)table->GetMemoryWin32HandleKHR;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x8aa3a953u:
+        case XXH3_vkGetMemoryWin32HandlePropertiesKHR:
             if (!strcmp(name, "GetMemoryWin32HandlePropertiesKHR")) return (void *)table->GetMemoryWin32HandlePropertiesKHR;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_KHR_external_memory_fd extension commands
-        case 0xf40b9fe1u:
+        case XXH3_vkGetMemoryFdKHR:
             if (!strcmp(name, "GetMemoryFdKHR")) return (void *)table->GetMemoryFdKHR;
             break;
-        case 0x56495eaau:
+        case XXH3_vkGetMemoryFdPropertiesKHR:
             if (!strcmp(name, "GetMemoryFdPropertiesKHR")) return (void *)table->GetMemoryFdPropertiesKHR;
             break;
 
         // ---- VK_KHR_external_semaphore_win32 extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x9c1d8f6au:
+        case XXH3_vkImportSemaphoreWin32HandleKHR:
             if (!strcmp(name, "ImportSemaphoreWin32HandleKHR")) return (void *)table->ImportSemaphoreWin32HandleKHR;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x08094127u:
+        case XXH3_vkGetSemaphoreWin32HandleKHR:
             if (!strcmp(name, "GetSemaphoreWin32HandleKHR")) return (void *)table->GetSemaphoreWin32HandleKHR;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_KHR_external_semaphore_fd extension commands
-        case 0x63f7079fu:
+        case XXH3_vkImportSemaphoreFdKHR:
             if (!strcmp(name, "ImportSemaphoreFdKHR")) return (void *)table->ImportSemaphoreFdKHR;
             break;
-        case 0x68dc7f34u:
+        case XXH3_vkGetSemaphoreFdKHR:
             if (!strcmp(name, "GetSemaphoreFdKHR")) return (void *)table->GetSemaphoreFdKHR;
             break;
 
         // ---- VK_KHR_push_descriptor extension commands
-        case 0x3728abedu:
+        case XXH3_vkCmdPushDescriptorSetKHR:
             if (!strcmp(name, "CmdPushDescriptorSetKHR")) return (void *)table->CmdPushDescriptorSetKHR;
             break;
-        case 0xcdcc9167u:
+        case XXH3_vkCmdPushDescriptorSetWithTemplateKHR:
             if (!strcmp(name, "CmdPushDescriptorSetWithTemplateKHR")) return (void *)table->CmdPushDescriptorSetWithTemplateKHR;
             break;
 
         // ---- VK_KHR_descriptor_update_template extension commands
-        case 0x1e2093eau:
+        case XXH3_vkCreateDescriptorUpdateTemplateKHR:
             if (!strcmp(name, "CreateDescriptorUpdateTemplateKHR")) return (void *)table->CreateDescriptorUpdateTemplateKHR;
             break;
-        case 0x17e357a2u:
+        case XXH3_vkDestroyDescriptorUpdateTemplateKHR:
             if (!strcmp(name, "DestroyDescriptorUpdateTemplateKHR")) return (void *)table->DestroyDescriptorUpdateTemplateKHR;
             break;
-        case 0x74072198u:
+        case XXH3_vkUpdateDescriptorSetWithTemplateKHR:
             if (!strcmp(name, "UpdateDescriptorSetWithTemplateKHR")) return (void *)table->UpdateDescriptorSetWithTemplateKHR;
             break;
 
         // ---- VK_KHR_create_renderpass2 extension commands
-        case 0xff68d4a5u:
+        case XXH3_vkCreateRenderPass2KHR:
             if (!strcmp(name, "CreateRenderPass2KHR")) return (void *)table->CreateRenderPass2KHR;
             break;
-        case 0x1342302cu:
+        case XXH3_vkCmdBeginRenderPass2KHR:
             if (!strcmp(name, "CmdBeginRenderPass2KHR")) return (void *)table->CmdBeginRenderPass2KHR;
             break;
-        case 0xb9f20aa0u:
+        case XXH3_vkCmdNextSubpass2KHR:
             if (!strcmp(name, "CmdNextSubpass2KHR")) return (void *)table->CmdNextSubpass2KHR;
             break;
-        case 0x192dc6f8u:
+        case XXH3_vkCmdEndRenderPass2KHR:
             if (!strcmp(name, "CmdEndRenderPass2KHR")) return (void *)table->CmdEndRenderPass2KHR;
             break;
 
         // ---- VK_KHR_shared_presentable_image extension commands
-        case 0x7204d3eeu:
+        case XXH3_vkGetSwapchainStatusKHR:
             if (!strcmp(name, "GetSwapchainStatusKHR")) return (void *)table->GetSwapchainStatusKHR;
             break;
 
         // ---- VK_KHR_external_fence_win32 extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xc75dd639u:
+        case XXH3_vkImportFenceWin32HandleKHR:
             if (!strcmp(name, "ImportFenceWin32HandleKHR")) return (void *)table->ImportFenceWin32HandleKHR;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x1a5aafe0u:
+        case XXH3_vkGetFenceWin32HandleKHR:
             if (!strcmp(name, "GetFenceWin32HandleKHR")) return (void *)table->GetFenceWin32HandleKHR;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_KHR_external_fence_fd extension commands
-        case 0x8cdebc12u:
+        case XXH3_vkImportFenceFdKHR:
             if (!strcmp(name, "ImportFenceFdKHR")) return (void *)table->ImportFenceFdKHR;
             break;
-        case 0x5a3a2481u:
+        case XXH3_vkGetFenceFdKHR:
             if (!strcmp(name, "GetFenceFdKHR")) return (void *)table->GetFenceFdKHR;
             break;
 
         // ---- VK_KHR_performance_query extension commands
-        case 0xf1c9f763u:
+        case XXH3_vkAcquireProfilingLockKHR:
             if (!strcmp(name, "AcquireProfilingLockKHR")) return (void *)table->AcquireProfilingLockKHR;
             break;
-        case 0xebe8785eu:
+        case XXH3_vkReleaseProfilingLockKHR:
             if (!strcmp(name, "ReleaseProfilingLockKHR")) return (void *)table->ReleaseProfilingLockKHR;
             break;
 
         // ---- VK_KHR_get_memory_requirements2 extension commands
-        case 0x4eabff9eu:
+        case XXH3_vkGetImageMemoryRequirements2KHR:
             if (!strcmp(name, "GetImageMemoryRequirements2KHR")) return (void *)table->GetImageMemoryRequirements2KHR;
             break;
-        case 0x2909ef17u:
+        case XXH3_vkGetBufferMemoryRequirements2KHR:
             if (!strcmp(name, "GetBufferMemoryRequirements2KHR")) return (void *)table->GetBufferMemoryRequirements2KHR;
             break;
-        case 0x6dd8dc46u:
+        case XXH3_vkGetImageSparseMemoryRequirements2KHR:
             if (!strcmp(name, "GetImageSparseMemoryRequirements2KHR")) return (void *)table->GetImageSparseMemoryRequirements2KHR;
             break;
 
         // ---- VK_KHR_sampler_ycbcr_conversion extension commands
-        case 0x85ef1f45u:
+        case XXH3_vkCreateSamplerYcbcrConversionKHR:
             if (!strcmp(name, "CreateSamplerYcbcrConversionKHR")) return (void *)table->CreateSamplerYcbcrConversionKHR;
             break;
-        case 0xbe069d3du:
+        case XXH3_vkDestroySamplerYcbcrConversionKHR:
             if (!strcmp(name, "DestroySamplerYcbcrConversionKHR")) return (void *)table->DestroySamplerYcbcrConversionKHR;
             break;
 
         // ---- VK_KHR_bind_memory2 extension commands
-        case 0x6d4e02deu:
+        case XXH3_vkBindBufferMemory2KHR:
             if (!strcmp(name, "BindBufferMemory2KHR")) return (void *)table->BindBufferMemory2KHR;
             break;
-        case 0x201869e9u:
+        case XXH3_vkBindImageMemory2KHR:
             if (!strcmp(name, "BindImageMemory2KHR")) return (void *)table->BindImageMemory2KHR;
             break;
 
         // ---- VK_KHR_maintenance3 extension commands
-        case 0x9edd64bau:
+        case XXH3_vkGetDescriptorSetLayoutSupportKHR:
             if (!strcmp(name, "GetDescriptorSetLayoutSupportKHR")) return (void *)table->GetDescriptorSetLayoutSupportKHR;
             break;
 
         // ---- VK_KHR_draw_indirect_count extension commands
-        case 0xda9e74f9u:
+        case XXH3_vkCmdDrawIndirectCountKHR:
             if (!strcmp(name, "CmdDrawIndirectCountKHR")) return (void *)table->CmdDrawIndirectCountKHR;
             break;
-        case 0xb26a147au:
+        case XXH3_vkCmdDrawIndexedIndirectCountKHR:
             if (!strcmp(name, "CmdDrawIndexedIndirectCountKHR")) return (void *)table->CmdDrawIndexedIndirectCountKHR;
             break;
 
         // ---- VK_KHR_timeline_semaphore extension commands
-        case 0xf35de4b5u:
+        case XXH3_vkGetSemaphoreCounterValueKHR:
             if (!strcmp(name, "GetSemaphoreCounterValueKHR")) return (void *)table->GetSemaphoreCounterValueKHR;
             break;
-        case 0xd6b1ec1eu:
+        case XXH3_vkWaitSemaphoresKHR:
             if (!strcmp(name, "WaitSemaphoresKHR")) return (void *)table->WaitSemaphoresKHR;
             break;
-        case 0xe32cacd8u:
+        case XXH3_vkSignalSemaphoreKHR:
             if (!strcmp(name, "SignalSemaphoreKHR")) return (void *)table->SignalSemaphoreKHR;
             break;
 
         // ---- VK_KHR_fragment_shading_rate extension commands
-        case 0x3fb07adeu:
+        case XXH3_vkCmdSetFragmentShadingRateKHR:
             if (!strcmp(name, "CmdSetFragmentShadingRateKHR")) return (void *)table->CmdSetFragmentShadingRateKHR;
             break;
 
         // ---- VK_KHR_dynamic_rendering_local_read extension commands
-        case 0x55942285u:
+        case XXH3_vkCmdSetRenderingAttachmentLocationsKHR:
             if (!strcmp(name, "CmdSetRenderingAttachmentLocationsKHR")) return (void *)table->CmdSetRenderingAttachmentLocationsKHR;
             break;
-        case 0xd1853d34u:
+        case XXH3_vkCmdSetRenderingInputAttachmentIndicesKHR:
             if (!strcmp(name, "CmdSetRenderingInputAttachmentIndicesKHR")) return (void *)table->CmdSetRenderingInputAttachmentIndicesKHR;
             break;
 
         // ---- VK_KHR_present_wait extension commands
-        case 0xf8e1926du:
+        case XXH3_vkWaitForPresentKHR:
             if (!strcmp(name, "WaitForPresentKHR")) return (void *)table->WaitForPresentKHR;
             break;
 
         // ---- VK_KHR_buffer_device_address extension commands
-        case 0xf67656c8u:
+        case XXH3_vkGetBufferDeviceAddressKHR:
             if (!strcmp(name, "GetBufferDeviceAddressKHR")) return (void *)table->GetBufferDeviceAddressKHR;
             break;
-        case 0x6af732c7u:
+        case XXH3_vkGetBufferOpaqueCaptureAddressKHR:
             if (!strcmp(name, "GetBufferOpaqueCaptureAddressKHR")) return (void *)table->GetBufferOpaqueCaptureAddressKHR;
             break;
-        case 0x40173f8au:
+        case XXH3_vkGetDeviceMemoryOpaqueCaptureAddressKHR:
             if (!strcmp(name, "GetDeviceMemoryOpaqueCaptureAddressKHR")) return (void *)table->GetDeviceMemoryOpaqueCaptureAddressKHR;
             break;
 
         // ---- VK_KHR_deferred_host_operations extension commands
-        case 0x41db77c2u:
+        case XXH3_vkCreateDeferredOperationKHR:
             if (!strcmp(name, "CreateDeferredOperationKHR")) return (void *)table->CreateDeferredOperationKHR;
             break;
-        case 0xe2e9652au:
+        case XXH3_vkDestroyDeferredOperationKHR:
             if (!strcmp(name, "DestroyDeferredOperationKHR")) return (void *)table->DestroyDeferredOperationKHR;
             break;
-        case 0xa17aac2bu:
+        case XXH3_vkGetDeferredOperationMaxConcurrencyKHR:
             if (!strcmp(name, "GetDeferredOperationMaxConcurrencyKHR")) return (void *)table->GetDeferredOperationMaxConcurrencyKHR;
             break;
-        case 0xc99a2583u:
+        case XXH3_vkGetDeferredOperationResultKHR:
             if (!strcmp(name, "GetDeferredOperationResultKHR")) return (void *)table->GetDeferredOperationResultKHR;
             break;
-        case 0xf82ca3cau:
+        case XXH3_vkDeferredOperationJoinKHR:
             if (!strcmp(name, "DeferredOperationJoinKHR")) return (void *)table->DeferredOperationJoinKHR;
             break;
 
         // ---- VK_KHR_pipeline_executable_properties extension commands
-        case 0x5120db1bu:
+        case XXH3_vkGetPipelineExecutablePropertiesKHR:
             if (!strcmp(name, "GetPipelineExecutablePropertiesKHR")) return (void *)table->GetPipelineExecutablePropertiesKHR;
             break;
-        case 0x415fae7du:
+        case XXH3_vkGetPipelineExecutableStatisticsKHR:
             if (!strcmp(name, "GetPipelineExecutableStatisticsKHR")) return (void *)table->GetPipelineExecutableStatisticsKHR;
             break;
-        case 0x3f6f94ddu:
+        case XXH3_vkGetPipelineExecutableInternalRepresentationsKHR:
             if (!strcmp(name, "GetPipelineExecutableInternalRepresentationsKHR")) return (void *)table->GetPipelineExecutableInternalRepresentationsKHR;
             break;
 
         // ---- VK_KHR_map_memory2 extension commands
-        case 0xfcd0e5c3u:
+        case XXH3_vkMapMemory2KHR:
             if (!strcmp(name, "MapMemory2KHR")) return (void *)table->MapMemory2KHR;
             break;
-        case 0xbd86b31au:
+        case XXH3_vkUnmapMemory2KHR:
             if (!strcmp(name, "UnmapMemory2KHR")) return (void *)table->UnmapMemory2KHR;
             break;
 
         // ---- VK_KHR_video_encode_queue extension commands
-        case 0xe513aa09u:
+        case XXH3_vkGetEncodedVideoSessionParametersKHR:
             if (!strcmp(name, "GetEncodedVideoSessionParametersKHR")) return (void *)table->GetEncodedVideoSessionParametersKHR;
             break;
-        case 0xed044fd3u:
+        case XXH3_vkCmdEncodeVideoKHR:
             if (!strcmp(name, "CmdEncodeVideoKHR")) return (void *)table->CmdEncodeVideoKHR;
             break;
 
         // ---- VK_KHR_synchronization2 extension commands
-        case 0x5a728716u:
+        case XXH3_vkCmdSetEvent2KHR:
             if (!strcmp(name, "CmdSetEvent2KHR")) return (void *)table->CmdSetEvent2KHR;
             break;
-        case 0xa5b840dfu:
+        case XXH3_vkCmdResetEvent2KHR:
             if (!strcmp(name, "CmdResetEvent2KHR")) return (void *)table->CmdResetEvent2KHR;
             break;
-        case 0x91e1837au:
+        case XXH3_vkCmdWaitEvents2KHR:
             if (!strcmp(name, "CmdWaitEvents2KHR")) return (void *)table->CmdWaitEvents2KHR;
             break;
-        case 0x1dfbddedu:
+        case XXH3_vkCmdPipelineBarrier2KHR:
             if (!strcmp(name, "CmdPipelineBarrier2KHR")) return (void *)table->CmdPipelineBarrier2KHR;
             break;
-        case 0xe0d31c8fu:
+        case XXH3_vkCmdWriteTimestamp2KHR:
             if (!strcmp(name, "CmdWriteTimestamp2KHR")) return (void *)table->CmdWriteTimestamp2KHR;
             break;
-        case 0x63783d0du:
+        case XXH3_vkQueueSubmit2KHR:
             if (!strcmp(name, "QueueSubmit2KHR")) return (void *)table->QueueSubmit2KHR;
             break;
 
         // ---- VK_KHR_device_address_commands extension commands
-        case 0x83d6864eu:
+        case XXH3_vkCmdBindIndexBuffer3KHR:
             if (!strcmp(name, "CmdBindIndexBuffer3KHR")) return (void *)table->CmdBindIndexBuffer3KHR;
             break;
-        case 0x07552f79u:
+        case XXH3_vkCmdBindVertexBuffers3KHR:
             if (!strcmp(name, "CmdBindVertexBuffers3KHR")) return (void *)table->CmdBindVertexBuffers3KHR;
             break;
-        case 0xfc7b6a6eu:
+        case XXH3_vkCmdDrawIndirect2KHR:
             if (!strcmp(name, "CmdDrawIndirect2KHR")) return (void *)table->CmdDrawIndirect2KHR;
             break;
-        case 0xb46b003du:
+        case XXH3_vkCmdDrawIndexedIndirect2KHR:
             if (!strcmp(name, "CmdDrawIndexedIndirect2KHR")) return (void *)table->CmdDrawIndexedIndirect2KHR;
             break;
-        case 0x4f295d26u:
+        case XXH3_vkCmdDispatchIndirect2KHR:
             if (!strcmp(name, "CmdDispatchIndirect2KHR")) return (void *)table->CmdDispatchIndirect2KHR;
             break;
-        case 0x5602cfa4u:
+        case XXH3_vkCmdCopyMemoryKHR:
             if (!strcmp(name, "CmdCopyMemoryKHR")) return (void *)table->CmdCopyMemoryKHR;
             break;
-        case 0xe8215fe8u:
+        case XXH3_vkCmdCopyMemoryToImageKHR:
             if (!strcmp(name, "CmdCopyMemoryToImageKHR")) return (void *)table->CmdCopyMemoryToImageKHR;
             break;
-        case 0xb26c1574u:
+        case XXH3_vkCmdCopyImageToMemoryKHR:
             if (!strcmp(name, "CmdCopyImageToMemoryKHR")) return (void *)table->CmdCopyImageToMemoryKHR;
             break;
-        case 0x0663b20cu:
+        case XXH3_vkCmdUpdateMemoryKHR:
             if (!strcmp(name, "CmdUpdateMemoryKHR")) return (void *)table->CmdUpdateMemoryKHR;
             break;
-        case 0x12eb262cu:
+        case XXH3_vkCmdFillMemoryKHR:
             if (!strcmp(name, "CmdFillMemoryKHR")) return (void *)table->CmdFillMemoryKHR;
             break;
-        case 0x35d24253u:
+        case XXH3_vkCmdCopyQueryPoolResultsToMemoryKHR:
             if (!strcmp(name, "CmdCopyQueryPoolResultsToMemoryKHR")) return (void *)table->CmdCopyQueryPoolResultsToMemoryKHR;
             break;
-        case 0xb51d3c53u:
+        case XXH3_vkCmdDrawIndirectCount2KHR:
             if (!strcmp(name, "CmdDrawIndirectCount2KHR")) return (void *)table->CmdDrawIndirectCount2KHR;
             break;
-        case 0x2d675662u:
+        case XXH3_vkCmdDrawIndexedIndirectCount2KHR:
             if (!strcmp(name, "CmdDrawIndexedIndirectCount2KHR")) return (void *)table->CmdDrawIndexedIndirectCount2KHR;
             break;
-        case 0x2ed06d21u:
+        case XXH3_vkCmdBeginConditionalRendering2EXT:
             if (!strcmp(name, "CmdBeginConditionalRendering2EXT")) return (void *)table->CmdBeginConditionalRendering2EXT;
             break;
-        case 0x956c8b1bu:
+        case XXH3_vkCmdBindTransformFeedbackBuffers2EXT:
             if (!strcmp(name, "CmdBindTransformFeedbackBuffers2EXT")) return (void *)table->CmdBindTransformFeedbackBuffers2EXT;
             break;
-        case 0x79dc416au:
+        case XXH3_vkCmdBeginTransformFeedback2EXT:
             if (!strcmp(name, "CmdBeginTransformFeedback2EXT")) return (void *)table->CmdBeginTransformFeedback2EXT;
             break;
-        case 0xeb8ed116u:
+        case XXH3_vkCmdEndTransformFeedback2EXT:
             if (!strcmp(name, "CmdEndTransformFeedback2EXT")) return (void *)table->CmdEndTransformFeedback2EXT;
             break;
-        case 0xa13ce3b5u:
+        case XXH3_vkCmdDrawIndirectByteCount2EXT:
             if (!strcmp(name, "CmdDrawIndirectByteCount2EXT")) return (void *)table->CmdDrawIndirectByteCount2EXT;
             break;
-        case 0x8148b859u:
+        case XXH3_vkCmdDrawMeshTasksIndirect2EXT:
             if (!strcmp(name, "CmdDrawMeshTasksIndirect2EXT")) return (void *)table->CmdDrawMeshTasksIndirect2EXT;
             break;
-        case 0x349198b6u:
+        case XXH3_vkCmdDrawMeshTasksIndirectCount2EXT:
             if (!strcmp(name, "CmdDrawMeshTasksIndirectCount2EXT")) return (void *)table->CmdDrawMeshTasksIndirectCount2EXT;
             break;
-        case 0xf0e2afa4u:
+        case XXH3_vkCmdWriteMarkerToMemoryAMD:
             if (!strcmp(name, "CmdWriteMarkerToMemoryAMD")) return (void *)table->CmdWriteMarkerToMemoryAMD;
             break;
-        case 0xef4623ffu:
+        case XXH3_vkCreateAccelerationStructure2KHR:
             if (!strcmp(name, "CreateAccelerationStructure2KHR")) return (void *)table->CreateAccelerationStructure2KHR;
             break;
 
         // ---- VK_KHR_copy_commands2 extension commands
-        case 0x8ad79009u:
+        case XXH3_vkCmdCopyBuffer2KHR:
             if (!strcmp(name, "CmdCopyBuffer2KHR")) return (void *)table->CmdCopyBuffer2KHR;
             break;
-        case 0xb82dbd0au:
+        case XXH3_vkCmdCopyImage2KHR:
             if (!strcmp(name, "CmdCopyImage2KHR")) return (void *)table->CmdCopyImage2KHR;
             break;
-        case 0xac4cc803u:
+        case XXH3_vkCmdCopyBufferToImage2KHR:
             if (!strcmp(name, "CmdCopyBufferToImage2KHR")) return (void *)table->CmdCopyBufferToImage2KHR;
             break;
-        case 0xb3361a99u:
+        case XXH3_vkCmdCopyImageToBuffer2KHR:
             if (!strcmp(name, "CmdCopyImageToBuffer2KHR")) return (void *)table->CmdCopyImageToBuffer2KHR;
             break;
-        case 0x6f8868d4u:
+        case XXH3_vkCmdBlitImage2KHR:
             if (!strcmp(name, "CmdBlitImage2KHR")) return (void *)table->CmdBlitImage2KHR;
             break;
-        case 0xd9427c73u:
+        case XXH3_vkCmdResolveImage2KHR:
             if (!strcmp(name, "CmdResolveImage2KHR")) return (void *)table->CmdResolveImage2KHR;
             break;
 
         // ---- VK_KHR_ray_tracing_maintenance1 extension commands
-        case 0x1f19994au:
+        case XXH3_vkCmdTraceRaysIndirect2KHR:
             if (!strcmp(name, "CmdTraceRaysIndirect2KHR")) return (void *)table->CmdTraceRaysIndirect2KHR;
             break;
 
         // ---- VK_KHR_maintenance4 extension commands
-        case 0x1e729e4fu:
+        case XXH3_vkGetDeviceBufferMemoryRequirementsKHR:
             if (!strcmp(name, "GetDeviceBufferMemoryRequirementsKHR")) return (void *)table->GetDeviceBufferMemoryRequirementsKHR;
             break;
-        case 0x6df0b8f8u:
+        case XXH3_vkGetDeviceImageMemoryRequirementsKHR:
             if (!strcmp(name, "GetDeviceImageMemoryRequirementsKHR")) return (void *)table->GetDeviceImageMemoryRequirementsKHR;
             break;
-        case 0x2ded89dcu:
+        case XXH3_vkGetDeviceImageSparseMemoryRequirementsKHR:
             if (!strcmp(name, "GetDeviceImageSparseMemoryRequirementsKHR")) return (void *)table->GetDeviceImageSparseMemoryRequirementsKHR;
             break;
 
         // ---- VK_KHR_maintenance5 extension commands
-        case 0x48eace23u:
+        case XXH3_vkCmdBindIndexBuffer2KHR:
             if (!strcmp(name, "CmdBindIndexBuffer2KHR")) return (void *)table->CmdBindIndexBuffer2KHR;
             break;
-        case 0xf4ab27fbu:
+        case XXH3_vkGetRenderingAreaGranularityKHR:
             if (!strcmp(name, "GetRenderingAreaGranularityKHR")) return (void *)table->GetRenderingAreaGranularityKHR;
             break;
-        case 0x7c40af99u:
+        case XXH3_vkGetDeviceImageSubresourceLayoutKHR:
             if (!strcmp(name, "GetDeviceImageSubresourceLayoutKHR")) return (void *)table->GetDeviceImageSubresourceLayoutKHR;
             break;
-        case 0xa6b7077du:
+        case XXH3_vkGetImageSubresourceLayout2KHR:
             if (!strcmp(name, "GetImageSubresourceLayout2KHR")) return (void *)table->GetImageSubresourceLayout2KHR;
             break;
 
         // ---- VK_KHR_present_wait2 extension commands
-        case 0x8c33ea4fu:
+        case XXH3_vkWaitForPresent2KHR:
             if (!strcmp(name, "WaitForPresent2KHR")) return (void *)table->WaitForPresent2KHR;
             break;
 
         // ---- VK_KHR_pipeline_binary extension commands
-        case 0xef98a8a5u:
+        case XXH3_vkCreatePipelineBinariesKHR:
             if (!strcmp(name, "CreatePipelineBinariesKHR")) return (void *)table->CreatePipelineBinariesKHR;
             break;
-        case 0xe6865415u:
+        case XXH3_vkDestroyPipelineBinaryKHR:
             if (!strcmp(name, "DestroyPipelineBinaryKHR")) return (void *)table->DestroyPipelineBinaryKHR;
             break;
-        case 0x5fd4a693u:
+        case XXH3_vkGetPipelineKeyKHR:
             if (!strcmp(name, "GetPipelineKeyKHR")) return (void *)table->GetPipelineKeyKHR;
             break;
-        case 0xd217a0e3u:
+        case XXH3_vkGetPipelineBinaryDataKHR:
             if (!strcmp(name, "GetPipelineBinaryDataKHR")) return (void *)table->GetPipelineBinaryDataKHR;
             break;
-        case 0x53358d0du:
+        case XXH3_vkReleaseCapturedPipelineDataKHR:
             if (!strcmp(name, "ReleaseCapturedPipelineDataKHR")) return (void *)table->ReleaseCapturedPipelineDataKHR;
             break;
 
         // ---- VK_KHR_swapchain_maintenance1 extension commands
-        case 0x9eeaf127u:
+        case XXH3_vkReleaseSwapchainImagesKHR:
             if (!strcmp(name, "ReleaseSwapchainImagesKHR")) return (void *)table->ReleaseSwapchainImagesKHR;
             break;
 
         // ---- VK_KHR_line_rasterization extension commands
-        case 0x0968c67fu:
+        case XXH3_vkCmdSetLineStippleKHR:
             if (!strcmp(name, "CmdSetLineStippleKHR")) return (void *)table->CmdSetLineStippleKHR;
             break;
 
         // ---- VK_KHR_calibrated_timestamps extension commands
-        case 0x6b882920u:
+        case XXH3_vkGetCalibratedTimestampsKHR:
             if (!strcmp(name, "GetCalibratedTimestampsKHR")) return (void *)table->GetCalibratedTimestampsKHR;
             break;
 
         // ---- VK_KHR_maintenance6 extension commands
-        case 0x710c992du:
+        case XXH3_vkCmdBindDescriptorSets2KHR:
             if (!strcmp(name, "CmdBindDescriptorSets2KHR")) return (void *)table->CmdBindDescriptorSets2KHR;
             break;
-        case 0x653f92f5u:
+        case XXH3_vkCmdPushConstants2KHR:
             if (!strcmp(name, "CmdPushConstants2KHR")) return (void *)table->CmdPushConstants2KHR;
             break;
-        case 0x16210ecfu:
+        case XXH3_vkCmdPushDescriptorSet2KHR:
             if (!strcmp(name, "CmdPushDescriptorSet2KHR")) return (void *)table->CmdPushDescriptorSet2KHR;
             break;
-        case 0x9b217891u:
+        case XXH3_vkCmdPushDescriptorSetWithTemplate2KHR:
             if (!strcmp(name, "CmdPushDescriptorSetWithTemplate2KHR")) return (void *)table->CmdPushDescriptorSetWithTemplate2KHR;
             break;
-        case 0xaa36302fu:
+        case XXH3_vkCmdSetDescriptorBufferOffsets2EXT:
             if (!strcmp(name, "CmdSetDescriptorBufferOffsets2EXT")) return (void *)table->CmdSetDescriptorBufferOffsets2EXT;
             break;
-        case 0x8c819255u:
+        case XXH3_vkCmdBindDescriptorBufferEmbeddedSamplers2EXT:
             if (!strcmp(name, "CmdBindDescriptorBufferEmbeddedSamplers2EXT")) return (void *)table->CmdBindDescriptorBufferEmbeddedSamplers2EXT;
             break;
 
         // ---- VK_KHR_copy_memory_indirect extension commands
-        case 0x6822bffau:
+        case XXH3_vkCmdCopyMemoryIndirectKHR:
             if (!strcmp(name, "CmdCopyMemoryIndirectKHR")) return (void *)table->CmdCopyMemoryIndirectKHR;
             break;
-        case 0x45e676eeu:
+        case XXH3_vkCmdCopyMemoryToImageIndirectKHR:
             if (!strcmp(name, "CmdCopyMemoryToImageIndirectKHR")) return (void *)table->CmdCopyMemoryToImageIndirectKHR;
             break;
 
         // ---- VK_KHR_device_fault extension commands
-        case 0xbabfebc5u:
+        case XXH3_vkGetDeviceFaultReportsKHR:
             if (!strcmp(name, "GetDeviceFaultReportsKHR")) return (void *)table->GetDeviceFaultReportsKHR;
             break;
-        case 0x77fed63du:
+        case XXH3_vkGetDeviceFaultDebugInfoKHR:
             if (!strcmp(name, "GetDeviceFaultDebugInfoKHR")) return (void *)table->GetDeviceFaultDebugInfoKHR;
             break;
 
         // ---- VK_KHR_maintenance10 extension commands
-        case 0x1486526du:
+        case XXH3_vkCmdEndRendering2KHR:
             if (!strcmp(name, "CmdEndRendering2KHR")) return (void *)table->CmdEndRendering2KHR;
             break;
 
         // ---- VK_EXT_debug_marker extension commands
-        case 0x35133102u:
+        case XXH3_vkDebugMarkerSetObjectTagEXT:
             if (!strcmp(name, "DebugMarkerSetObjectTagEXT")) return dev->layer_extensions.ext_debug_marker_enabled ? (void *)DebugMarkerSetObjectTagEXT : NULL;
             break;
-        case 0xd549f399u:
+        case XXH3_vkDebugMarkerSetObjectNameEXT:
             if (!strcmp(name, "DebugMarkerSetObjectNameEXT")) return dev->layer_extensions.ext_debug_marker_enabled ? (void *)DebugMarkerSetObjectNameEXT : NULL;
             break;
-        case 0x8bd450dcu:
+        case XXH3_vkCmdDebugMarkerBeginEXT:
             if (!strcmp(name, "CmdDebugMarkerBeginEXT")) return (void *)table->CmdDebugMarkerBeginEXT;
             break;
-        case 0x39db560cu:
+        case XXH3_vkCmdDebugMarkerEndEXT:
             if (!strcmp(name, "CmdDebugMarkerEndEXT")) return (void *)table->CmdDebugMarkerEndEXT;
             break;
-        case 0x87eb00acu:
+        case XXH3_vkCmdDebugMarkerInsertEXT:
             if (!strcmp(name, "CmdDebugMarkerInsertEXT")) return (void *)table->CmdDebugMarkerInsertEXT;
             break;
 
         // ---- VK_EXT_transform_feedback extension commands
-        case 0x13f3b181u:
+        case XXH3_vkCmdBindTransformFeedbackBuffersEXT:
             if (!strcmp(name, "CmdBindTransformFeedbackBuffersEXT")) return (void *)table->CmdBindTransformFeedbackBuffersEXT;
             break;
-        case 0x9b6bf192u:
+        case XXH3_vkCmdBeginTransformFeedbackEXT:
             if (!strcmp(name, "CmdBeginTransformFeedbackEXT")) return (void *)table->CmdBeginTransformFeedbackEXT;
             break;
-        case 0x367a51c6u:
+        case XXH3_vkCmdEndTransformFeedbackEXT:
             if (!strcmp(name, "CmdEndTransformFeedbackEXT")) return (void *)table->CmdEndTransformFeedbackEXT;
             break;
-        case 0x301925d4u:
+        case XXH3_vkCmdBeginQueryIndexedEXT:
             if (!strcmp(name, "CmdBeginQueryIndexedEXT")) return (void *)table->CmdBeginQueryIndexedEXT;
             break;
-        case 0xbca8e430u:
+        case XXH3_vkCmdEndQueryIndexedEXT:
             if (!strcmp(name, "CmdEndQueryIndexedEXT")) return (void *)table->CmdEndQueryIndexedEXT;
             break;
-        case 0xa5386103u:
+        case XXH3_vkCmdDrawIndirectByteCountEXT:
             if (!strcmp(name, "CmdDrawIndirectByteCountEXT")) return (void *)table->CmdDrawIndirectByteCountEXT;
             break;
 
         // ---- VK_NVX_binary_import extension commands
-        case 0xdf85d3a7u:
+        case XXH3_vkCreateCuModuleNVX:
             if (!strcmp(name, "CreateCuModuleNVX")) return (void *)table->CreateCuModuleNVX;
             break;
-        case 0x1a7b1b6bu:
+        case XXH3_vkCreateCuFunctionNVX:
             if (!strcmp(name, "CreateCuFunctionNVX")) return (void *)table->CreateCuFunctionNVX;
             break;
-        case 0x76ff5d6fu:
+        case XXH3_vkDestroyCuModuleNVX:
             if (!strcmp(name, "DestroyCuModuleNVX")) return (void *)table->DestroyCuModuleNVX;
             break;
-        case 0x185d65e3u:
+        case XXH3_vkDestroyCuFunctionNVX:
             if (!strcmp(name, "DestroyCuFunctionNVX")) return (void *)table->DestroyCuFunctionNVX;
             break;
-        case 0xe56f83cfu:
+        case XXH3_vkCmdCuLaunchKernelNVX:
             if (!strcmp(name, "CmdCuLaunchKernelNVX")) return (void *)table->CmdCuLaunchKernelNVX;
             break;
 
         // ---- VK_NVX_image_view_handle extension commands
-        case 0x24b2d191u:
+        case XXH3_vkGetImageViewHandleNVX:
             if (!strcmp(name, "GetImageViewHandleNVX")) return (void *)table->GetImageViewHandleNVX;
             break;
-        case 0x2339418bu:
+        case XXH3_vkGetImageViewHandle64NVX:
             if (!strcmp(name, "GetImageViewHandle64NVX")) return (void *)table->GetImageViewHandle64NVX;
             break;
-        case 0x515f4f51u:
+        case XXH3_vkGetImageViewAddressNVX:
             if (!strcmp(name, "GetImageViewAddressNVX")) return (void *)table->GetImageViewAddressNVX;
             break;
-        case 0x39a203a9u:
+        case XXH3_vkGetDeviceCombinedImageSamplerIndexNVX:
             if (!strcmp(name, "GetDeviceCombinedImageSamplerIndexNVX")) return (void *)table->GetDeviceCombinedImageSamplerIndexNVX;
             break;
 
         // ---- VK_AMD_draw_indirect_count extension commands
-        case 0x4a6af6e0u:
+        case XXH3_vkCmdDrawIndirectCountAMD:
             if (!strcmp(name, "CmdDrawIndirectCountAMD")) return (void *)table->CmdDrawIndirectCountAMD;
             break;
-        case 0xce3c2253u:
+        case XXH3_vkCmdDrawIndexedIndirectCountAMD:
             if (!strcmp(name, "CmdDrawIndexedIndirectCountAMD")) return (void *)table->CmdDrawIndexedIndirectCountAMD;
             break;
 
         // ---- VK_AMD_shader_info extension commands
-        case 0xae68a420u:
+        case XXH3_vkGetShaderInfoAMD:
             if (!strcmp(name, "GetShaderInfoAMD")) return (void *)table->GetShaderInfoAMD;
             break;
 
         // ---- VK_NV_external_memory_win32 extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xaa346f01u:
+        case XXH3_vkGetMemoryWin32HandleNV:
             if (!strcmp(name, "GetMemoryWin32HandleNV")) return (void *)table->GetMemoryWin32HandleNV;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_EXT_conditional_rendering extension commands
-        case 0x83cc6ec7u:
+        case XXH3_vkCmdBeginConditionalRenderingEXT:
             if (!strcmp(name, "CmdBeginConditionalRenderingEXT")) return (void *)table->CmdBeginConditionalRenderingEXT;
             break;
-        case 0xc2f44443u:
+        case XXH3_vkCmdEndConditionalRenderingEXT:
             if (!strcmp(name, "CmdEndConditionalRenderingEXT")) return (void *)table->CmdEndConditionalRenderingEXT;
             break;
 
         // ---- VK_NV_clip_space_w_scaling extension commands
-        case 0xef4404bdu:
+        case XXH3_vkCmdSetViewportWScalingNV:
             if (!strcmp(name, "CmdSetViewportWScalingNV")) return (void *)table->CmdSetViewportWScalingNV;
             break;
 
         // ---- VK_EXT_display_control extension commands
-        case 0xcd3d83d6u:
+        case XXH3_vkDisplayPowerControlEXT:
             if (!strcmp(name, "DisplayPowerControlEXT")) return (void *)table->DisplayPowerControlEXT;
             break;
-        case 0x89eb83c5u:
+        case XXH3_vkRegisterDeviceEventEXT:
             if (!strcmp(name, "RegisterDeviceEventEXT")) return (void *)table->RegisterDeviceEventEXT;
             break;
-        case 0x308cb801u:
+        case XXH3_vkRegisterDisplayEventEXT:
             if (!strcmp(name, "RegisterDisplayEventEXT")) return (void *)table->RegisterDisplayEventEXT;
             break;
-        case 0x422be39au:
+        case XXH3_vkGetSwapchainCounterEXT:
             if (!strcmp(name, "GetSwapchainCounterEXT")) return (void *)table->GetSwapchainCounterEXT;
             break;
 
         // ---- VK_GOOGLE_display_timing extension commands
-        case 0x9d1e9cbbu:
+        case XXH3_vkGetRefreshCycleDurationGOOGLE:
             if (!strcmp(name, "GetRefreshCycleDurationGOOGLE")) return (void *)table->GetRefreshCycleDurationGOOGLE;
             break;
-        case 0x2bf55b06u:
+        case XXH3_vkGetPastPresentationTimingGOOGLE:
             if (!strcmp(name, "GetPastPresentationTimingGOOGLE")) return (void *)table->GetPastPresentationTimingGOOGLE;
             break;
 
         // ---- VK_EXT_discard_rectangles extension commands
-        case 0x494be225u:
+        case XXH3_vkCmdSetDiscardRectangleEXT:
             if (!strcmp(name, "CmdSetDiscardRectangleEXT")) return (void *)table->CmdSetDiscardRectangleEXT;
             break;
-        case 0xde952114u:
+        case XXH3_vkCmdSetDiscardRectangleEnableEXT:
             if (!strcmp(name, "CmdSetDiscardRectangleEnableEXT")) return (void *)table->CmdSetDiscardRectangleEnableEXT;
             break;
-        case 0x0229a59cu:
+        case XXH3_vkCmdSetDiscardRectangleModeEXT:
             if (!strcmp(name, "CmdSetDiscardRectangleModeEXT")) return (void *)table->CmdSetDiscardRectangleModeEXT;
             break;
 
         // ---- VK_EXT_hdr_metadata extension commands
-        case 0x4c4c9e61u:
+        case XXH3_vkSetHdrMetadataEXT:
             if (!strcmp(name, "SetHdrMetadataEXT")) return (void *)table->SetHdrMetadataEXT;
             break;
 
         // ---- VK_EXT_debug_utils extension commands
-        case 0x773b4682u:
+        case XXH3_vkSetDebugUtilsObjectNameEXT:
             if (!strcmp(name, "SetDebugUtilsObjectNameEXT")) return dev->layer_extensions.ext_debug_utils_enabled ? (void *)SetDebugUtilsObjectNameEXT : NULL;
             break;
-        case 0x357569a7u:
+        case XXH3_vkSetDebugUtilsObjectTagEXT:
             if (!strcmp(name, "SetDebugUtilsObjectTagEXT")) return dev->layer_extensions.ext_debug_utils_enabled ? (void *)SetDebugUtilsObjectTagEXT : NULL;
             break;
-        case 0x17c2ff64u:
+        case XXH3_vkQueueBeginDebugUtilsLabelEXT:
             if (!strcmp(name, "QueueBeginDebugUtilsLabelEXT")) return (void *)table->QueueBeginDebugUtilsLabelEXT;
             break;
-        case 0xdf00ddb4u:
+        case XXH3_vkQueueEndDebugUtilsLabelEXT:
             if (!strcmp(name, "QueueEndDebugUtilsLabelEXT")) return (void *)table->QueueEndDebugUtilsLabelEXT;
             break;
-        case 0x4e04da94u:
+        case XXH3_vkQueueInsertDebugUtilsLabelEXT:
             if (!strcmp(name, "QueueInsertDebugUtilsLabelEXT")) return (void *)table->QueueInsertDebugUtilsLabelEXT;
             break;
-        case 0xc0ad7af9u:
+        case XXH3_vkCmdBeginDebugUtilsLabelEXT:
             if (!strcmp(name, "CmdBeginDebugUtilsLabelEXT")) return (void *)table->CmdBeginDebugUtilsLabelEXT;
             break;
-        case 0x54548a95u:
+        case XXH3_vkCmdEndDebugUtilsLabelEXT:
             if (!strcmp(name, "CmdEndDebugUtilsLabelEXT")) return (void *)table->CmdEndDebugUtilsLabelEXT;
             break;
-        case 0x08691667u:
+        case XXH3_vkCmdInsertDebugUtilsLabelEXT:
             if (!strcmp(name, "CmdInsertDebugUtilsLabelEXT")) return (void *)table->CmdInsertDebugUtilsLabelEXT;
             break;
 
         // ---- VK_ANDROID_external_memory_android_hardware_buffer extension commands
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-        case 0xb9163790u:
+        case XXH3_vkGetAndroidHardwareBufferPropertiesANDROID:
             if (!strcmp(name, "GetAndroidHardwareBufferPropertiesANDROID")) return (void *)table->GetAndroidHardwareBufferPropertiesANDROID;
             break;
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-        case 0x20fc64b4u:
+        case XXH3_vkGetMemoryAndroidHardwareBufferANDROID:
             if (!strcmp(name, "GetMemoryAndroidHardwareBufferANDROID")) return (void *)table->GetMemoryAndroidHardwareBufferANDROID;
             break;
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 
         // ---- VK_AMD_gpa_interface extension commands
-        case 0x8aa864afu:
+        case XXH3_vkCreateGpaSessionAMD:
             if (!strcmp(name, "CreateGpaSessionAMD")) return (void *)table->CreateGpaSessionAMD;
             break;
-        case 0xcbcaef47u:
+        case XXH3_vkDestroyGpaSessionAMD:
             if (!strcmp(name, "DestroyGpaSessionAMD")) return (void *)table->DestroyGpaSessionAMD;
             break;
-        case 0x2e7fabf0u:
+        case XXH3_vkSetGpaDeviceClockModeAMD:
             if (!strcmp(name, "SetGpaDeviceClockModeAMD")) return (void *)table->SetGpaDeviceClockModeAMD;
             break;
-        case 0x1b222879u:
+        case XXH3_vkGetGpaDeviceClockInfoAMD:
             if (!strcmp(name, "GetGpaDeviceClockInfoAMD")) return (void *)table->GetGpaDeviceClockInfoAMD;
             break;
-        case 0x0a5546c0u:
+        case XXH3_vkCmdBeginGpaSessionAMD:
             if (!strcmp(name, "CmdBeginGpaSessionAMD")) return (void *)table->CmdBeginGpaSessionAMD;
             break;
-        case 0xfed3ed24u:
+        case XXH3_vkCmdEndGpaSessionAMD:
             if (!strcmp(name, "CmdEndGpaSessionAMD")) return (void *)table->CmdEndGpaSessionAMD;
             break;
-        case 0xbde10466u:
+        case XXH3_vkCmdBeginGpaSampleAMD:
             if (!strcmp(name, "CmdBeginGpaSampleAMD")) return (void *)table->CmdBeginGpaSampleAMD;
             break;
-        case 0xd1be1f02u:
+        case XXH3_vkCmdEndGpaSampleAMD:
             if (!strcmp(name, "CmdEndGpaSampleAMD")) return (void *)table->CmdEndGpaSampleAMD;
             break;
-        case 0xa427fd8bu:
+        case XXH3_vkGetGpaSessionStatusAMD:
             if (!strcmp(name, "GetGpaSessionStatusAMD")) return (void *)table->GetGpaSessionStatusAMD;
             break;
-        case 0x0f68255du:
+        case XXH3_vkGetGpaSessionResultsAMD:
             if (!strcmp(name, "GetGpaSessionResultsAMD")) return (void *)table->GetGpaSessionResultsAMD;
             break;
-        case 0x558b561cu:
+        case XXH3_vkResetGpaSessionAMD:
             if (!strcmp(name, "ResetGpaSessionAMD")) return (void *)table->ResetGpaSessionAMD;
             break;
-        case 0xb2c1bb6cu:
+        case XXH3_vkCmdCopyGpaSessionResultsAMD:
             if (!strcmp(name, "CmdCopyGpaSessionResultsAMD")) return (void *)table->CmdCopyGpaSessionResultsAMD;
             break;
 
         // ---- VK_AMDX_shader_enqueue extension commands
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x6591a33cu:
+        case XXH3_vkCreateExecutionGraphPipelinesAMDX:
             if (!strcmp(name, "CreateExecutionGraphPipelinesAMDX")) return (void *)table->CreateExecutionGraphPipelinesAMDX;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x285c32bcu:
+        case XXH3_vkGetExecutionGraphPipelineScratchSizeAMDX:
             if (!strcmp(name, "GetExecutionGraphPipelineScratchSizeAMDX")) return (void *)table->GetExecutionGraphPipelineScratchSizeAMDX;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x269b0af3u:
+        case XXH3_vkGetExecutionGraphPipelineNodeIndexAMDX:
             if (!strcmp(name, "GetExecutionGraphPipelineNodeIndexAMDX")) return (void *)table->GetExecutionGraphPipelineNodeIndexAMDX;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x3c22a23eu:
+        case XXH3_vkCmdInitializeGraphScratchMemoryAMDX:
             if (!strcmp(name, "CmdInitializeGraphScratchMemoryAMDX")) return (void *)table->CmdInitializeGraphScratchMemoryAMDX;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0xb7474735u:
+        case XXH3_vkCmdDispatchGraphAMDX:
             if (!strcmp(name, "CmdDispatchGraphAMDX")) return (void *)table->CmdDispatchGraphAMDX;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x0ec3bd13u:
+        case XXH3_vkCmdDispatchGraphIndirectAMDX:
             if (!strcmp(name, "CmdDispatchGraphIndirectAMDX")) return (void *)table->CmdDispatchGraphIndirectAMDX;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x10376d2eu:
+        case XXH3_vkCmdDispatchGraphIndirectCountAMDX:
             if (!strcmp(name, "CmdDispatchGraphIndirectCountAMDX")) return (void *)table->CmdDispatchGraphIndirectCountAMDX;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
         // ---- VK_EXT_descriptor_heap extension commands
-        case 0x12ae8561u:
+        case XXH3_vkWriteSamplerDescriptorsEXT:
             if (!strcmp(name, "WriteSamplerDescriptorsEXT")) return (void *)table->WriteSamplerDescriptorsEXT;
             break;
-        case 0xa535e175u:
+        case XXH3_vkWriteResourceDescriptorsEXT:
             if (!strcmp(name, "WriteResourceDescriptorsEXT")) return (void *)table->WriteResourceDescriptorsEXT;
             break;
-        case 0xcd88cf99u:
+        case XXH3_vkCmdBindSamplerHeapEXT:
             if (!strcmp(name, "CmdBindSamplerHeapEXT")) return (void *)table->CmdBindSamplerHeapEXT;
             break;
-        case 0xc282757du:
+        case XXH3_vkCmdBindResourceHeapEXT:
             if (!strcmp(name, "CmdBindResourceHeapEXT")) return (void *)table->CmdBindResourceHeapEXT;
             break;
-        case 0xdfc9609au:
+        case XXH3_vkCmdPushDataEXT:
             if (!strcmp(name, "CmdPushDataEXT")) return (void *)table->CmdPushDataEXT;
             break;
-        case 0x2e5a2a1au:
+        case XXH3_vkGetImageOpaqueCaptureDataEXT:
             if (!strcmp(name, "GetImageOpaqueCaptureDataEXT")) return (void *)table->GetImageOpaqueCaptureDataEXT;
             break;
-        case 0xf5acd713u:
+        case XXH3_vkRegisterCustomBorderColorEXT:
             if (!strcmp(name, "RegisterCustomBorderColorEXT")) return (void *)table->RegisterCustomBorderColorEXT;
             break;
-        case 0x49241c28u:
+        case XXH3_vkUnregisterCustomBorderColorEXT:
             if (!strcmp(name, "UnregisterCustomBorderColorEXT")) return (void *)table->UnregisterCustomBorderColorEXT;
             break;
-        case 0x201f6589u:
+        case XXH3_vkGetTensorOpaqueCaptureDataARM:
             if (!strcmp(name, "GetTensorOpaqueCaptureDataARM")) return (void *)table->GetTensorOpaqueCaptureDataARM;
             break;
 
         // ---- VK_EXT_sample_locations extension commands
-        case 0xd0bfab14u:
+        case XXH3_vkCmdSetSampleLocationsEXT:
             if (!strcmp(name, "CmdSetSampleLocationsEXT")) return (void *)table->CmdSetSampleLocationsEXT;
             break;
 
         // ---- VK_EXT_image_drm_format_modifier extension commands
-        case 0x0f35fea9u:
+        case XXH3_vkGetImageDrmFormatModifierPropertiesEXT:
             if (!strcmp(name, "GetImageDrmFormatModifierPropertiesEXT")) return (void *)table->GetImageDrmFormatModifierPropertiesEXT;
             break;
 
         // ---- VK_EXT_validation_cache extension commands
-        case 0x8fcdba63u:
+        case XXH3_vkCreateValidationCacheEXT:
             if (!strcmp(name, "CreateValidationCacheEXT")) return (void *)table->CreateValidationCacheEXT;
             break;
-        case 0xfb7aea5bu:
+        case XXH3_vkDestroyValidationCacheEXT:
             if (!strcmp(name, "DestroyValidationCacheEXT")) return (void *)table->DestroyValidationCacheEXT;
             break;
-        case 0x643a9b0eu:
+        case XXH3_vkMergeValidationCachesEXT:
             if (!strcmp(name, "MergeValidationCachesEXT")) return (void *)table->MergeValidationCachesEXT;
             break;
-        case 0x150f30f9u:
+        case XXH3_vkGetValidationCacheDataEXT:
             if (!strcmp(name, "GetValidationCacheDataEXT")) return (void *)table->GetValidationCacheDataEXT;
             break;
 
         // ---- VK_NV_shading_rate_image extension commands
-        case 0x6a4bbce9u:
+        case XXH3_vkCmdBindShadingRateImageNV:
             if (!strcmp(name, "CmdBindShadingRateImageNV")) return (void *)table->CmdBindShadingRateImageNV;
             break;
-        case 0xe4fce164u:
+        case XXH3_vkCmdSetViewportShadingRatePaletteNV:
             if (!strcmp(name, "CmdSetViewportShadingRatePaletteNV")) return (void *)table->CmdSetViewportShadingRatePaletteNV;
             break;
-        case 0xae8c7ae6u:
+        case XXH3_vkCmdSetCoarseSampleOrderNV:
             if (!strcmp(name, "CmdSetCoarseSampleOrderNV")) return (void *)table->CmdSetCoarseSampleOrderNV;
             break;
 
         // ---- VK_NV_ray_tracing extension commands
-        case 0xa6a91c1au:
+        case XXH3_vkCreateAccelerationStructureNV:
             if (!strcmp(name, "CreateAccelerationStructureNV")) return (void *)table->CreateAccelerationStructureNV;
             break;
-        case 0xf3a49dc2u:
+        case XXH3_vkDestroyAccelerationStructureNV:
             if (!strcmp(name, "DestroyAccelerationStructureNV")) return (void *)table->DestroyAccelerationStructureNV;
             break;
-        case 0x94c92d9fu:
+        case XXH3_vkGetAccelerationStructureMemoryRequirementsNV:
             if (!strcmp(name, "GetAccelerationStructureMemoryRequirementsNV")) return (void *)table->GetAccelerationStructureMemoryRequirementsNV;
             break;
-        case 0xba777ef4u:
+        case XXH3_vkBindAccelerationStructureMemoryNV:
             if (!strcmp(name, "BindAccelerationStructureMemoryNV")) return (void *)table->BindAccelerationStructureMemoryNV;
             break;
-        case 0x41a5a62eu:
+        case XXH3_vkCmdBuildAccelerationStructureNV:
             if (!strcmp(name, "CmdBuildAccelerationStructureNV")) return (void *)table->CmdBuildAccelerationStructureNV;
             break;
-        case 0x7a5d9a1bu:
+        case XXH3_vkCmdCopyAccelerationStructureNV:
             if (!strcmp(name, "CmdCopyAccelerationStructureNV")) return (void *)table->CmdCopyAccelerationStructureNV;
             break;
-        case 0x16249515u:
+        case XXH3_vkCmdTraceRaysNV:
             if (!strcmp(name, "CmdTraceRaysNV")) return (void *)table->CmdTraceRaysNV;
             break;
-        case 0xf2f82f6au:
+        case XXH3_vkCreateRayTracingPipelinesNV:
             if (!strcmp(name, "CreateRayTracingPipelinesNV")) return (void *)table->CreateRayTracingPipelinesNV;
             break;
 
         // ---- VK_KHR_ray_tracing_pipeline extension commands
-        case 0xc58edd21u:
+        case XXH3_vkGetRayTracingShaderGroupHandlesKHR:
             if (!strcmp(name, "GetRayTracingShaderGroupHandlesKHR")) return (void *)table->GetRayTracingShaderGroupHandlesKHR;
             break;
 
         // ---- VK_NV_ray_tracing extension commands
-        case 0x0d5f3ca6u:
+        case XXH3_vkGetRayTracingShaderGroupHandlesNV:
             if (!strcmp(name, "GetRayTracingShaderGroupHandlesNV")) return (void *)table->GetRayTracingShaderGroupHandlesNV;
             break;
-        case 0xe0f756e2u:
+        case XXH3_vkGetAccelerationStructureHandleNV:
             if (!strcmp(name, "GetAccelerationStructureHandleNV")) return (void *)table->GetAccelerationStructureHandleNV;
             break;
-        case 0xb79ab941u:
+        case XXH3_vkCmdWriteAccelerationStructuresPropertiesNV:
             if (!strcmp(name, "CmdWriteAccelerationStructuresPropertiesNV")) return (void *)table->CmdWriteAccelerationStructuresPropertiesNV;
             break;
-        case 0xb1c5975du:
+        case XXH3_vkCompileDeferredNV:
             if (!strcmp(name, "CompileDeferredNV")) return (void *)table->CompileDeferredNV;
             break;
 
         // ---- VK_EXT_external_memory_host extension commands
-        case 0x969c0921u:
+        case XXH3_vkGetMemoryHostPointerPropertiesEXT:
             if (!strcmp(name, "GetMemoryHostPointerPropertiesEXT")) return (void *)table->GetMemoryHostPointerPropertiesEXT;
             break;
 
         // ---- VK_AMD_buffer_marker extension commands
-        case 0xbc07cba8u:
+        case XXH3_vkCmdWriteBufferMarkerAMD:
             if (!strcmp(name, "CmdWriteBufferMarkerAMD")) return (void *)table->CmdWriteBufferMarkerAMD;
             break;
-        case 0x94d3cdeau:
+        case XXH3_vkCmdWriteBufferMarker2AMD:
             if (!strcmp(name, "CmdWriteBufferMarker2AMD")) return (void *)table->CmdWriteBufferMarker2AMD;
             break;
 
         // ---- VK_EXT_calibrated_timestamps extension commands
-        case 0xaff87e08u:
+        case XXH3_vkGetCalibratedTimestampsEXT:
             if (!strcmp(name, "GetCalibratedTimestampsEXT")) return (void *)table->GetCalibratedTimestampsEXT;
             break;
 
         // ---- VK_NV_mesh_shader extension commands
-        case 0x99213e96u:
+        case XXH3_vkCmdDrawMeshTasksNV:
             if (!strcmp(name, "CmdDrawMeshTasksNV")) return (void *)table->CmdDrawMeshTasksNV;
             break;
-        case 0xa6f9ae88u:
+        case XXH3_vkCmdDrawMeshTasksIndirectNV:
             if (!strcmp(name, "CmdDrawMeshTasksIndirectNV")) return (void *)table->CmdDrawMeshTasksIndirectNV;
             break;
-        case 0x549d70abu:
+        case XXH3_vkCmdDrawMeshTasksIndirectCountNV:
             if (!strcmp(name, "CmdDrawMeshTasksIndirectCountNV")) return (void *)table->CmdDrawMeshTasksIndirectCountNV;
             break;
 
         // ---- VK_NV_scissor_exclusive extension commands
-        case 0xc9d49accu:
+        case XXH3_vkCmdSetExclusiveScissorEnableNV:
             if (!strcmp(name, "CmdSetExclusiveScissorEnableNV")) return (void *)table->CmdSetExclusiveScissorEnableNV;
             break;
-        case 0x59aa4d2fu:
+        case XXH3_vkCmdSetExclusiveScissorNV:
             if (!strcmp(name, "CmdSetExclusiveScissorNV")) return (void *)table->CmdSetExclusiveScissorNV;
             break;
 
         // ---- VK_NV_device_diagnostic_checkpoints extension commands
-        case 0xb6d28423u:
+        case XXH3_vkCmdSetCheckpointNV:
             if (!strcmp(name, "CmdSetCheckpointNV")) return (void *)table->CmdSetCheckpointNV;
             break;
-        case 0x449b2e0cu:
+        case XXH3_vkGetQueueCheckpointDataNV:
             if (!strcmp(name, "GetQueueCheckpointDataNV")) return (void *)table->GetQueueCheckpointDataNV;
             break;
-        case 0x348ecc02u:
+        case XXH3_vkGetQueueCheckpointData2NV:
             if (!strcmp(name, "GetQueueCheckpointData2NV")) return (void *)table->GetQueueCheckpointData2NV;
             break;
 
         // ---- VK_EXT_present_timing extension commands
-        case 0xda074e3bu:
+        case XXH3_vkSetSwapchainPresentTimingQueueSizeEXT:
             if (!strcmp(name, "SetSwapchainPresentTimingQueueSizeEXT")) return (void *)table->SetSwapchainPresentTimingQueueSizeEXT;
             break;
-        case 0xe26293a9u:
+        case XXH3_vkGetSwapchainTimingPropertiesEXT:
             if (!strcmp(name, "GetSwapchainTimingPropertiesEXT")) return (void *)table->GetSwapchainTimingPropertiesEXT;
             break;
-        case 0x15b187f8u:
+        case XXH3_vkGetSwapchainTimeDomainPropertiesEXT:
             if (!strcmp(name, "GetSwapchainTimeDomainPropertiesEXT")) return (void *)table->GetSwapchainTimeDomainPropertiesEXT;
             break;
-        case 0x81335194u:
+        case XXH3_vkGetPastPresentationTimingEXT:
             if (!strcmp(name, "GetPastPresentationTimingEXT")) return (void *)table->GetPastPresentationTimingEXT;
             break;
 
         // ---- VK_INTEL_performance_query extension commands
-        case 0x48bbbb5fu:
+        case XXH3_vkInitializePerformanceApiINTEL:
             if (!strcmp(name, "InitializePerformanceApiINTEL")) return (void *)table->InitializePerformanceApiINTEL;
             break;
-        case 0x1253c0d2u:
+        case XXH3_vkUninitializePerformanceApiINTEL:
             if (!strcmp(name, "UninitializePerformanceApiINTEL")) return (void *)table->UninitializePerformanceApiINTEL;
             break;
-        case 0xd1766025u:
+        case XXH3_vkCmdSetPerformanceMarkerINTEL:
             if (!strcmp(name, "CmdSetPerformanceMarkerINTEL")) return (void *)table->CmdSetPerformanceMarkerINTEL;
             break;
-        case 0x49b583ddu:
+        case XXH3_vkCmdSetPerformanceStreamMarkerINTEL:
             if (!strcmp(name, "CmdSetPerformanceStreamMarkerINTEL")) return (void *)table->CmdSetPerformanceStreamMarkerINTEL;
             break;
-        case 0x138dfdbbu:
+        case XXH3_vkCmdSetPerformanceOverrideINTEL:
             if (!strcmp(name, "CmdSetPerformanceOverrideINTEL")) return (void *)table->CmdSetPerformanceOverrideINTEL;
             break;
-        case 0xb537e059u:
+        case XXH3_vkAcquirePerformanceConfigurationINTEL:
             if (!strcmp(name, "AcquirePerformanceConfigurationINTEL")) return (void *)table->AcquirePerformanceConfigurationINTEL;
             break;
-        case 0x599c00bau:
+        case XXH3_vkReleasePerformanceConfigurationINTEL:
             if (!strcmp(name, "ReleasePerformanceConfigurationINTEL")) return (void *)table->ReleasePerformanceConfigurationINTEL;
             break;
-        case 0x9e52d85cu:
+        case XXH3_vkQueueSetPerformanceConfigurationINTEL:
             if (!strcmp(name, "QueueSetPerformanceConfigurationINTEL")) return (void *)table->QueueSetPerformanceConfigurationINTEL;
             break;
-        case 0xc1a38c12u:
+        case XXH3_vkGetPerformanceParameterINTEL:
             if (!strcmp(name, "GetPerformanceParameterINTEL")) return (void *)table->GetPerformanceParameterINTEL;
             break;
 
         // ---- VK_AMD_display_native_hdr extension commands
-        case 0xafa2d3edu:
+        case XXH3_vkSetLocalDimmingAMD:
             if (!strcmp(name, "SetLocalDimmingAMD")) return (void *)table->SetLocalDimmingAMD;
             break;
 
         // ---- VK_EXT_buffer_device_address extension commands
-        case 0x28645dc0u:
+        case XXH3_vkGetBufferDeviceAddressEXT:
             if (!strcmp(name, "GetBufferDeviceAddressEXT")) return (void *)table->GetBufferDeviceAddressEXT;
             break;
 
         // ---- VK_EXT_full_screen_exclusive extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x9fb871e0u:
+        case XXH3_vkAcquireFullScreenExclusiveModeEXT:
             if (!strcmp(name, "AcquireFullScreenExclusiveModeEXT")) return (void *)table->AcquireFullScreenExclusiveModeEXT;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x67c7c855u:
+        case XXH3_vkReleaseFullScreenExclusiveModeEXT:
             if (!strcmp(name, "ReleaseFullScreenExclusiveModeEXT")) return (void *)table->ReleaseFullScreenExclusiveModeEXT;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xbde3a0ebu:
+        case XXH3_vkGetDeviceGroupSurfacePresentModes2EXT:
             if (!strcmp(name, "GetDeviceGroupSurfacePresentModes2EXT")) return (void *)table->GetDeviceGroupSurfacePresentModes2EXT;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_EXT_line_rasterization extension commands
-        case 0xad3668e7u:
+        case XXH3_vkCmdSetLineStippleEXT:
             if (!strcmp(name, "CmdSetLineStippleEXT")) return (void *)table->CmdSetLineStippleEXT;
             break;
 
         // ---- VK_EXT_host_query_reset extension commands
-        case 0x6c6fcce1u:
+        case XXH3_vkResetQueryPoolEXT:
             if (!strcmp(name, "ResetQueryPoolEXT")) return (void *)table->ResetQueryPoolEXT;
             break;
 
         // ---- VK_EXT_extended_dynamic_state extension commands
-        case 0xab9b765du:
+        case XXH3_vkCmdSetCullModeEXT:
             if (!strcmp(name, "CmdSetCullModeEXT")) return (void *)table->CmdSetCullModeEXT;
             break;
-        case 0xf2289404u:
+        case XXH3_vkCmdSetFrontFaceEXT:
             if (!strcmp(name, "CmdSetFrontFaceEXT")) return (void *)table->CmdSetFrontFaceEXT;
             break;
-        case 0x64cba91au:
+        case XXH3_vkCmdSetPrimitiveTopologyEXT:
             if (!strcmp(name, "CmdSetPrimitiveTopologyEXT")) return (void *)table->CmdSetPrimitiveTopologyEXT;
             break;
-        case 0xf0fcf30du:
+        case XXH3_vkCmdSetViewportWithCountEXT:
             if (!strcmp(name, "CmdSetViewportWithCountEXT")) return (void *)table->CmdSetViewportWithCountEXT;
             break;
-        case 0xe7925953u:
+        case XXH3_vkCmdSetScissorWithCountEXT:
             if (!strcmp(name, "CmdSetScissorWithCountEXT")) return (void *)table->CmdSetScissorWithCountEXT;
             break;
-        case 0xb4cd241cu:
+        case XXH3_vkCmdBindVertexBuffers2EXT:
             if (!strcmp(name, "CmdBindVertexBuffers2EXT")) return (void *)table->CmdBindVertexBuffers2EXT;
             break;
-        case 0xdfd30d54u:
+        case XXH3_vkCmdSetDepthTestEnableEXT:
             if (!strcmp(name, "CmdSetDepthTestEnableEXT")) return (void *)table->CmdSetDepthTestEnableEXT;
             break;
-        case 0x10132f69u:
+        case XXH3_vkCmdSetDepthWriteEnableEXT:
             if (!strcmp(name, "CmdSetDepthWriteEnableEXT")) return (void *)table->CmdSetDepthWriteEnableEXT;
             break;
-        case 0x421cb111u:
+        case XXH3_vkCmdSetDepthCompareOpEXT:
             if (!strcmp(name, "CmdSetDepthCompareOpEXT")) return (void *)table->CmdSetDepthCompareOpEXT;
             break;
-        case 0x6a6d3a6fu:
+        case XXH3_vkCmdSetDepthBoundsTestEnableEXT:
             if (!strcmp(name, "CmdSetDepthBoundsTestEnableEXT")) return (void *)table->CmdSetDepthBoundsTestEnableEXT;
             break;
-        case 0x62b54f0fu:
+        case XXH3_vkCmdSetStencilTestEnableEXT:
             if (!strcmp(name, "CmdSetStencilTestEnableEXT")) return (void *)table->CmdSetStencilTestEnableEXT;
             break;
-        case 0xc2c7a883u:
+        case XXH3_vkCmdSetStencilOpEXT:
             if (!strcmp(name, "CmdSetStencilOpEXT")) return (void *)table->CmdSetStencilOpEXT;
             break;
 
         // ---- VK_EXT_host_image_copy extension commands
-        case 0xd1081f1au:
+        case XXH3_vkCopyMemoryToImageEXT:
             if (!strcmp(name, "CopyMemoryToImageEXT")) return (void *)table->CopyMemoryToImageEXT;
             break;
-        case 0xf686396eu:
+        case XXH3_vkCopyImageToMemoryEXT:
             if (!strcmp(name, "CopyImageToMemoryEXT")) return (void *)table->CopyImageToMemoryEXT;
             break;
-        case 0xa81e501cu:
+        case XXH3_vkCopyImageToImageEXT:
             if (!strcmp(name, "CopyImageToImageEXT")) return (void *)table->CopyImageToImageEXT;
             break;
-        case 0xbd1c916cu:
+        case XXH3_vkTransitionImageLayoutEXT:
             if (!strcmp(name, "TransitionImageLayoutEXT")) return (void *)table->TransitionImageLayoutEXT;
             break;
-        case 0x54f17095u:
+        case XXH3_vkGetImageSubresourceLayout2EXT:
             if (!strcmp(name, "GetImageSubresourceLayout2EXT")) return (void *)table->GetImageSubresourceLayout2EXT;
             break;
 
         // ---- VK_EXT_swapchain_maintenance1 extension commands
-        case 0x944dc39fu:
+        case XXH3_vkReleaseSwapchainImagesEXT:
             if (!strcmp(name, "ReleaseSwapchainImagesEXT")) return (void *)table->ReleaseSwapchainImagesEXT;
             break;
 
         // ---- VK_NV_device_generated_commands extension commands
-        case 0xd2aa7009u:
+        case XXH3_vkGetGeneratedCommandsMemoryRequirementsNV:
             if (!strcmp(name, "GetGeneratedCommandsMemoryRequirementsNV")) return (void *)table->GetGeneratedCommandsMemoryRequirementsNV;
             break;
-        case 0x8d45b6c0u:
+        case XXH3_vkCmdPreprocessGeneratedCommandsNV:
             if (!strcmp(name, "CmdPreprocessGeneratedCommandsNV")) return (void *)table->CmdPreprocessGeneratedCommandsNV;
             break;
-        case 0xe443e77du:
+        case XXH3_vkCmdExecuteGeneratedCommandsNV:
             if (!strcmp(name, "CmdExecuteGeneratedCommandsNV")) return (void *)table->CmdExecuteGeneratedCommandsNV;
             break;
-        case 0xa5273626u:
+        case XXH3_vkCmdBindPipelineShaderGroupNV:
             if (!strcmp(name, "CmdBindPipelineShaderGroupNV")) return (void *)table->CmdBindPipelineShaderGroupNV;
             break;
-        case 0x51109e57u:
+        case XXH3_vkCreateIndirectCommandsLayoutNV:
             if (!strcmp(name, "CreateIndirectCommandsLayoutNV")) return (void *)table->CreateIndirectCommandsLayoutNV;
             break;
-        case 0x92854a2fu:
+        case XXH3_vkDestroyIndirectCommandsLayoutNV:
             if (!strcmp(name, "DestroyIndirectCommandsLayoutNV")) return (void *)table->DestroyIndirectCommandsLayoutNV;
             break;
 
         // ---- VK_EXT_depth_bias_control extension commands
-        case 0x318f1b8eu:
+        case XXH3_vkCmdSetDepthBias2EXT:
             if (!strcmp(name, "CmdSetDepthBias2EXT")) return (void *)table->CmdSetDepthBias2EXT;
             break;
 
         // ---- VK_EXT_private_data extension commands
-        case 0x091e69a3u:
+        case XXH3_vkCreatePrivateDataSlotEXT:
             if (!strcmp(name, "CreatePrivateDataSlotEXT")) return (void *)table->CreatePrivateDataSlotEXT;
             break;
-        case 0xa81e10ebu:
+        case XXH3_vkDestroyPrivateDataSlotEXT:
             if (!strcmp(name, "DestroyPrivateDataSlotEXT")) return (void *)table->DestroyPrivateDataSlotEXT;
             break;
-        case 0x8c160fadu:
+        case XXH3_vkSetPrivateDataEXT:
             if (!strcmp(name, "SetPrivateDataEXT")) return (void *)table->SetPrivateDataEXT;
             break;
-        case 0x889689a9u:
+        case XXH3_vkGetPrivateDataEXT:
             if (!strcmp(name, "GetPrivateDataEXT")) return (void *)table->GetPrivateDataEXT;
             break;
 
         // ---- VK_QCOM_queue_perf_hint extension commands
-        case 0x25e8d0f2u:
+        case XXH3_vkQueueSetPerfHintQCOM:
             if (!strcmp(name, "QueueSetPerfHintQCOM")) return (void *)table->QueueSetPerfHintQCOM;
             break;
 
         // ---- VK_NV_cuda_kernel_launch extension commands
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x45e9daceu:
+        case XXH3_vkCreateCudaModuleNV:
             if (!strcmp(name, "CreateCudaModuleNV")) return (void *)table->CreateCudaModuleNV;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0xa6a2b5bau:
+        case XXH3_vkGetCudaModuleCacheNV:
             if (!strcmp(name, "GetCudaModuleCacheNV")) return (void *)table->GetCudaModuleCacheNV;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x2a307bb6u:
+        case XXH3_vkCreateCudaFunctionNV:
             if (!strcmp(name, "CreateCudaFunctionNV")) return (void *)table->CreateCudaFunctionNV;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x04687356u:
+        case XXH3_vkDestroyCudaModuleNV:
             if (!strcmp(name, "DestroyCudaModuleNV")) return (void *)table->DestroyCudaModuleNV;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x2e6ec66eu:
+        case XXH3_vkDestroyCudaFunctionNV:
             if (!strcmp(name, "DestroyCudaFunctionNV")) return (void *)table->DestroyCudaFunctionNV;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x129a70c6u:
+        case XXH3_vkCmdCudaLaunchKernelNV:
             if (!strcmp(name, "CmdCudaLaunchKernelNV")) return (void *)table->CmdCudaLaunchKernelNV;
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
         // ---- VK_QCOM_tile_shading extension commands
-        case 0x6f5d0139u:
+        case XXH3_vkCmdDispatchTileQCOM:
             if (!strcmp(name, "CmdDispatchTileQCOM")) return (void *)table->CmdDispatchTileQCOM;
             break;
-        case 0x648e12c3u:
+        case XXH3_vkCmdBeginPerTileExecutionQCOM:
             if (!strcmp(name, "CmdBeginPerTileExecutionQCOM")) return (void *)table->CmdBeginPerTileExecutionQCOM;
             break;
-        case 0x8724225fu:
+        case XXH3_vkCmdEndPerTileExecutionQCOM:
             if (!strcmp(name, "CmdEndPerTileExecutionQCOM")) return (void *)table->CmdEndPerTileExecutionQCOM;
             break;
 
         // ---- VK_NV_low_latency extension commands
-        case 0x6b0465f2u:
+        case XXH3_vkSetLatencySleepModeLegacyNV:
             if (!strcmp(name, "SetLatencySleepModeLegacyNV")) return (void *)table->SetLatencySleepModeLegacyNV;
             break;
-        case 0xc66f5793u:
+        case XXH3_vkLatencySleepLegacyNV:
             if (!strcmp(name, "LatencySleepLegacyNV")) return (void *)table->LatencySleepLegacyNV;
             break;
-        case 0x4a6c5faeu:
+        case XXH3_vkSetLatencyMarkerLegacyNV:
             if (!strcmp(name, "SetLatencyMarkerLegacyNV")) return (void *)table->SetLatencyMarkerLegacyNV;
             break;
-        case 0x8bc2efb5u:
+        case XXH3_vkGetLatencyTimingsLegacyNV:
             if (!strcmp(name, "GetLatencyTimingsLegacyNV")) return (void *)table->GetLatencyTimingsLegacyNV;
             break;
-        case 0x95c3d312u:
+        case XXH3_vkQueueNotifyOutOfBandLegacyNV:
             if (!strcmp(name, "QueueNotifyOutOfBandLegacyNV")) return (void *)table->QueueNotifyOutOfBandLegacyNV;
             break;
-        case 0x121842abu:
+        case XXH3_vkGetSleepStatusLegacyNV:
             if (!strcmp(name, "GetSleepStatusLegacyNV")) return (void *)table->GetSleepStatusLegacyNV;
             break;
-        case 0x7fc5aa3eu:
+        case XXH3_vkShutdownLatencyDeviceLegacyNV:
             if (!strcmp(name, "ShutdownLatencyDeviceLegacyNV")) return (void *)table->ShutdownLatencyDeviceLegacyNV;
             break;
 
         // ---- VK_EXT_metal_objects extension commands
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-        case 0xb9aa8da9u:
+        case XXH3_vkExportMetalObjectsEXT:
             if (!strcmp(name, "ExportMetalObjectsEXT")) return (void *)table->ExportMetalObjectsEXT;
             break;
 #endif // VK_USE_PLATFORM_METAL_EXT
 
         // ---- VK_EXT_descriptor_buffer extension commands
-        case 0xcc0f26f0u:
+        case XXH3_vkGetDescriptorSetLayoutSizeEXT:
             if (!strcmp(name, "GetDescriptorSetLayoutSizeEXT")) return (void *)table->GetDescriptorSetLayoutSizeEXT;
             break;
-        case 0xc1941ea5u:
+        case XXH3_vkGetDescriptorSetLayoutBindingOffsetEXT:
             if (!strcmp(name, "GetDescriptorSetLayoutBindingOffsetEXT")) return (void *)table->GetDescriptorSetLayoutBindingOffsetEXT;
             break;
-        case 0x00925845u:
+        case XXH3_vkGetDescriptorEXT:
             if (!strcmp(name, "GetDescriptorEXT")) return (void *)table->GetDescriptorEXT;
             break;
-        case 0x5cd0b4bbu:
+        case XXH3_vkCmdBindDescriptorBuffersEXT:
             if (!strcmp(name, "CmdBindDescriptorBuffersEXT")) return (void *)table->CmdBindDescriptorBuffersEXT;
             break;
-        case 0xf9f42a2du:
+        case XXH3_vkCmdSetDescriptorBufferOffsetsEXT:
             if (!strcmp(name, "CmdSetDescriptorBufferOffsetsEXT")) return (void *)table->CmdSetDescriptorBufferOffsetsEXT;
             break;
-        case 0x8cb64a23u:
+        case XXH3_vkCmdBindDescriptorBufferEmbeddedSamplersEXT:
             if (!strcmp(name, "CmdBindDescriptorBufferEmbeddedSamplersEXT")) return (void *)table->CmdBindDescriptorBufferEmbeddedSamplersEXT;
             break;
-        case 0x8928ea04u:
+        case XXH3_vkGetBufferOpaqueCaptureDescriptorDataEXT:
             if (!strcmp(name, "GetBufferOpaqueCaptureDescriptorDataEXT")) return (void *)table->GetBufferOpaqueCaptureDescriptorDataEXT;
             break;
-        case 0xc2b010ddu:
+        case XXH3_vkGetImageOpaqueCaptureDescriptorDataEXT:
             if (!strcmp(name, "GetImageOpaqueCaptureDescriptorDataEXT")) return (void *)table->GetImageOpaqueCaptureDescriptorDataEXT;
             break;
-        case 0xeae4a4ecu:
+        case XXH3_vkGetImageViewOpaqueCaptureDescriptorDataEXT:
             if (!strcmp(name, "GetImageViewOpaqueCaptureDescriptorDataEXT")) return (void *)table->GetImageViewOpaqueCaptureDescriptorDataEXT;
             break;
-        case 0xbd1e21ccu:
+        case XXH3_vkGetSamplerOpaqueCaptureDescriptorDataEXT:
             if (!strcmp(name, "GetSamplerOpaqueCaptureDescriptorDataEXT")) return (void *)table->GetSamplerOpaqueCaptureDescriptorDataEXT;
             break;
-        case 0x430ba849u:
+        case XXH3_vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT:
             if (!strcmp(name, "GetAccelerationStructureOpaqueCaptureDescriptorDataEXT")) return (void *)table->GetAccelerationStructureOpaqueCaptureDescriptorDataEXT;
             break;
 
         // ---- VK_NV_fragment_shading_rate_enums extension commands
-        case 0x449b8d16u:
+        case XXH3_vkCmdSetFragmentShadingRateEnumNV:
             if (!strcmp(name, "CmdSetFragmentShadingRateEnumNV")) return (void *)table->CmdSetFragmentShadingRateEnumNV;
             break;
 
         // ---- VK_EXT_device_fault extension commands
-        case 0xa47a426eu:
+        case XXH3_vkGetDeviceFaultInfoEXT:
             if (!strcmp(name, "GetDeviceFaultInfoEXT")) return (void *)table->GetDeviceFaultInfoEXT;
             break;
 
         // ---- VK_EXT_vertex_input_dynamic_state extension commands
-        case 0x8005af30u:
+        case XXH3_vkCmdSetVertexInputEXT:
             if (!strcmp(name, "CmdSetVertexInputEXT")) return (void *)table->CmdSetVertexInputEXT;
             break;
 
         // ---- VK_FUCHSIA_external_memory extension commands
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xd4b736e2u:
+        case XXH3_vkGetMemoryZirconHandleFUCHSIA:
             if (!strcmp(name, "GetMemoryZirconHandleFUCHSIA")) return (void *)table->GetMemoryZirconHandleFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x1982503du:
+        case XXH3_vkGetMemoryZirconHandlePropertiesFUCHSIA:
             if (!strcmp(name, "GetMemoryZirconHandlePropertiesFUCHSIA")) return (void *)table->GetMemoryZirconHandlePropertiesFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 
         // ---- VK_FUCHSIA_external_semaphore extension commands
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x326b4b20u:
+        case XXH3_vkImportSemaphoreZirconHandleFUCHSIA:
             if (!strcmp(name, "ImportSemaphoreZirconHandleFUCHSIA")) return (void *)table->ImportSemaphoreZirconHandleFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xe6bbe67bu:
+        case XXH3_vkGetSemaphoreZirconHandleFUCHSIA:
             if (!strcmp(name, "GetSemaphoreZirconHandleFUCHSIA")) return (void *)table->GetSemaphoreZirconHandleFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 
         // ---- VK_FUCHSIA_buffer_collection extension commands
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xa722b2c0u:
+        case XXH3_vkCreateBufferCollectionFUCHSIA:
             if (!strcmp(name, "CreateBufferCollectionFUCHSIA")) return (void *)table->CreateBufferCollectionFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x3bba029fu:
+        case XXH3_vkSetBufferCollectionImageConstraintsFUCHSIA:
             if (!strcmp(name, "SetBufferCollectionImageConstraintsFUCHSIA")) return (void *)table->SetBufferCollectionImageConstraintsFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x9c967496u:
+        case XXH3_vkSetBufferCollectionBufferConstraintsFUCHSIA:
             if (!strcmp(name, "SetBufferCollectionBufferConstraintsFUCHSIA")) return (void *)table->SetBufferCollectionBufferConstraintsFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xa5a53ad8u:
+        case XXH3_vkDestroyBufferCollectionFUCHSIA:
             if (!strcmp(name, "DestroyBufferCollectionFUCHSIA")) return (void *)table->DestroyBufferCollectionFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x963d0551u:
+        case XXH3_vkGetBufferCollectionPropertiesFUCHSIA:
             if (!strcmp(name, "GetBufferCollectionPropertiesFUCHSIA")) return (void *)table->GetBufferCollectionPropertiesFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 
         // ---- VK_HUAWEI_subpass_shading extension commands
-        case 0x4c56fa14u:
+        case XXH3_vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI:
             if (!strcmp(name, "GetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI")) return (void *)table->GetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI;
             break;
-        case 0x08ae7a99u:
+        case XXH3_vkCmdSubpassShadingHUAWEI:
             if (!strcmp(name, "CmdSubpassShadingHUAWEI")) return (void *)table->CmdSubpassShadingHUAWEI;
             break;
 
         // ---- VK_HUAWEI_invocation_mask extension commands
-        case 0x8948a3bbu:
+        case XXH3_vkCmdBindInvocationMaskHUAWEI:
             if (!strcmp(name, "CmdBindInvocationMaskHUAWEI")) return (void *)table->CmdBindInvocationMaskHUAWEI;
             break;
 
         // ---- VK_NV_external_memory_rdma extension commands
-        case 0x654fb382u:
+        case XXH3_vkGetMemoryRemoteAddressNV:
             if (!strcmp(name, "GetMemoryRemoteAddressNV")) return (void *)table->GetMemoryRemoteAddressNV;
             break;
 
         // ---- VK_EXT_pipeline_properties extension commands
-        case 0xa91b0edbu:
+        case XXH3_vkGetPipelinePropertiesEXT:
             if (!strcmp(name, "GetPipelinePropertiesEXT")) return (void *)table->GetPipelinePropertiesEXT;
             break;
 
         // ---- VK_EXT_extended_dynamic_state2 extension commands
-        case 0xe3cf69c8u:
+        case XXH3_vkCmdSetPatchControlPointsEXT:
             if (!strcmp(name, "CmdSetPatchControlPointsEXT")) return (void *)table->CmdSetPatchControlPointsEXT;
             break;
-        case 0x015d47c4u:
+        case XXH3_vkCmdSetRasterizerDiscardEnableEXT:
             if (!strcmp(name, "CmdSetRasterizerDiscardEnableEXT")) return (void *)table->CmdSetRasterizerDiscardEnableEXT;
             break;
-        case 0xd526ddf7u:
+        case XXH3_vkCmdSetDepthBiasEnableEXT:
             if (!strcmp(name, "CmdSetDepthBiasEnableEXT")) return (void *)table->CmdSetDepthBiasEnableEXT;
             break;
-        case 0xe76c2231u:
+        case XXH3_vkCmdSetLogicOpEXT:
             if (!strcmp(name, "CmdSetLogicOpEXT")) return (void *)table->CmdSetLogicOpEXT;
             break;
-        case 0x69f6e32du:
+        case XXH3_vkCmdSetPrimitiveRestartEnableEXT:
             if (!strcmp(name, "CmdSetPrimitiveRestartEnableEXT")) return (void *)table->CmdSetPrimitiveRestartEnableEXT;
             break;
 
         // ---- VK_EXT_color_write_enable extension commands
-        case 0x88b42aefu:
+        case XXH3_vkCmdSetColorWriteEnableEXT:
             if (!strcmp(name, "CmdSetColorWriteEnableEXT")) return (void *)table->CmdSetColorWriteEnableEXT;
             break;
 
         // ---- VK_EXT_multi_draw extension commands
-        case 0x2a995ebdu:
+        case XXH3_vkCmdDrawMultiEXT:
             if (!strcmp(name, "CmdDrawMultiEXT")) return (void *)table->CmdDrawMultiEXT;
             break;
-        case 0xa3a7fa6eu:
+        case XXH3_vkCmdDrawMultiIndexedEXT:
             if (!strcmp(name, "CmdDrawMultiIndexedEXT")) return (void *)table->CmdDrawMultiIndexedEXT;
             break;
 
         // ---- VK_EXT_opacity_micromap extension commands
-        case 0x367ac11eu:
+        case XXH3_vkCreateMicromapEXT:
             if (!strcmp(name, "CreateMicromapEXT")) return (void *)table->CreateMicromapEXT;
             break;
-        case 0x4c19d1c6u:
+        case XXH3_vkDestroyMicromapEXT:
             if (!strcmp(name, "DestroyMicromapEXT")) return (void *)table->DestroyMicromapEXT;
             break;
-        case 0xffe0755fu:
+        case XXH3_vkCmdBuildMicromapsEXT:
             if (!strcmp(name, "CmdBuildMicromapsEXT")) return (void *)table->CmdBuildMicromapsEXT;
             break;
-        case 0x316926b1u:
+        case XXH3_vkBuildMicromapsEXT:
             if (!strcmp(name, "BuildMicromapsEXT")) return (void *)table->BuildMicromapsEXT;
             break;
-        case 0x16c3f23du:
+        case XXH3_vkCopyMicromapEXT:
             if (!strcmp(name, "CopyMicromapEXT")) return (void *)table->CopyMicromapEXT;
             break;
-        case 0xdd14db57u:
+        case XXH3_vkCopyMicromapToMemoryEXT:
             if (!strcmp(name, "CopyMicromapToMemoryEXT")) return (void *)table->CopyMicromapToMemoryEXT;
             break;
-        case 0xe467c893u:
+        case XXH3_vkCopyMemoryToMicromapEXT:
             if (!strcmp(name, "CopyMemoryToMicromapEXT")) return (void *)table->CopyMemoryToMicromapEXT;
             break;
-        case 0x4e595135u:
+        case XXH3_vkWriteMicromapsPropertiesEXT:
             if (!strcmp(name, "WriteMicromapsPropertiesEXT")) return (void *)table->WriteMicromapsPropertiesEXT;
             break;
-        case 0x3c8abe13u:
+        case XXH3_vkCmdCopyMicromapEXT:
             if (!strcmp(name, "CmdCopyMicromapEXT")) return (void *)table->CmdCopyMicromapEXT;
             break;
-        case 0xf8b0deb9u:
+        case XXH3_vkCmdCopyMicromapToMemoryEXT:
             if (!strcmp(name, "CmdCopyMicromapToMemoryEXT")) return (void *)table->CmdCopyMicromapToMemoryEXT;
             break;
-        case 0xae64bcc5u:
+        case XXH3_vkCmdCopyMemoryToMicromapEXT:
             if (!strcmp(name, "CmdCopyMemoryToMicromapEXT")) return (void *)table->CmdCopyMemoryToMicromapEXT;
             break;
-        case 0xf2620b47u:
+        case XXH3_vkCmdWriteMicromapsPropertiesEXT:
             if (!strcmp(name, "CmdWriteMicromapsPropertiesEXT")) return (void *)table->CmdWriteMicromapsPropertiesEXT;
             break;
-        case 0x3db62560u:
+        case XXH3_vkGetDeviceMicromapCompatibilityEXT:
             if (!strcmp(name, "GetDeviceMicromapCompatibilityEXT")) return (void *)table->GetDeviceMicromapCompatibilityEXT;
             break;
-        case 0x4700a14au:
+        case XXH3_vkGetMicromapBuildSizesEXT:
             if (!strcmp(name, "GetMicromapBuildSizesEXT")) return (void *)table->GetMicromapBuildSizesEXT;
             break;
 
         // ---- VK_HUAWEI_cluster_culling_shader extension commands
-        case 0x92efcafcu:
+        case XXH3_vkCmdDrawClusterHUAWEI:
             if (!strcmp(name, "CmdDrawClusterHUAWEI")) return (void *)table->CmdDrawClusterHUAWEI;
             break;
-        case 0xa4dbc26au:
+        case XXH3_vkCmdDrawClusterIndirectHUAWEI:
             if (!strcmp(name, "CmdDrawClusterIndirectHUAWEI")) return (void *)table->CmdDrawClusterIndirectHUAWEI;
             break;
 
         // ---- VK_EXT_pageable_device_local_memory extension commands
-        case 0x46de03b5u:
+        case XXH3_vkSetDeviceMemoryPriorityEXT:
             if (!strcmp(name, "SetDeviceMemoryPriorityEXT")) return (void *)table->SetDeviceMemoryPriorityEXT;
             break;
 
         // ---- VK_ARM_scheduling_controls extension commands
-        case 0x6ebdb357u:
+        case XXH3_vkCmdSetDispatchParametersARM:
             if (!strcmp(name, "CmdSetDispatchParametersARM")) return (void *)table->CmdSetDispatchParametersARM;
             break;
 
         // ---- VK_VALVE_descriptor_set_host_mapping extension commands
-        case 0x3c6e3abau:
+        case XXH3_vkGetDescriptorSetLayoutHostMappingInfoVALVE:
             if (!strcmp(name, "GetDescriptorSetLayoutHostMappingInfoVALVE")) return (void *)table->GetDescriptorSetLayoutHostMappingInfoVALVE;
             break;
-        case 0xc911a54cu:
+        case XXH3_vkGetDescriptorSetHostMappingVALVE:
             if (!strcmp(name, "GetDescriptorSetHostMappingVALVE")) return (void *)table->GetDescriptorSetHostMappingVALVE;
             break;
 
         // ---- VK_NV_copy_memory_indirect extension commands
-        case 0x0e5861dfu:
+        case XXH3_vkCmdCopyMemoryIndirectNV:
             if (!strcmp(name, "CmdCopyMemoryIndirectNV")) return (void *)table->CmdCopyMemoryIndirectNV;
             break;
-        case 0x89366afbu:
+        case XXH3_vkCmdCopyMemoryToImageIndirectNV:
             if (!strcmp(name, "CmdCopyMemoryToImageIndirectNV")) return (void *)table->CmdCopyMemoryToImageIndirectNV;
             break;
 
         // ---- VK_NV_memory_decompression extension commands
-        case 0x3787dc07u:
+        case XXH3_vkCmdDecompressMemoryNV:
             if (!strcmp(name, "CmdDecompressMemoryNV")) return (void *)table->CmdDecompressMemoryNV;
             break;
-        case 0x4c9a0898u:
+        case XXH3_vkCmdDecompressMemoryIndirectCountNV:
             if (!strcmp(name, "CmdDecompressMemoryIndirectCountNV")) return (void *)table->CmdDecompressMemoryIndirectCountNV;
             break;
 
         // ---- VK_NV_device_generated_commands_compute extension commands
-        case 0x68516320u:
+        case XXH3_vkGetPipelineIndirectMemoryRequirementsNV:
             if (!strcmp(name, "GetPipelineIndirectMemoryRequirementsNV")) return (void *)table->GetPipelineIndirectMemoryRequirementsNV;
             break;
-        case 0x40e85748u:
+        case XXH3_vkCmdUpdatePipelineIndirectBufferNV:
             if (!strcmp(name, "CmdUpdatePipelineIndirectBufferNV")) return (void *)table->CmdUpdatePipelineIndirectBufferNV;
             break;
-        case 0x928cd267u:
+        case XXH3_vkGetPipelineIndirectDeviceAddressNV:
             if (!strcmp(name, "GetPipelineIndirectDeviceAddressNV")) return (void *)table->GetPipelineIndirectDeviceAddressNV;
             break;
 
         // ---- VK_OHOS_external_memory extension commands
 #if defined(VK_USE_PLATFORM_OHOS)
-        case 0x06874e5eu:
+        case XXH3_vkGetNativeBufferPropertiesOHOS:
             if (!strcmp(name, "GetNativeBufferPropertiesOHOS")) return (void *)table->GetNativeBufferPropertiesOHOS;
             break;
 #endif // VK_USE_PLATFORM_OHOS
 #if defined(VK_USE_PLATFORM_OHOS)
-        case 0xbb61bc68u:
+        case XXH3_vkGetMemoryNativeBufferOHOS:
             if (!strcmp(name, "GetMemoryNativeBufferOHOS")) return (void *)table->GetMemoryNativeBufferOHOS;
             break;
 #endif // VK_USE_PLATFORM_OHOS
 
         // ---- VK_EXT_extended_dynamic_state3 extension commands
-        case 0x2023a31du:
+        case XXH3_vkCmdSetDepthClampEnableEXT:
             if (!strcmp(name, "CmdSetDepthClampEnableEXT")) return (void *)table->CmdSetDepthClampEnableEXT;
             break;
-        case 0xead2dc11u:
+        case XXH3_vkCmdSetPolygonModeEXT:
             if (!strcmp(name, "CmdSetPolygonModeEXT")) return (void *)table->CmdSetPolygonModeEXT;
             break;
-        case 0x40d2368au:
+        case XXH3_vkCmdSetRasterizationSamplesEXT:
             if (!strcmp(name, "CmdSetRasterizationSamplesEXT")) return (void *)table->CmdSetRasterizationSamplesEXT;
             break;
-        case 0x8074bbbau:
+        case XXH3_vkCmdSetSampleMaskEXT:
             if (!strcmp(name, "CmdSetSampleMaskEXT")) return (void *)table->CmdSetSampleMaskEXT;
             break;
-        case 0x436cf4cau:
+        case XXH3_vkCmdSetAlphaToCoverageEnableEXT:
             if (!strcmp(name, "CmdSetAlphaToCoverageEnableEXT")) return (void *)table->CmdSetAlphaToCoverageEnableEXT;
             break;
-        case 0x88aa9b78u:
+        case XXH3_vkCmdSetAlphaToOneEnableEXT:
             if (!strcmp(name, "CmdSetAlphaToOneEnableEXT")) return (void *)table->CmdSetAlphaToOneEnableEXT;
             break;
-        case 0xfdc1a750u:
+        case XXH3_vkCmdSetLogicOpEnableEXT:
             if (!strcmp(name, "CmdSetLogicOpEnableEXT")) return (void *)table->CmdSetLogicOpEnableEXT;
             break;
-        case 0xef84fefbu:
+        case XXH3_vkCmdSetColorBlendEnableEXT:
             if (!strcmp(name, "CmdSetColorBlendEnableEXT")) return (void *)table->CmdSetColorBlendEnableEXT;
             break;
-        case 0xa2683bf4u:
+        case XXH3_vkCmdSetColorBlendEquationEXT:
             if (!strcmp(name, "CmdSetColorBlendEquationEXT")) return (void *)table->CmdSetColorBlendEquationEXT;
             break;
-        case 0xabff6022u:
+        case XXH3_vkCmdSetColorWriteMaskEXT:
             if (!strcmp(name, "CmdSetColorWriteMaskEXT")) return (void *)table->CmdSetColorWriteMaskEXT;
             break;
-        case 0x69b05a7du:
+        case XXH3_vkCmdSetTessellationDomainOriginEXT:
             if (!strcmp(name, "CmdSetTessellationDomainOriginEXT")) return (void *)table->CmdSetTessellationDomainOriginEXT;
             break;
-        case 0xb085c957u:
+        case XXH3_vkCmdSetRasterizationStreamEXT:
             if (!strcmp(name, "CmdSetRasterizationStreamEXT")) return (void *)table->CmdSetRasterizationStreamEXT;
             break;
-        case 0x75d3a4bfu:
+        case XXH3_vkCmdSetConservativeRasterizationModeEXT:
             if (!strcmp(name, "CmdSetConservativeRasterizationModeEXT")) return (void *)table->CmdSetConservativeRasterizationModeEXT;
             break;
-        case 0x9b4dd0e5u:
+        case XXH3_vkCmdSetExtraPrimitiveOverestimationSizeEXT:
             if (!strcmp(name, "CmdSetExtraPrimitiveOverestimationSizeEXT")) return (void *)table->CmdSetExtraPrimitiveOverestimationSizeEXT;
             break;
-        case 0xde0cc9cau:
+        case XXH3_vkCmdSetDepthClipEnableEXT:
             if (!strcmp(name, "CmdSetDepthClipEnableEXT")) return (void *)table->CmdSetDepthClipEnableEXT;
             break;
-        case 0xa2d6a90du:
+        case XXH3_vkCmdSetSampleLocationsEnableEXT:
             if (!strcmp(name, "CmdSetSampleLocationsEnableEXT")) return (void *)table->CmdSetSampleLocationsEnableEXT;
             break;
-        case 0x91cd4248u:
+        case XXH3_vkCmdSetColorBlendAdvancedEXT:
             if (!strcmp(name, "CmdSetColorBlendAdvancedEXT")) return (void *)table->CmdSetColorBlendAdvancedEXT;
             break;
-        case 0x2f707cd4u:
+        case XXH3_vkCmdSetProvokingVertexModeEXT:
             if (!strcmp(name, "CmdSetProvokingVertexModeEXT")) return (void *)table->CmdSetProvokingVertexModeEXT;
             break;
-        case 0x0bd058f0u:
+        case XXH3_vkCmdSetLineRasterizationModeEXT:
             if (!strcmp(name, "CmdSetLineRasterizationModeEXT")) return (void *)table->CmdSetLineRasterizationModeEXT;
             break;
-        case 0xe0af9de6u:
+        case XXH3_vkCmdSetLineStippleEnableEXT:
             if (!strcmp(name, "CmdSetLineStippleEnableEXT")) return (void *)table->CmdSetLineStippleEnableEXT;
             break;
-        case 0x66cb7fcbu:
+        case XXH3_vkCmdSetDepthClipNegativeOneToOneEXT:
             if (!strcmp(name, "CmdSetDepthClipNegativeOneToOneEXT")) return (void *)table->CmdSetDepthClipNegativeOneToOneEXT;
             break;
-        case 0x02eda17au:
+        case XXH3_vkCmdSetViewportWScalingEnableNV:
             if (!strcmp(name, "CmdSetViewportWScalingEnableNV")) return (void *)table->CmdSetViewportWScalingEnableNV;
             break;
-        case 0x32f50e8fu:
+        case XXH3_vkCmdSetViewportSwizzleNV:
             if (!strcmp(name, "CmdSetViewportSwizzleNV")) return (void *)table->CmdSetViewportSwizzleNV;
             break;
-        case 0x1cd4b962u:
+        case XXH3_vkCmdSetCoverageToColorEnableNV:
             if (!strcmp(name, "CmdSetCoverageToColorEnableNV")) return (void *)table->CmdSetCoverageToColorEnableNV;
             break;
-        case 0x44b956aau:
+        case XXH3_vkCmdSetCoverageToColorLocationNV:
             if (!strcmp(name, "CmdSetCoverageToColorLocationNV")) return (void *)table->CmdSetCoverageToColorLocationNV;
             break;
-        case 0x4a470032u:
+        case XXH3_vkCmdSetCoverageModulationModeNV:
             if (!strcmp(name, "CmdSetCoverageModulationModeNV")) return (void *)table->CmdSetCoverageModulationModeNV;
             break;
-        case 0xe3053e18u:
+        case XXH3_vkCmdSetCoverageModulationTableEnableNV:
             if (!strcmp(name, "CmdSetCoverageModulationTableEnableNV")) return (void *)table->CmdSetCoverageModulationTableEnableNV;
             break;
-        case 0x19587b3bu:
+        case XXH3_vkCmdSetCoverageModulationTableNV:
             if (!strcmp(name, "CmdSetCoverageModulationTableNV")) return (void *)table->CmdSetCoverageModulationTableNV;
             break;
-        case 0x793a2117u:
+        case XXH3_vkCmdSetShadingRateImageEnableNV:
             if (!strcmp(name, "CmdSetShadingRateImageEnableNV")) return (void *)table->CmdSetShadingRateImageEnableNV;
             break;
-        case 0x8c9443cbu:
+        case XXH3_vkCmdSetRepresentativeFragmentTestEnableNV:
             if (!strcmp(name, "CmdSetRepresentativeFragmentTestEnableNV")) return (void *)table->CmdSetRepresentativeFragmentTestEnableNV;
             break;
-        case 0xcd8c0debu:
+        case XXH3_vkCmdSetCoverageReductionModeNV:
             if (!strcmp(name, "CmdSetCoverageReductionModeNV")) return (void *)table->CmdSetCoverageReductionModeNV;
             break;
 
         // ---- VK_ARM_tensors extension commands
-        case 0x8ee83766u:
+        case XXH3_vkCreateTensorARM:
             if (!strcmp(name, "CreateTensorARM")) return (void *)table->CreateTensorARM;
             break;
-        case 0x78dca0eeu:
+        case XXH3_vkDestroyTensorARM:
             if (!strcmp(name, "DestroyTensorARM")) return (void *)table->DestroyTensorARM;
             break;
-        case 0x2235ebb5u:
+        case XXH3_vkCreateTensorViewARM:
             if (!strcmp(name, "CreateTensorViewARM")) return (void *)table->CreateTensorViewARM;
             break;
-        case 0x865e822du:
+        case XXH3_vkDestroyTensorViewARM:
             if (!strcmp(name, "DestroyTensorViewARM")) return (void *)table->DestroyTensorViewARM;
             break;
-        case 0x59691d2du:
+        case XXH3_vkGetTensorMemoryRequirementsARM:
             if (!strcmp(name, "GetTensorMemoryRequirementsARM")) return (void *)table->GetTensorMemoryRequirementsARM;
             break;
-        case 0x8618affau:
+        case XXH3_vkBindTensorMemoryARM:
             if (!strcmp(name, "BindTensorMemoryARM")) return (void *)table->BindTensorMemoryARM;
             break;
-        case 0xe1b39aebu:
+        case XXH3_vkGetDeviceTensorMemoryRequirementsARM:
             if (!strcmp(name, "GetDeviceTensorMemoryRequirementsARM")) return (void *)table->GetDeviceTensorMemoryRequirementsARM;
             break;
-        case 0xb93ada8bu:
+        case XXH3_vkCmdCopyTensorARM:
             if (!strcmp(name, "CmdCopyTensorARM")) return (void *)table->CmdCopyTensorARM;
             break;
-        case 0xceb87a56u:
+        case XXH3_vkGetTensorOpaqueCaptureDescriptorDataARM:
             if (!strcmp(name, "GetTensorOpaqueCaptureDescriptorDataARM")) return (void *)table->GetTensorOpaqueCaptureDescriptorDataARM;
             break;
-        case 0x938d0053u:
+        case XXH3_vkGetTensorViewOpaqueCaptureDescriptorDataARM:
             if (!strcmp(name, "GetTensorViewOpaqueCaptureDescriptorDataARM")) return (void *)table->GetTensorViewOpaqueCaptureDescriptorDataARM;
             break;
 
         // ---- VK_EXT_shader_module_identifier extension commands
-        case 0x9e53195cu:
+        case XXH3_vkGetShaderModuleIdentifierEXT:
             if (!strcmp(name, "GetShaderModuleIdentifierEXT")) return (void *)table->GetShaderModuleIdentifierEXT;
             break;
-        case 0xa4c4d258u:
+        case XXH3_vkGetShaderModuleCreateInfoIdentifierEXT:
             if (!strcmp(name, "GetShaderModuleCreateInfoIdentifierEXT")) return (void *)table->GetShaderModuleCreateInfoIdentifierEXT;
             break;
 
         // ---- VK_NV_optical_flow extension commands
-        case 0x131f42e1u:
+        case XXH3_vkCreateOpticalFlowSessionNV:
             if (!strcmp(name, "CreateOpticalFlowSessionNV")) return (void *)table->CreateOpticalFlowSessionNV;
             break;
-        case 0x18d36c59u:
+        case XXH3_vkDestroyOpticalFlowSessionNV:
             if (!strcmp(name, "DestroyOpticalFlowSessionNV")) return (void *)table->DestroyOpticalFlowSessionNV;
             break;
-        case 0x7ed5d89bu:
+        case XXH3_vkBindOpticalFlowSessionImageNV:
             if (!strcmp(name, "BindOpticalFlowSessionImageNV")) return (void *)table->BindOpticalFlowSessionImageNV;
             break;
-        case 0x51df2d1cu:
+        case XXH3_vkCmdOpticalFlowExecuteNV:
             if (!strcmp(name, "CmdOpticalFlowExecuteNV")) return (void *)table->CmdOpticalFlowExecuteNV;
             break;
 
         // ---- VK_AMD_anti_lag extension commands
-        case 0xe574b248u:
+        case XXH3_vkAntiLagUpdateAMD:
             if (!strcmp(name, "AntiLagUpdateAMD")) return (void *)table->AntiLagUpdateAMD;
             break;
 
         // ---- VK_EXT_shader_object extension commands
-        case 0x7af22e70u:
+        case XXH3_vkCreateShadersEXT:
             if (!strcmp(name, "CreateShadersEXT")) return (void *)table->CreateShadersEXT;
             break;
-        case 0x4356e7ebu:
+        case XXH3_vkDestroyShaderEXT:
             if (!strcmp(name, "DestroyShaderEXT")) return (void *)table->DestroyShaderEXT;
             break;
-        case 0x035647d6u:
+        case XXH3_vkGetShaderBinaryDataEXT:
             if (!strcmp(name, "GetShaderBinaryDataEXT")) return (void *)table->GetShaderBinaryDataEXT;
             break;
-        case 0xaf09e9c9u:
+        case XXH3_vkCmdBindShadersEXT:
             if (!strcmp(name, "CmdBindShadersEXT")) return (void *)table->CmdBindShadersEXT;
             break;
-        case 0x2fbae029u:
+        case XXH3_vkCmdSetDepthClampRangeEXT:
             if (!strcmp(name, "CmdSetDepthClampRangeEXT")) return (void *)table->CmdSetDepthClampRangeEXT;
             break;
 
         // ---- VK_QCOM_tile_properties extension commands
-        case 0x1b96b233u:
+        case XXH3_vkGetFramebufferTilePropertiesQCOM:
             if (!strcmp(name, "GetFramebufferTilePropertiesQCOM")) return (void *)table->GetFramebufferTilePropertiesQCOM;
             break;
-        case 0xa57b8109u:
+        case XXH3_vkGetDynamicRenderingTilePropertiesQCOM:
             if (!strcmp(name, "GetDynamicRenderingTilePropertiesQCOM")) return (void *)table->GetDynamicRenderingTilePropertiesQCOM;
             break;
 
         // ---- VK_NV_cooperative_vector extension commands
-        case 0xfdc0d2b5u:
+        case XXH3_vkConvertCooperativeVectorMatrixNV:
             if (!strcmp(name, "ConvertCooperativeVectorMatrixNV")) return (void *)table->ConvertCooperativeVectorMatrixNV;
             break;
-        case 0xa3bc320fu:
+        case XXH3_vkCmdConvertCooperativeVectorMatrixNV:
             if (!strcmp(name, "CmdConvertCooperativeVectorMatrixNV")) return (void *)table->CmdConvertCooperativeVectorMatrixNV;
             break;
 
         // ---- VK_NV_low_latency2 extension commands
-        case 0x8d2a16c5u:
+        case XXH3_vkSetLatencySleepModeNV:
             if (!strcmp(name, "SetLatencySleepModeNV")) return (void *)table->SetLatencySleepModeNV;
             break;
-        case 0xd9427520u:
+        case XXH3_vkLatencySleepNV:
             if (!strcmp(name, "LatencySleepNV")) return (void *)table->LatencySleepNV;
             break;
-        case 0xb07b0699u:
+        case XXH3_vkSetLatencyMarkerNV:
             if (!strcmp(name, "SetLatencyMarkerNV")) return (void *)table->SetLatencyMarkerNV;
             break;
-        case 0xb95541bau:
+        case XXH3_vkGetLatencyTimingsNV:
             if (!strcmp(name, "GetLatencyTimingsNV")) return (void *)table->GetLatencyTimingsNV;
             break;
-        case 0x87fc9ca5u:
+        case XXH3_vkQueueNotifyOutOfBandNV:
             if (!strcmp(name, "QueueNotifyOutOfBandNV")) return (void *)table->QueueNotifyOutOfBandNV;
             break;
 
         // ---- VK_ARM_data_graph extension commands
-        case 0x2173b4c0u:
+        case XXH3_vkCreateDataGraphPipelinesARM:
             if (!strcmp(name, "CreateDataGraphPipelinesARM")) return (void *)table->CreateDataGraphPipelinesARM;
             break;
-        case 0x186d09dbu:
+        case XXH3_vkCreateDataGraphPipelineSessionARM:
             if (!strcmp(name, "CreateDataGraphPipelineSessionARM")) return (void *)table->CreateDataGraphPipelineSessionARM;
             break;
-        case 0x87a1a322u:
+        case XXH3_vkGetDataGraphPipelineSessionBindPointRequirementsARM:
             if (!strcmp(name, "GetDataGraphPipelineSessionBindPointRequirementsARM")) return (void *)table->GetDataGraphPipelineSessionBindPointRequirementsARM;
             break;
-        case 0xa168b348u:
+        case XXH3_vkGetDataGraphPipelineSessionMemoryRequirementsARM:
             if (!strcmp(name, "GetDataGraphPipelineSessionMemoryRequirementsARM")) return (void *)table->GetDataGraphPipelineSessionMemoryRequirementsARM;
             break;
-        case 0x0b8f6dbfu:
+        case XXH3_vkBindDataGraphPipelineSessionMemoryARM:
             if (!strcmp(name, "BindDataGraphPipelineSessionMemoryARM")) return (void *)table->BindDataGraphPipelineSessionMemoryARM;
             break;
-        case 0x22aae5c3u:
+        case XXH3_vkDestroyDataGraphPipelineSessionARM:
             if (!strcmp(name, "DestroyDataGraphPipelineSessionARM")) return (void *)table->DestroyDataGraphPipelineSessionARM;
             break;
-        case 0x72c8ae53u:
+        case XXH3_vkCmdDispatchDataGraphARM:
             if (!strcmp(name, "CmdDispatchDataGraphARM")) return (void *)table->CmdDispatchDataGraphARM;
             break;
-        case 0x816ef83fu:
+        case XXH3_vkGetDataGraphPipelineAvailablePropertiesARM:
             if (!strcmp(name, "GetDataGraphPipelineAvailablePropertiesARM")) return (void *)table->GetDataGraphPipelineAvailablePropertiesARM;
             break;
-        case 0x8358ba34u:
+        case XXH3_vkGetDataGraphPipelinePropertiesARM:
             if (!strcmp(name, "GetDataGraphPipelinePropertiesARM")) return (void *)table->GetDataGraphPipelinePropertiesARM;
             break;
 
         // ---- VK_EXT_attachment_feedback_loop_dynamic_state extension commands
-        case 0x7597b011u:
+        case XXH3_vkCmdSetAttachmentFeedbackLoopEnableEXT:
             if (!strcmp(name, "CmdSetAttachmentFeedbackLoopEnableEXT")) return (void *)table->CmdSetAttachmentFeedbackLoopEnableEXT;
             break;
 
         // ---- VK_QNX_external_memory_screen_buffer extension commands
 #if defined(VK_USE_PLATFORM_SCREEN_QNX)
-        case 0xb6bc3d65u:
+        case XXH3_vkGetScreenBufferPropertiesQNX:
             if (!strcmp(name, "GetScreenBufferPropertiesQNX")) return (void *)table->GetScreenBufferPropertiesQNX;
             break;
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 
         // ---- VK_QCOM_tile_memory_heap extension commands
-        case 0xa87804d7u:
+        case XXH3_vkCmdBindTileMemoryQCOM:
             if (!strcmp(name, "CmdBindTileMemoryQCOM")) return (void *)table->CmdBindTileMemoryQCOM;
             break;
 
         // ---- VK_EXT_memory_decompression extension commands
-        case 0xd19fa84au:
+        case XXH3_vkCmdDecompressMemoryEXT:
             if (!strcmp(name, "CmdDecompressMemoryEXT")) return (void *)table->CmdDecompressMemoryEXT;
             break;
-        case 0xc1bea83fu:
+        case XXH3_vkCmdDecompressMemoryIndirectCountEXT:
             if (!strcmp(name, "CmdDecompressMemoryIndirectCountEXT")) return (void *)table->CmdDecompressMemoryIndirectCountEXT;
             break;
 
         // ---- VK_NV_external_compute_queue extension commands
-        case 0x66123ec2u:
+        case XXH3_vkCreateExternalComputeQueueNV:
             if (!strcmp(name, "CreateExternalComputeQueueNV")) return (void *)table->CreateExternalComputeQueueNV;
             break;
-        case 0xb140596au:
+        case XXH3_vkDestroyExternalComputeQueueNV:
             if (!strcmp(name, "DestroyExternalComputeQueueNV")) return (void *)table->DestroyExternalComputeQueueNV;
             break;
-        case 0x4db4b434u:
+        case XXH3_vkGetExternalComputeQueueDataNV:
             if (!strcmp(name, "GetExternalComputeQueueDataNV")) return (void *)table->GetExternalComputeQueueDataNV;
             break;
 
         // ---- VK_NV_cluster_acceleration_structure extension commands
-        case 0x5e994382u:
+        case XXH3_vkGetClusterAccelerationStructureBuildSizesNV:
             if (!strcmp(name, "GetClusterAccelerationStructureBuildSizesNV")) return (void *)table->GetClusterAccelerationStructureBuildSizesNV;
             break;
-        case 0x50372290u:
+        case XXH3_vkCmdBuildClusterAccelerationStructureIndirectNV:
             if (!strcmp(name, "CmdBuildClusterAccelerationStructureIndirectNV")) return (void *)table->CmdBuildClusterAccelerationStructureIndirectNV;
             break;
 
         // ---- VK_NV_partitioned_acceleration_structure extension commands
-        case 0x921b5752u:
+        case XXH3_vkGetPartitionedAccelerationStructuresBuildSizesNV:
             if (!strcmp(name, "GetPartitionedAccelerationStructuresBuildSizesNV")) return (void *)table->GetPartitionedAccelerationStructuresBuildSizesNV;
             break;
-        case 0xc9bd643eu:
+        case XXH3_vkCmdBuildPartitionedAccelerationStructuresNV:
             if (!strcmp(name, "CmdBuildPartitionedAccelerationStructuresNV")) return (void *)table->CmdBuildPartitionedAccelerationStructuresNV;
             break;
 
         // ---- VK_EXT_device_generated_commands extension commands
-        case 0x0de82280u:
+        case XXH3_vkGetGeneratedCommandsMemoryRequirementsEXT:
             if (!strcmp(name, "GetGeneratedCommandsMemoryRequirementsEXT")) return (void *)table->GetGeneratedCommandsMemoryRequirementsEXT;
             break;
-        case 0x45082ad7u:
+        case XXH3_vkCmdPreprocessGeneratedCommandsEXT:
             if (!strcmp(name, "CmdPreprocessGeneratedCommandsEXT")) return (void *)table->CmdPreprocessGeneratedCommandsEXT;
             break;
-        case 0x4e44bcbcu:
+        case XXH3_vkCmdExecuteGeneratedCommandsEXT:
             if (!strcmp(name, "CmdExecuteGeneratedCommandsEXT")) return (void *)table->CmdExecuteGeneratedCommandsEXT;
             break;
-        case 0xf3e8f51au:
+        case XXH3_vkCreateIndirectCommandsLayoutEXT:
             if (!strcmp(name, "CreateIndirectCommandsLayoutEXT")) return (void *)table->CreateIndirectCommandsLayoutEXT;
             break;
-        case 0xe39a9d42u:
+        case XXH3_vkDestroyIndirectCommandsLayoutEXT:
             if (!strcmp(name, "DestroyIndirectCommandsLayoutEXT")) return (void *)table->DestroyIndirectCommandsLayoutEXT;
             break;
-        case 0xcb16d00cu:
+        case XXH3_vkCreateIndirectExecutionSetEXT:
             if (!strcmp(name, "CreateIndirectExecutionSetEXT")) return (void *)table->CreateIndirectExecutionSetEXT;
             break;
-        case 0x9c4214c4u:
+        case XXH3_vkDestroyIndirectExecutionSetEXT:
             if (!strcmp(name, "DestroyIndirectExecutionSetEXT")) return (void *)table->DestroyIndirectExecutionSetEXT;
             break;
-        case 0x19f63d15u:
+        case XXH3_vkUpdateIndirectExecutionSetPipelineEXT:
             if (!strcmp(name, "UpdateIndirectExecutionSetPipelineEXT")) return (void *)table->UpdateIndirectExecutionSetPipelineEXT;
             break;
-        case 0x05ac8360u:
+        case XXH3_vkUpdateIndirectExecutionSetShaderEXT:
             if (!strcmp(name, "UpdateIndirectExecutionSetShaderEXT")) return (void *)table->UpdateIndirectExecutionSetShaderEXT;
             break;
 
         // ---- VK_EXT_external_memory_metal extension commands
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-        case 0xa02b049cu:
+        case XXH3_vkGetMemoryMetalHandleEXT:
             if (!strcmp(name, "GetMemoryMetalHandleEXT")) return (void *)table->GetMemoryMetalHandleEXT;
             break;
 #endif // VK_USE_PLATFORM_METAL_EXT
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-        case 0x2ad619bfu:
+        case XXH3_vkGetMemoryMetalHandlePropertiesEXT:
             if (!strcmp(name, "GetMemoryMetalHandlePropertiesEXT")) return (void *)table->GetMemoryMetalHandlePropertiesEXT;
             break;
 #endif // VK_USE_PLATFORM_METAL_EXT
 
         // ---- VK_ARM_shader_instrumentation extension commands
-        case 0x91602e1cu:
+        case XXH3_vkCreateShaderInstrumentationARM:
             if (!strcmp(name, "CreateShaderInstrumentationARM")) return (void *)table->CreateShaderInstrumentationARM;
             break;
-        case 0x6b282174u:
+        case XXH3_vkDestroyShaderInstrumentationARM:
             if (!strcmp(name, "DestroyShaderInstrumentationARM")) return (void *)table->DestroyShaderInstrumentationARM;
             break;
-        case 0x820deaa5u:
+        case XXH3_vkCmdBeginShaderInstrumentationARM:
             if (!strcmp(name, "CmdBeginShaderInstrumentationARM")) return (void *)table->CmdBeginShaderInstrumentationARM;
             break;
-        case 0x9e284719u:
+        case XXH3_vkCmdEndShaderInstrumentationARM:
             if (!strcmp(name, "CmdEndShaderInstrumentationARM")) return (void *)table->CmdEndShaderInstrumentationARM;
             break;
-        case 0xb87c65c8u:
+        case XXH3_vkGetShaderInstrumentationValuesARM:
             if (!strcmp(name, "GetShaderInstrumentationValuesARM")) return (void *)table->GetShaderInstrumentationValuesARM;
             break;
-        case 0xe46475d2u:
+        case XXH3_vkClearShaderInstrumentationMetricsARM:
             if (!strcmp(name, "ClearShaderInstrumentationMetricsARM")) return (void *)table->ClearShaderInstrumentationMetricsARM;
             break;
 
         // ---- VK_EXT_fragment_density_map_offset extension commands
-        case 0xc27109a5u:
+        case XXH3_vkCmdEndRendering2EXT:
             if (!strcmp(name, "CmdEndRendering2EXT")) return (void *)table->CmdEndRendering2EXT;
             break;
 
         // ---- VK_EXT_custom_resolve extension commands
-        case 0xc3261ff8u:
+        case XXH3_vkCmdBeginCustomResolveEXT:
             if (!strcmp(name, "CmdBeginCustomResolveEXT")) return (void *)table->CmdBeginCustomResolveEXT;
             break;
 
         // ---- VK_NV_compute_occupancy_priority extension commands
-        case 0x233e514bu:
+        case XXH3_vkCmdSetComputeOccupancyPriorityNV:
             if (!strcmp(name, "CmdSetComputeOccupancyPriorityNV")) return (void *)table->CmdSetComputeOccupancyPriorityNV;
             break;
 
         // ---- VK_EXT_primitive_restart_index extension commands
-        case 0x52eaa7c6u:
+        case XXH3_vkCmdSetPrimitiveRestartIndexEXT:
             if (!strcmp(name, "CmdSetPrimitiveRestartIndexEXT")) return (void *)table->CmdSetPrimitiveRestartIndexEXT;
             break;
 
         // ---- VK_KHR_acceleration_structure extension commands
-        case 0xce965a5du:
+        case XXH3_vkCreateAccelerationStructureKHR:
             if (!strcmp(name, "CreateAccelerationStructureKHR")) return (void *)table->CreateAccelerationStructureKHR;
             break;
-        case 0x451e9ac5u:
+        case XXH3_vkDestroyAccelerationStructureKHR:
             if (!strcmp(name, "DestroyAccelerationStructureKHR")) return (void *)table->DestroyAccelerationStructureKHR;
             break;
-        case 0x0279ea2eu:
+        case XXH3_vkCmdBuildAccelerationStructuresKHR:
             if (!strcmp(name, "CmdBuildAccelerationStructuresKHR")) return (void *)table->CmdBuildAccelerationStructuresKHR;
             break;
-        case 0x77d19a58u:
+        case XXH3_vkCmdBuildAccelerationStructuresIndirectKHR:
             if (!strcmp(name, "CmdBuildAccelerationStructuresIndirectKHR")) return (void *)table->CmdBuildAccelerationStructuresIndirectKHR;
             break;
-        case 0xd699e1dcu:
+        case XXH3_vkBuildAccelerationStructuresKHR:
             if (!strcmp(name, "BuildAccelerationStructuresKHR")) return (void *)table->BuildAccelerationStructuresKHR;
             break;
-        case 0x99303774u:
+        case XXH3_vkCopyAccelerationStructureKHR:
             if (!strcmp(name, "CopyAccelerationStructureKHR")) return (void *)table->CopyAccelerationStructureKHR;
             break;
-        case 0xd6d213eau:
+        case XXH3_vkCopyAccelerationStructureToMemoryKHR:
             if (!strcmp(name, "CopyAccelerationStructureToMemoryKHR")) return (void *)table->CopyAccelerationStructureToMemoryKHR;
             break;
-        case 0xdc7bca4eu:
+        case XXH3_vkCopyMemoryToAccelerationStructureKHR:
             if (!strcmp(name, "CopyMemoryToAccelerationStructureKHR")) return (void *)table->CopyMemoryToAccelerationStructureKHR;
             break;
-        case 0x5baf1f8au:
+        case XXH3_vkWriteAccelerationStructuresPropertiesKHR:
             if (!strcmp(name, "WriteAccelerationStructuresPropertiesKHR")) return (void *)table->WriteAccelerationStructuresPropertiesKHR;
             break;
-        case 0x07d2daceu:
+        case XXH3_vkCmdCopyAccelerationStructureKHR:
             if (!strcmp(name, "CmdCopyAccelerationStructureKHR")) return (void *)table->CmdCopyAccelerationStructureKHR;
             break;
-        case 0x69b69860u:
+        case XXH3_vkCmdCopyAccelerationStructureToMemoryKHR:
             if (!strcmp(name, "CmdCopyAccelerationStructureToMemoryKHR")) return (void *)table->CmdCopyAccelerationStructureToMemoryKHR;
             break;
-        case 0xc05e1ddcu:
+        case XXH3_vkCmdCopyMemoryToAccelerationStructureKHR:
             if (!strcmp(name, "CmdCopyMemoryToAccelerationStructureKHR")) return (void *)table->CmdCopyMemoryToAccelerationStructureKHR;
             break;
-        case 0x17e34879u:
+        case XXH3_vkGetAccelerationStructureDeviceAddressKHR:
             if (!strcmp(name, "GetAccelerationStructureDeviceAddressKHR")) return (void *)table->GetAccelerationStructureDeviceAddressKHR;
             break;
-        case 0xf8d9e440u:
+        case XXH3_vkCmdWriteAccelerationStructuresPropertiesKHR:
             if (!strcmp(name, "CmdWriteAccelerationStructuresPropertiesKHR")) return (void *)table->CmdWriteAccelerationStructuresPropertiesKHR;
             break;
-        case 0x2d186d4du:
+        case XXH3_vkGetDeviceAccelerationStructureCompatibilityKHR:
             if (!strcmp(name, "GetDeviceAccelerationStructureCompatibilityKHR")) return (void *)table->GetDeviceAccelerationStructureCompatibilityKHR;
             break;
-        case 0x4b8adcb5u:
+        case XXH3_vkGetAccelerationStructureBuildSizesKHR:
             if (!strcmp(name, "GetAccelerationStructureBuildSizesKHR")) return (void *)table->GetAccelerationStructureBuildSizesKHR;
             break;
 
         // ---- VK_KHR_ray_tracing_pipeline extension commands
-        case 0x683dee8cu:
+        case XXH3_vkCmdTraceRaysKHR:
             if (!strcmp(name, "CmdTraceRaysKHR")) return (void *)table->CmdTraceRaysKHR;
             break;
-        case 0x9f60774du:
+        case XXH3_vkCreateRayTracingPipelinesKHR:
             if (!strcmp(name, "CreateRayTracingPipelinesKHR")) return (void *)table->CreateRayTracingPipelinesKHR;
             break;
-        case 0x7e4aca88u:
+        case XXH3_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR:
             if (!strcmp(name, "GetRayTracingCaptureReplayShaderGroupHandlesKHR")) return (void *)table->GetRayTracingCaptureReplayShaderGroupHandlesKHR;
             break;
-        case 0x71243852u:
+        case XXH3_vkCmdTraceRaysIndirectKHR:
             if (!strcmp(name, "CmdTraceRaysIndirectKHR")) return (void *)table->CmdTraceRaysIndirectKHR;
             break;
-        case 0xd366d0cfu:
+        case XXH3_vkGetRayTracingShaderGroupStackSizeKHR:
             if (!strcmp(name, "GetRayTracingShaderGroupStackSizeKHR")) return (void *)table->GetRayTracingShaderGroupStackSizeKHR;
             break;
-        case 0xb831363du:
+        case XXH3_vkCmdSetRayTracingPipelineStackSizeKHR:
             if (!strcmp(name, "CmdSetRayTracingPipelineStackSizeKHR")) return (void *)table->CmdSetRayTracingPipelineStackSizeKHR;
             break;
 
         // ---- VK_EXT_mesh_shader extension commands
-        case 0xb2ec7be9u:
+        case XXH3_vkCmdDrawMeshTasksEXT:
             if (!strcmp(name, "CmdDrawMeshTasksEXT")) return (void *)table->CmdDrawMeshTasksEXT;
             break;
-        case 0x13d6aa6fu:
+        case XXH3_vkCmdDrawMeshTasksIndirectEXT:
             if (!strcmp(name, "CmdDrawMeshTasksIndirectEXT")) return (void *)table->CmdDrawMeshTasksIndirectEXT;
             break;
-        case 0xb67c7ce6u:
+        case XXH3_vkCmdDrawMeshTasksIndirectCountEXT:
             if (!strcmp(name, "CmdDrawMeshTasksIndirectCountEXT")) return (void *)table->CmdDrawMeshTasksIndirectCountEXT;
             break;
         default:
@@ -5029,7 +5030,7 @@ VKAPI_ATTR void* VKAPI_CALL loader_lookup_device_dispatch_table(const VkLayerDis
 
 // Instance command lookup function
 VKAPI_ATTR void* VKAPI_CALL loader_lookup_instance_dispatch_table(const VkLayerInstanceDispatchTable *table, const char *name,
-                                                                 bool *found_name) {
+                                                                  uint64_t name_hash, bool *found_name) {
     if (!name || name[0] != 'v' || name[1] != 'k') {
         *found_name = false;
         return NULL;
@@ -5037,533 +5038,532 @@ VKAPI_ATTR void* VKAPI_CALL loader_lookup_instance_dispatch_table(const VkLayerI
 
     *found_name = true;
     name += 2;
-    const uint32_t name_hash = loader_hash_string(name);
     switch (name_hash) {
 
         // ---- Core Vulkan 1.0 commands
-        case 0x72bac092u:
+        case XXH3_vkDestroyInstance:
             if (!strcmp(name, "DestroyInstance")) return (void *)table->DestroyInstance;
             break;
-        case 0x47707f5bu:
+        case XXH3_vkEnumeratePhysicalDevices:
             if (!strcmp(name, "EnumeratePhysicalDevices")) return (void *)table->EnumeratePhysicalDevices;
             break;
-        case 0x1f85ee93u:
+        case XXH3_vkGetPhysicalDeviceFeatures:
             if (!strcmp(name, "GetPhysicalDeviceFeatures")) return (void *)table->GetPhysicalDeviceFeatures;
             break;
-        case 0x74a5d8deu:
+        case XXH3_vkGetPhysicalDeviceFormatProperties:
             if (!strcmp(name, "GetPhysicalDeviceFormatProperties")) return (void *)table->GetPhysicalDeviceFormatProperties;
             break;
-        case 0x8451aa6bu:
+        case XXH3_vkGetPhysicalDeviceImageFormatProperties:
             if (!strcmp(name, "GetPhysicalDeviceImageFormatProperties")) return (void *)table->GetPhysicalDeviceImageFormatProperties;
             break;
-        case 0x1de4f4b9u:
+        case XXH3_vkGetPhysicalDeviceProperties:
             if (!strcmp(name, "GetPhysicalDeviceProperties")) return (void *)table->GetPhysicalDeviceProperties;
             break;
-        case 0x027f4f12u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyProperties:
             if (!strcmp(name, "GetPhysicalDeviceQueueFamilyProperties")) return (void *)table->GetPhysicalDeviceQueueFamilyProperties;
             break;
-        case 0x1c0f4f2eu:
+        case XXH3_vkGetPhysicalDeviceMemoryProperties:
             if (!strcmp(name, "GetPhysicalDeviceMemoryProperties")) return (void *)table->GetPhysicalDeviceMemoryProperties;
             break;
-        case 0x2d3c8c27u:
+        case XXH3_vkGetInstanceProcAddr:
             if (!strcmp(name, "GetInstanceProcAddr")) return (void *)table->GetInstanceProcAddr;
             break;
-        case 0xd83dfc59u:
+        case XXH3_vkEnumerateDeviceExtensionProperties:
             if (!strcmp(name, "EnumerateDeviceExtensionProperties")) return (void *)table->EnumerateDeviceExtensionProperties;
             break;
-        case 0x74122e01u:
+        case XXH3_vkEnumerateDeviceLayerProperties:
             if (!strcmp(name, "EnumerateDeviceLayerProperties")) return (void *)table->EnumerateDeviceLayerProperties;
             break;
-        case 0x9c272193u:
+        case XXH3_vkGetPhysicalDeviceSparseImageFormatProperties:
             if (!strcmp(name, "GetPhysicalDeviceSparseImageFormatProperties")) return (void *)table->GetPhysicalDeviceSparseImageFormatProperties;
             break;
 
         // ---- Core Vulkan 1.1 commands
-        case 0xf777380au:
+        case XXH3_vkEnumeratePhysicalDeviceGroups:
             if (!strcmp(name, "EnumeratePhysicalDeviceGroups")) return (void *)table->EnumeratePhysicalDeviceGroups;
             break;
-        case 0x40d6a773u:
+        case XXH3_vkGetPhysicalDeviceFeatures2:
             if (!strcmp(name, "GetPhysicalDeviceFeatures2")) return (void *)table->GetPhysicalDeviceFeatures2;
             break;
-        case 0x9a6cf6d1u:
+        case XXH3_vkGetPhysicalDeviceProperties2:
             if (!strcmp(name, "GetPhysicalDeviceProperties2")) return (void *)table->GetPhysicalDeviceProperties2;
             break;
-        case 0x8d147b84u:
+        case XXH3_vkGetPhysicalDeviceFormatProperties2:
             if (!strcmp(name, "GetPhysicalDeviceFormatProperties2")) return (void *)table->GetPhysicalDeviceFormatProperties2;
             break;
-        case 0xa58f2a1bu:
+        case XXH3_vkGetPhysicalDeviceImageFormatProperties2:
             if (!strcmp(name, "GetPhysicalDeviceImageFormatProperties2")) return (void *)table->GetPhysicalDeviceImageFormatProperties2;
             break;
-        case 0x0e698f60u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyProperties2:
             if (!strcmp(name, "GetPhysicalDeviceQueueFamilyProperties2")) return (void *)table->GetPhysicalDeviceQueueFamilyProperties2;
             break;
-        case 0x48198914u:
+        case XXH3_vkGetPhysicalDeviceMemoryProperties2:
             if (!strcmp(name, "GetPhysicalDeviceMemoryProperties2")) return (void *)table->GetPhysicalDeviceMemoryProperties2;
             break;
-        case 0x7299f073u:
+        case XXH3_vkGetPhysicalDeviceSparseImageFormatProperties2:
             if (!strcmp(name, "GetPhysicalDeviceSparseImageFormatProperties2")) return (void *)table->GetPhysicalDeviceSparseImageFormatProperties2;
             break;
-        case 0x457cf6d0u:
+        case XXH3_vkGetPhysicalDeviceExternalBufferProperties:
             if (!strcmp(name, "GetPhysicalDeviceExternalBufferProperties")) return (void *)table->GetPhysicalDeviceExternalBufferProperties;
             break;
-        case 0xae7670e9u:
+        case XXH3_vkGetPhysicalDeviceExternalFenceProperties:
             if (!strcmp(name, "GetPhysicalDeviceExternalFenceProperties")) return (void *)table->GetPhysicalDeviceExternalFenceProperties;
             break;
-        case 0xc95e77dau:
+        case XXH3_vkGetPhysicalDeviceExternalSemaphoreProperties:
             if (!strcmp(name, "GetPhysicalDeviceExternalSemaphoreProperties")) return (void *)table->GetPhysicalDeviceExternalSemaphoreProperties;
             break;
 
         // ---- Core Vulkan 1.3 commands
-        case 0xbf928f7bu:
+        case XXH3_vkGetPhysicalDeviceToolProperties:
             if (!strcmp(name, "GetPhysicalDeviceToolProperties")) return (void *)table->GetPhysicalDeviceToolProperties;
             break;
 
         // ---- VK_KHR_surface extension commands
-        case 0xa055626fu:
+        case XXH3_vkDestroySurfaceKHR:
             if (!strcmp(name, "DestroySurfaceKHR")) return (void *)table->DestroySurfaceKHR;
             break;
-        case 0xeddb22e9u:
+        case XXH3_vkGetPhysicalDeviceSurfaceSupportKHR:
             if (!strcmp(name, "GetPhysicalDeviceSurfaceSupportKHR")) return (void *)table->GetPhysicalDeviceSurfaceSupportKHR;
             break;
-        case 0x35be348cu:
+        case XXH3_vkGetPhysicalDeviceSurfaceCapabilitiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceSurfaceCapabilitiesKHR")) return (void *)table->GetPhysicalDeviceSurfaceCapabilitiesKHR;
             break;
-        case 0xcbc23c60u:
+        case XXH3_vkGetPhysicalDeviceSurfaceFormatsKHR:
             if (!strcmp(name, "GetPhysicalDeviceSurfaceFormatsKHR")) return (void *)table->GetPhysicalDeviceSurfaceFormatsKHR;
             break;
-        case 0xc3bb5079u:
+        case XXH3_vkGetPhysicalDeviceSurfacePresentModesKHR:
             if (!strcmp(name, "GetPhysicalDeviceSurfacePresentModesKHR")) return (void *)table->GetPhysicalDeviceSurfacePresentModesKHR;
             break;
 
         // ---- VK_KHR_swapchain extension commands
-        case 0x7f1cbd5cu:
+        case XXH3_vkGetPhysicalDevicePresentRectanglesKHR:
             if (!strcmp(name, "GetPhysicalDevicePresentRectanglesKHR")) return (void *)table->GetPhysicalDevicePresentRectanglesKHR;
             break;
 
         // ---- VK_KHR_display extension commands
-        case 0x6ae00b02u:
+        case XXH3_vkGetPhysicalDeviceDisplayPropertiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceDisplayPropertiesKHR")) return (void *)table->GetPhysicalDeviceDisplayPropertiesKHR;
             break;
-        case 0x74256fc0u:
+        case XXH3_vkGetPhysicalDeviceDisplayPlanePropertiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceDisplayPlanePropertiesKHR")) return (void *)table->GetPhysicalDeviceDisplayPlanePropertiesKHR;
             break;
-        case 0x069c6c3bu:
+        case XXH3_vkGetDisplayPlaneSupportedDisplaysKHR:
             if (!strcmp(name, "GetDisplayPlaneSupportedDisplaysKHR")) return (void *)table->GetDisplayPlaneSupportedDisplaysKHR;
             break;
-        case 0x7fb98644u:
+        case XXH3_vkGetDisplayModePropertiesKHR:
             if (!strcmp(name, "GetDisplayModePropertiesKHR")) return (void *)table->GetDisplayModePropertiesKHR;
             break;
-        case 0x9565f3f9u:
+        case XXH3_vkCreateDisplayModeKHR:
             if (!strcmp(name, "CreateDisplayModeKHR")) return (void *)table->CreateDisplayModeKHR;
             break;
-        case 0x1ff22654u:
+        case XXH3_vkGetDisplayPlaneCapabilitiesKHR:
             if (!strcmp(name, "GetDisplayPlaneCapabilitiesKHR")) return (void *)table->GetDisplayPlaneCapabilitiesKHR;
             break;
-        case 0xdd4f3c17u:
+        case XXH3_vkCreateDisplayPlaneSurfaceKHR:
             if (!strcmp(name, "CreateDisplayPlaneSurfaceKHR")) return (void *)table->CreateDisplayPlaneSurfaceKHR;
             break;
 
         // ---- VK_KHR_xlib_surface extension commands
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
-        case 0xe0afa1bcu:
+        case XXH3_vkCreateXlibSurfaceKHR:
             if (!strcmp(name, "CreateXlibSurfaceKHR")) return (void *)table->CreateXlibSurfaceKHR;
             break;
 #endif // VK_USE_PLATFORM_XLIB_KHR
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
-        case 0x661fc9c5u:
+        case XXH3_vkGetPhysicalDeviceXlibPresentationSupportKHR:
             if (!strcmp(name, "GetPhysicalDeviceXlibPresentationSupportKHR")) return (void *)table->GetPhysicalDeviceXlibPresentationSupportKHR;
             break;
 #endif // VK_USE_PLATFORM_XLIB_KHR
 
         // ---- VK_KHR_xcb_surface extension commands
 #if defined(VK_USE_PLATFORM_XCB_KHR)
-        case 0x8566b9e0u:
+        case XXH3_vkCreateXcbSurfaceKHR:
             if (!strcmp(name, "CreateXcbSurfaceKHR")) return (void *)table->CreateXcbSurfaceKHR;
             break;
 #endif // VK_USE_PLATFORM_XCB_KHR
 #if defined(VK_USE_PLATFORM_XCB_KHR)
-        case 0xfce4073fu:
+        case XXH3_vkGetPhysicalDeviceXcbPresentationSupportKHR:
             if (!strcmp(name, "GetPhysicalDeviceXcbPresentationSupportKHR")) return (void *)table->GetPhysicalDeviceXcbPresentationSupportKHR;
             break;
 #endif // VK_USE_PLATFORM_XCB_KHR
 
         // ---- VK_KHR_wayland_surface extension commands
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
-        case 0xa0c8077bu:
+        case XXH3_vkCreateWaylandSurfaceKHR:
             if (!strcmp(name, "CreateWaylandSurfaceKHR")) return (void *)table->CreateWaylandSurfaceKHR;
             break;
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
-        case 0x09cc42b8u:
+        case XXH3_vkGetPhysicalDeviceWaylandPresentationSupportKHR:
             if (!strcmp(name, "GetPhysicalDeviceWaylandPresentationSupportKHR")) return (void *)table->GetPhysicalDeviceWaylandPresentationSupportKHR;
             break;
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
 
         // ---- VK_KHR_android_surface extension commands
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-        case 0xd9f5522au:
+        case XXH3_vkCreateAndroidSurfaceKHR:
             if (!strcmp(name, "CreateAndroidSurfaceKHR")) return (void *)table->CreateAndroidSurfaceKHR;
             break;
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 
         // ---- VK_KHR_win32_surface extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x03edf712u:
+        case XXH3_vkCreateWin32SurfaceKHR:
             if (!strcmp(name, "CreateWin32SurfaceKHR")) return (void *)table->CreateWin32SurfaceKHR;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x9e8c6a7du:
+        case XXH3_vkGetPhysicalDeviceWin32PresentationSupportKHR:
             if (!strcmp(name, "GetPhysicalDeviceWin32PresentationSupportKHR")) return (void *)table->GetPhysicalDeviceWin32PresentationSupportKHR;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_KHR_video_queue extension commands
-        case 0x69aa34ecu:
+        case XXH3_vkGetPhysicalDeviceVideoCapabilitiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceVideoCapabilitiesKHR")) return (void *)table->GetPhysicalDeviceVideoCapabilitiesKHR;
             break;
-        case 0xf490cbe4u:
+        case XXH3_vkGetPhysicalDeviceVideoFormatPropertiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceVideoFormatPropertiesKHR")) return (void *)table->GetPhysicalDeviceVideoFormatPropertiesKHR;
             break;
 
         // ---- VK_KHR_get_physical_device_properties2 extension commands
-        case 0x84aa6d76u:
+        case XXH3_vkGetPhysicalDeviceFeatures2KHR:
             if (!strcmp(name, "GetPhysicalDeviceFeatures2KHR")) return (void *)table->GetPhysicalDeviceFeatures2KHR;
             break;
-        case 0x4602fe80u:
+        case XXH3_vkGetPhysicalDeviceProperties2KHR:
             if (!strcmp(name, "GetPhysicalDeviceProperties2KHR")) return (void *)table->GetPhysicalDeviceProperties2KHR;
             break;
-        case 0xa2da0fe7u:
+        case XXH3_vkGetPhysicalDeviceFormatProperties2KHR:
             if (!strcmp(name, "GetPhysicalDeviceFormatProperties2KHR")) return (void *)table->GetPhysicalDeviceFormatProperties2KHR;
             break;
-        case 0x00dd0f8eu:
+        case XXH3_vkGetPhysicalDeviceImageFormatProperties2KHR:
             if (!strcmp(name, "GetPhysicalDeviceImageFormatProperties2KHR")) return (void *)table->GetPhysicalDeviceImageFormatProperties2KHR;
             break;
-        case 0x715bef0bu:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyProperties2KHR:
             if (!strcmp(name, "GetPhysicalDeviceQueueFamilyProperties2KHR")) return (void *)table->GetPhysicalDeviceQueueFamilyProperties2KHR;
             break;
-        case 0xe66dbb37u:
+        case XXH3_vkGetPhysicalDeviceMemoryProperties2KHR:
             if (!strcmp(name, "GetPhysicalDeviceMemoryProperties2KHR")) return (void *)table->GetPhysicalDeviceMemoryProperties2KHR;
             break;
-        case 0x3aebd076u:
+        case XXH3_vkGetPhysicalDeviceSparseImageFormatProperties2KHR:
             if (!strcmp(name, "GetPhysicalDeviceSparseImageFormatProperties2KHR")) return (void *)table->GetPhysicalDeviceSparseImageFormatProperties2KHR;
             break;
 
         // ---- VK_KHR_device_group_creation extension commands
-        case 0x261ea829u:
+        case XXH3_vkEnumeratePhysicalDeviceGroupsKHR:
             if (!strcmp(name, "EnumeratePhysicalDeviceGroupsKHR")) return (void *)table->EnumeratePhysicalDeviceGroupsKHR;
             break;
 
         // ---- VK_KHR_external_memory_capabilities extension commands
-        case 0x53febf3bu:
+        case XXH3_vkGetPhysicalDeviceExternalBufferPropertiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceExternalBufferPropertiesKHR")) return (void *)table->GetPhysicalDeviceExternalBufferPropertiesKHR;
             break;
 
         // ---- VK_KHR_external_semaphore_capabilities extension commands
-        case 0xf80228b9u:
+        case XXH3_vkGetPhysicalDeviceExternalSemaphorePropertiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceExternalSemaphorePropertiesKHR")) return (void *)table->GetPhysicalDeviceExternalSemaphorePropertiesKHR;
             break;
 
         // ---- VK_KHR_external_fence_capabilities extension commands
-        case 0xd9b26448u:
+        case XXH3_vkGetPhysicalDeviceExternalFencePropertiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceExternalFencePropertiesKHR")) return (void *)table->GetPhysicalDeviceExternalFencePropertiesKHR;
             break;
 
         // ---- VK_KHR_performance_query extension commands
-        case 0xdd2c038du:
+        case XXH3_vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR:
             if (!strcmp(name, "EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR")) return (void *)table->EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR;
             break;
-        case 0x204022a7u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR:
             if (!strcmp(name, "GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR")) return (void *)table->GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR;
             break;
 
         // ---- VK_KHR_get_surface_capabilities2 extension commands
-        case 0xfc0babdcu:
+        case XXH3_vkGetPhysicalDeviceSurfaceCapabilities2KHR:
             if (!strcmp(name, "GetPhysicalDeviceSurfaceCapabilities2KHR")) return (void *)table->GetPhysicalDeviceSurfaceCapabilities2KHR;
             break;
-        case 0xbeb71818u:
+        case XXH3_vkGetPhysicalDeviceSurfaceFormats2KHR:
             if (!strcmp(name, "GetPhysicalDeviceSurfaceFormats2KHR")) return (void *)table->GetPhysicalDeviceSurfaceFormats2KHR;
             break;
 
         // ---- VK_KHR_get_display_properties2 extension commands
-        case 0x6267683au:
+        case XXH3_vkGetPhysicalDeviceDisplayProperties2KHR:
             if (!strcmp(name, "GetPhysicalDeviceDisplayProperties2KHR")) return (void *)table->GetPhysicalDeviceDisplayProperties2KHR;
             break;
-        case 0x2693ff78u:
+        case XXH3_vkGetPhysicalDeviceDisplayPlaneProperties2KHR:
             if (!strcmp(name, "GetPhysicalDeviceDisplayPlaneProperties2KHR")) return (void *)table->GetPhysicalDeviceDisplayPlaneProperties2KHR;
             break;
-        case 0x91ff80e4u:
+        case XXH3_vkGetDisplayModeProperties2KHR:
             if (!strcmp(name, "GetDisplayModeProperties2KHR")) return (void *)table->GetDisplayModeProperties2KHR;
             break;
-        case 0x2769b7b4u:
+        case XXH3_vkGetDisplayPlaneCapabilities2KHR:
             if (!strcmp(name, "GetDisplayPlaneCapabilities2KHR")) return (void *)table->GetDisplayPlaneCapabilities2KHR;
             break;
 
         // ---- VK_KHR_fragment_shading_rate extension commands
-        case 0x5c375044u:
+        case XXH3_vkGetPhysicalDeviceFragmentShadingRatesKHR:
             if (!strcmp(name, "GetPhysicalDeviceFragmentShadingRatesKHR")) return (void *)table->GetPhysicalDeviceFragmentShadingRatesKHR;
             break;
 
         // ---- VK_KHR_video_encode_queue extension commands
-        case 0xdcdaba38u:
+        case XXH3_vkGetPhysicalDeviceVideoEncodeQualityLevelPropertiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceVideoEncodeQualityLevelPropertiesKHR")) return (void *)table->GetPhysicalDeviceVideoEncodeQualityLevelPropertiesKHR;
             break;
 
         // ---- VK_KHR_cooperative_matrix extension commands
-        case 0x94f3aef6u:
+        case XXH3_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR:
             if (!strcmp(name, "GetPhysicalDeviceCooperativeMatrixPropertiesKHR")) return (void *)table->GetPhysicalDeviceCooperativeMatrixPropertiesKHR;
             break;
 
         // ---- VK_KHR_calibrated_timestamps extension commands
-        case 0x5e5a476cu:
+        case XXH3_vkGetPhysicalDeviceCalibrateableTimeDomainsKHR:
             if (!strcmp(name, "GetPhysicalDeviceCalibrateableTimeDomainsKHR")) return (void *)table->GetPhysicalDeviceCalibrateableTimeDomainsKHR;
             break;
 
         // ---- VK_EXT_debug_report extension commands
-        case 0x7fe80d6cu:
+        case XXH3_vkCreateDebugReportCallbackEXT:
             if (!strcmp(name, "CreateDebugReportCallbackEXT")) return (void *)table->CreateDebugReportCallbackEXT;
             break;
-        case 0xe7e9f7a4u:
+        case XXH3_vkDestroyDebugReportCallbackEXT:
             if (!strcmp(name, "DestroyDebugReportCallbackEXT")) return (void *)table->DestroyDebugReportCallbackEXT;
             break;
-        case 0x32b85520u:
+        case XXH3_vkDebugReportMessageEXT:
             if (!strcmp(name, "DebugReportMessageEXT")) return (void *)table->DebugReportMessageEXT;
             break;
 
         // ---- VK_GGP_stream_descriptor_surface extension commands
 #if defined(VK_USE_PLATFORM_GGP)
-        case 0xc17c71d3u:
+        case XXH3_vkCreateStreamDescriptorSurfaceGGP:
             if (!strcmp(name, "CreateStreamDescriptorSurfaceGGP")) return (void *)table->CreateStreamDescriptorSurfaceGGP;
             break;
 #endif // VK_USE_PLATFORM_GGP
 
         // ---- VK_NV_external_memory_capabilities extension commands
-        case 0x571bf196u:
+        case XXH3_vkGetPhysicalDeviceExternalImageFormatPropertiesNV:
             if (!strcmp(name, "GetPhysicalDeviceExternalImageFormatPropertiesNV")) return (void *)table->GetPhysicalDeviceExternalImageFormatPropertiesNV;
             break;
 
         // ---- VK_NN_vi_surface extension commands
 #if defined(VK_USE_PLATFORM_VI_NN)
-        case 0x863117bbu:
+        case XXH3_vkCreateViSurfaceNN:
             if (!strcmp(name, "CreateViSurfaceNN")) return (void *)table->CreateViSurfaceNN;
             break;
 #endif // VK_USE_PLATFORM_VI_NN
 
         // ---- VK_EXT_direct_mode_display extension commands
-        case 0x8981a5c7u:
+        case XXH3_vkReleaseDisplayEXT:
             if (!strcmp(name, "ReleaseDisplayEXT")) return (void *)table->ReleaseDisplayEXT;
             break;
 
         // ---- VK_EXT_acquire_xlib_display extension commands
 #if defined(VK_USE_PLATFORM_XLIB_XRANDR_EXT)
-        case 0xdcc13f05u:
+        case XXH3_vkAcquireXlibDisplayEXT:
             if (!strcmp(name, "AcquireXlibDisplayEXT")) return (void *)table->AcquireXlibDisplayEXT;
             break;
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #if defined(VK_USE_PLATFORM_XLIB_XRANDR_EXT)
-        case 0x4a8e3892u:
+        case XXH3_vkGetRandROutputDisplayEXT:
             if (!strcmp(name, "GetRandROutputDisplayEXT")) return (void *)table->GetRandROutputDisplayEXT;
             break;
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 
         // ---- VK_EXT_display_surface_counter extension commands
-        case 0xd1bdfdd4u:
+        case XXH3_vkGetPhysicalDeviceSurfaceCapabilities2EXT:
             if (!strcmp(name, "GetPhysicalDeviceSurfaceCapabilities2EXT")) return (void *)table->GetPhysicalDeviceSurfaceCapabilities2EXT;
             break;
 
         // ---- VK_MVK_ios_surface extension commands
 #if defined(VK_USE_PLATFORM_IOS_MVK)
-        case 0x179aa91bu:
+        case XXH3_vkCreateIOSSurfaceMVK:
             if (!strcmp(name, "CreateIOSSurfaceMVK")) return (void *)table->CreateIOSSurfaceMVK;
             break;
 #endif // VK_USE_PLATFORM_IOS_MVK
 
         // ---- VK_MVK_macos_surface extension commands
 #if defined(VK_USE_PLATFORM_MACOS_MVK)
-        case 0xf32ece1fu:
+        case XXH3_vkCreateMacOSSurfaceMVK:
             if (!strcmp(name, "CreateMacOSSurfaceMVK")) return (void *)table->CreateMacOSSurfaceMVK;
             break;
 #endif // VK_USE_PLATFORM_MACOS_MVK
 
         // ---- VK_EXT_debug_utils extension commands
-        case 0xda987a67u:
+        case XXH3_vkCreateDebugUtilsMessengerEXT:
             if (!strcmp(name, "CreateDebugUtilsMessengerEXT")) return (void *)table->CreateDebugUtilsMessengerEXT;
             break;
-        case 0xc22d235fu:
+        case XXH3_vkDestroyDebugUtilsMessengerEXT:
             if (!strcmp(name, "DestroyDebugUtilsMessengerEXT")) return (void *)table->DestroyDebugUtilsMessengerEXT;
             break;
-        case 0xa4e5a25fu:
+        case XXH3_vkSubmitDebugUtilsMessageEXT:
             if (!strcmp(name, "SubmitDebugUtilsMessageEXT")) return (void *)table->SubmitDebugUtilsMessageEXT;
             break;
 
         // ---- VK_EXT_descriptor_heap extension commands
-        case 0x1f91e237u:
+        case XXH3_vkGetPhysicalDeviceDescriptorSizeEXT:
             if (!strcmp(name, "GetPhysicalDeviceDescriptorSizeEXT")) return (void *)table->GetPhysicalDeviceDescriptorSizeEXT;
             break;
 
         // ---- VK_EXT_sample_locations extension commands
-        case 0x91fd6da9u:
+        case XXH3_vkGetPhysicalDeviceMultisamplePropertiesEXT:
             if (!strcmp(name, "GetPhysicalDeviceMultisamplePropertiesEXT")) return (void *)table->GetPhysicalDeviceMultisamplePropertiesEXT;
             break;
 
         // ---- VK_EXT_calibrated_timestamps extension commands
-        case 0x73bbb944u:
+        case XXH3_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT:
             if (!strcmp(name, "GetPhysicalDeviceCalibrateableTimeDomainsEXT")) return (void *)table->GetPhysicalDeviceCalibrateableTimeDomainsEXT;
             break;
 
         // ---- VK_FUCHSIA_imagepipe_surface extension commands
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x0f39959au:
+        case XXH3_vkCreateImagePipeSurfaceFUCHSIA:
             if (!strcmp(name, "CreateImagePipeSurfaceFUCHSIA")) return (void *)table->CreateImagePipeSurfaceFUCHSIA;
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 
         // ---- VK_EXT_metal_surface extension commands
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-        case 0xfee7e802u:
+        case XXH3_vkCreateMetalSurfaceEXT:
             if (!strcmp(name, "CreateMetalSurfaceEXT")) return (void *)table->CreateMetalSurfaceEXT;
             break;
 #endif // VK_USE_PLATFORM_METAL_EXT
 
         // ---- VK_EXT_tooling_info extension commands
-        case 0x0c2f1fb6u:
+        case XXH3_vkGetPhysicalDeviceToolPropertiesEXT:
             if (!strcmp(name, "GetPhysicalDeviceToolPropertiesEXT")) return (void *)table->GetPhysicalDeviceToolPropertiesEXT;
             break;
 
         // ---- VK_NV_cooperative_matrix extension commands
-        case 0x45f8c703u:
+        case XXH3_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV:
             if (!strcmp(name, "GetPhysicalDeviceCooperativeMatrixPropertiesNV")) return (void *)table->GetPhysicalDeviceCooperativeMatrixPropertiesNV;
             break;
 
         // ---- VK_NV_coverage_reduction_mode extension commands
-        case 0xa161da27u:
+        case XXH3_vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV:
             if (!strcmp(name, "GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV")) return (void *)table->GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV;
             break;
 
         // ---- VK_EXT_full_screen_exclusive extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x821a789bu:
+        case XXH3_vkGetPhysicalDeviceSurfacePresentModes2EXT:
             if (!strcmp(name, "GetPhysicalDeviceSurfacePresentModes2EXT")) return (void *)table->GetPhysicalDeviceSurfacePresentModes2EXT;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_EXT_headless_surface extension commands
-        case 0xd35abb2cu:
+        case XXH3_vkCreateHeadlessSurfaceEXT:
             if (!strcmp(name, "CreateHeadlessSurfaceEXT")) return (void *)table->CreateHeadlessSurfaceEXT;
             break;
 
         // ---- VK_EXT_acquire_drm_display extension commands
-        case 0xdc6a4ea5u:
+        case XXH3_vkAcquireDrmDisplayEXT:
             if (!strcmp(name, "AcquireDrmDisplayEXT")) return (void *)table->AcquireDrmDisplayEXT;
             break;
-        case 0x096b67f1u:
+        case XXH3_vkGetDrmDisplayEXT:
             if (!strcmp(name, "GetDrmDisplayEXT")) return (void *)table->GetDrmDisplayEXT;
             break;
 
         // ---- VK_NV_acquire_winrt_display extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xcef6a005u:
+        case XXH3_vkAcquireWinrtDisplayNV:
             if (!strcmp(name, "AcquireWinrtDisplayNV")) return (void *)table->AcquireWinrtDisplayNV;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xd5127861u:
+        case XXH3_vkGetWinrtDisplayNV:
             if (!strcmp(name, "GetWinrtDisplayNV")) return (void *)table->GetWinrtDisplayNV;
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_EXT_directfb_surface extension commands
 #if defined(VK_USE_PLATFORM_DIRECTFB_EXT)
-        case 0x765413dau:
+        case XXH3_vkCreateDirectFBSurfaceEXT:
             if (!strcmp(name, "CreateDirectFBSurfaceEXT")) return (void *)table->CreateDirectFBSurfaceEXT;
             break;
 #endif // VK_USE_PLATFORM_DIRECTFB_EXT
 #if defined(VK_USE_PLATFORM_DIRECTFB_EXT)
-        case 0x1cac816bu:
+        case XXH3_vkGetPhysicalDeviceDirectFBPresentationSupportEXT:
             if (!strcmp(name, "GetPhysicalDeviceDirectFBPresentationSupportEXT")) return (void *)table->GetPhysicalDeviceDirectFBPresentationSupportEXT;
             break;
 #endif // VK_USE_PLATFORM_DIRECTFB_EXT
 
         // ---- VK_QNX_screen_surface extension commands
 #if defined(VK_USE_PLATFORM_SCREEN_QNX)
-        case 0xaa83acfdu:
+        case XXH3_vkCreateScreenSurfaceQNX:
             if (!strcmp(name, "CreateScreenSurfaceQNX")) return (void *)table->CreateScreenSurfaceQNX;
             break;
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 #if defined(VK_USE_PLATFORM_SCREEN_QNX)
-        case 0xa23e7294u:
+        case XXH3_vkGetPhysicalDeviceScreenPresentationSupportQNX:
             if (!strcmp(name, "GetPhysicalDeviceScreenPresentationSupportQNX")) return (void *)table->GetPhysicalDeviceScreenPresentationSupportQNX;
             break;
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 
         // ---- VK_ARM_tensors extension commands
-        case 0xa2eb3b67u:
+        case XXH3_vkGetPhysicalDeviceExternalTensorPropertiesARM:
             if (!strcmp(name, "GetPhysicalDeviceExternalTensorPropertiesARM")) return (void *)table->GetPhysicalDeviceExternalTensorPropertiesARM;
             break;
 
         // ---- VK_NV_optical_flow extension commands
-        case 0x8dc34c03u:
+        case XXH3_vkGetPhysicalDeviceOpticalFlowImageFormatsNV:
             if (!strcmp(name, "GetPhysicalDeviceOpticalFlowImageFormatsNV")) return (void *)table->GetPhysicalDeviceOpticalFlowImageFormatsNV;
             break;
 
         // ---- VK_NV_cooperative_vector extension commands
-        case 0xbfb812e5u:
+        case XXH3_vkGetPhysicalDeviceCooperativeVectorPropertiesNV:
             if (!strcmp(name, "GetPhysicalDeviceCooperativeVectorPropertiesNV")) return (void *)table->GetPhysicalDeviceCooperativeVectorPropertiesNV;
             break;
 
         // ---- VK_ARM_data_graph extension commands
-        case 0x638d0d92u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyDataGraphPropertiesARM:
             if (!strcmp(name, "GetPhysicalDeviceQueueFamilyDataGraphPropertiesARM")) return (void *)table->GetPhysicalDeviceQueueFamilyDataGraphPropertiesARM;
             break;
-        case 0x30bf23ddu:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyDataGraphProcessingEnginePropertiesARM:
             if (!strcmp(name, "GetPhysicalDeviceQueueFamilyDataGraphProcessingEnginePropertiesARM")) return (void *)table->GetPhysicalDeviceQueueFamilyDataGraphProcessingEnginePropertiesARM;
             break;
 
         // ---- VK_ARM_data_graph_instruction_set_tosa extension commands
-        case 0xe74f7ef1u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyDataGraphEngineOperationPropertiesARM:
             if (!strcmp(name, "GetPhysicalDeviceQueueFamilyDataGraphEngineOperationPropertiesARM")) return (void *)table->GetPhysicalDeviceQueueFamilyDataGraphEngineOperationPropertiesARM;
             break;
 
         // ---- VK_OHOS_surface extension commands
 #if defined(VK_USE_PLATFORM_OHOS)
-        case 0x145c187du:
+        case XXH3_vkCreateSurfaceOHOS:
             if (!strcmp(name, "CreateSurfaceOHOS")) return (void *)table->CreateSurfaceOHOS;
             break;
 #endif // VK_USE_PLATFORM_OHOS
 
         // ---- VK_NV_cooperative_matrix2 extension commands
-        case 0xe31dbd89u:
+        case XXH3_vkGetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV:
             if (!strcmp(name, "GetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV")) return (void *)table->GetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV;
             break;
 
         // ---- VK_ARM_performance_counters_by_region extension commands
-        case 0xccac9981u:
+        case XXH3_vkEnumeratePhysicalDeviceQueueFamilyPerformanceCountersByRegionARM:
             if (!strcmp(name, "EnumeratePhysicalDeviceQueueFamilyPerformanceCountersByRegionARM")) return (void *)table->EnumeratePhysicalDeviceQueueFamilyPerformanceCountersByRegionARM;
             break;
 
         // ---- VK_ARM_shader_instrumentation extension commands
-        case 0x4cf6e1fau:
+        case XXH3_vkEnumeratePhysicalDeviceShaderInstrumentationMetricsARM:
             if (!strcmp(name, "EnumeratePhysicalDeviceShaderInstrumentationMetricsARM")) return (void *)table->EnumeratePhysicalDeviceShaderInstrumentationMetricsARM;
             break;
 
         // ---- VK_ARM_data_graph_optical_flow extension commands
-        case 0x225e663au:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyDataGraphOpticalFlowImageFormatsARM:
             if (!strcmp(name, "GetPhysicalDeviceQueueFamilyDataGraphOpticalFlowImageFormatsARM")) return (void *)table->GetPhysicalDeviceQueueFamilyDataGraphOpticalFlowImageFormatsARM;
             break;
 
         // ---- VK_EXT_cooperative_matrix_maintenance1 extension commands
-        case 0xb3ca09aeu:
+        case XXH3_vkGetPhysicalDeviceCooperativeMatrixProperties2EXT:
             if (!strcmp(name, "GetPhysicalDeviceCooperativeMatrixProperties2EXT")) return (void *)table->GetPhysicalDeviceCooperativeMatrixProperties2EXT;
             break;
 
         // ---- VK_SEC_ubm_surface extension commands
 #if defined(VK_USE_PLATFORM_UBM_SEC)
-        case 0xafb52745u:
+        case XXH3_vkCreateUbmSurfaceSEC:
             if (!strcmp(name, "CreateUbmSurfaceSEC")) return (void *)table->CreateUbmSurfaceSEC;
             break;
 #endif // VK_USE_PLATFORM_UBM_SEC
 #if defined(VK_USE_PLATFORM_UBM_SEC)
-        case 0x4654e43au:
+        case XXH3_vkGetPhysicalDeviceUbmPresentationSupportSEC:
             if (!strcmp(name, "GetPhysicalDeviceUbmPresentationSupportSEC")) return (void *)table->GetPhysicalDeviceUbmPresentationSupportSEC;
             break;
 #endif // VK_USE_PLATFORM_UBM_SEC
@@ -14528,78 +14528,78 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawMeshTasksIndirectCountEXT(
 
 // GPA helpers for extensions
 // name_hash must be loader_hash_string(name) - passed in by the caller so it is only computed once per lookup.
-bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *name, uint32_t name_hash, void **addr) {
+bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *name, uint64_t name_hash, void **addr) {
     *addr = NULL;
     switch (name_hash) {
 
         // ---- VK_KHR_video_queue extension commands
-        case 0x5a670229u:
+        case XXH3_vkGetPhysicalDeviceVideoCapabilitiesKHR:
             if (!strcmp("vkGetPhysicalDeviceVideoCapabilitiesKHR", name)) {
                 *addr = (void *)GetPhysicalDeviceVideoCapabilitiesKHR;
                 return true;
             }
             break;
-        case 0x9bb9b67du:
+        case XXH3_vkGetPhysicalDeviceVideoFormatPropertiesKHR:
             if (!strcmp("vkGetPhysicalDeviceVideoFormatPropertiesKHR", name)) {
                 *addr = (void *)GetPhysicalDeviceVideoFormatPropertiesKHR;
                 return true;
             }
             break;
-        case 0x05ff253eu:
+        case XXH3_vkCreateVideoSessionKHR:
             if (!strcmp("vkCreateVideoSessionKHR", name)) {
                 *addr = (void *)CreateVideoSessionKHR;
                 return true;
             }
             break;
-        case 0xc7cb956cu:
+        case XXH3_vkDestroyVideoSessionKHR:
             if (!strcmp("vkDestroyVideoSessionKHR", name)) {
                 *addr = (void *)DestroyVideoSessionKHR;
                 return true;
             }
             break;
-        case 0xf1b97187u:
+        case XXH3_vkGetVideoSessionMemoryRequirementsKHR:
             if (!strcmp("vkGetVideoSessionMemoryRequirementsKHR", name)) {
                 *addr = (void *)GetVideoSessionMemoryRequirementsKHR;
                 return true;
             }
             break;
-        case 0x5308d2beu:
+        case XXH3_vkBindVideoSessionMemoryKHR:
             if (!strcmp("vkBindVideoSessionMemoryKHR", name)) {
                 *addr = (void *)BindVideoSessionMemoryKHR;
                 return true;
             }
             break;
-        case 0x32e5db36u:
+        case XXH3_vkCreateVideoSessionParametersKHR:
             if (!strcmp("vkCreateVideoSessionParametersKHR", name)) {
                 *addr = (void *)CreateVideoSessionParametersKHR;
                 return true;
             }
             break;
-        case 0xba0655adu:
+        case XXH3_vkUpdateVideoSessionParametersKHR:
             if (!strcmp("vkUpdateVideoSessionParametersKHR", name)) {
                 *addr = (void *)UpdateVideoSessionParametersKHR;
                 return true;
             }
             break;
-        case 0x4e1a3408u:
+        case XXH3_vkDestroyVideoSessionParametersKHR:
             if (!strcmp("vkDestroyVideoSessionParametersKHR", name)) {
                 *addr = (void *)DestroyVideoSessionParametersKHR;
                 return true;
             }
             break;
-        case 0x40cff81fu:
+        case XXH3_vkCmdBeginVideoCodingKHR:
             if (!strcmp("vkCmdBeginVideoCodingKHR", name)) {
                 *addr = (void *)CmdBeginVideoCodingKHR;
                 return true;
             }
             break;
-        case 0x0ab75f97u:
+        case XXH3_vkCmdEndVideoCodingKHR:
             if (!strcmp("vkCmdEndVideoCodingKHR", name)) {
                 *addr = (void *)CmdEndVideoCodingKHR;
                 return true;
             }
             break;
-        case 0xe206cd4fu:
+        case XXH3_vkCmdControlVideoCodingKHR:
             if (!strcmp("vkCmdControlVideoCodingKHR", name)) {
                 *addr = (void *)CmdControlVideoCodingKHR;
                 return true;
@@ -14607,7 +14607,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_video_decode_queue extension commands
-        case 0xfe59f5e6u:
+        case XXH3_vkCmdDecodeVideoKHR:
             if (!strcmp("vkCmdDecodeVideoKHR", name)) {
                 *addr = (void *)CmdDecodeVideoKHR;
                 return true;
@@ -14615,13 +14615,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_dynamic_rendering extension commands
-        case 0x75d22258u:
+        case XXH3_vkCmdBeginRenderingKHR:
             if (!strcmp("vkCmdBeginRenderingKHR", name)) {
                 *addr = (void *)CmdBeginRenderingKHR;
                 return true;
             }
             break;
-        case 0x73e23530u:
+        case XXH3_vkCmdEndRenderingKHR:
             if (!strcmp("vkCmdEndRenderingKHR", name)) {
                 *addr = (void *)CmdEndRenderingKHR;
                 return true;
@@ -14629,7 +14629,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_get_physical_device_properties2 extension commands
-        case 0x8682cc23u:
+        case XXH3_vkGetPhysicalDeviceFeatures2KHR:
             if (!strcmp("vkGetPhysicalDeviceFeatures2KHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_get_physical_device_properties2 == 1)
                              ? (void *)vkGetPhysicalDeviceFeatures2
@@ -14637,7 +14637,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0xcd58d5a9u:
+        case XXH3_vkGetPhysicalDeviceProperties2KHR:
             if (!strcmp("vkGetPhysicalDeviceProperties2KHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_get_physical_device_properties2 == 1)
                              ? (void *)vkGetPhysicalDeviceProperties2
@@ -14645,7 +14645,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0xd4b09a32u:
+        case XXH3_vkGetPhysicalDeviceFormatProperties2KHR:
             if (!strcmp("vkGetPhysicalDeviceFormatProperties2KHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_get_physical_device_properties2 == 1)
                              ? (void *)vkGetPhysicalDeviceFormatProperties2
@@ -14653,7 +14653,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0xca8ffcbdu:
+        case XXH3_vkGetPhysicalDeviceImageFormatProperties2KHR:
             if (!strcmp("vkGetPhysicalDeviceImageFormatProperties2KHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_get_physical_device_properties2 == 1)
                              ? (void *)vkGetPhysicalDeviceImageFormatProperties2
@@ -14661,7 +14661,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0xde6711d4u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyProperties2KHR:
             if (!strcmp("vkGetPhysicalDeviceQueueFamilyProperties2KHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_get_physical_device_properties2 == 1)
                              ? (void *)vkGetPhysicalDeviceQueueFamilyProperties2
@@ -14669,7 +14669,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0xd744d3deu:
+        case XXH3_vkGetPhysicalDeviceMemoryProperties2KHR:
             if (!strcmp("vkGetPhysicalDeviceMemoryProperties2KHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_get_physical_device_properties2 == 1)
                              ? (void *)vkGetPhysicalDeviceMemoryProperties2
@@ -14677,7 +14677,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0xe658803du:
+        case XXH3_vkGetPhysicalDeviceSparseImageFormatProperties2KHR:
             if (!strcmp("vkGetPhysicalDeviceSparseImageFormatProperties2KHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_get_physical_device_properties2 == 1)
                              ? (void *)vkGetPhysicalDeviceSparseImageFormatProperties2
@@ -14687,19 +14687,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_device_group extension commands
-        case 0x3cdaa412u:
+        case XXH3_vkGetDeviceGroupPeerMemoryFeaturesKHR:
             if (!strcmp("vkGetDeviceGroupPeerMemoryFeaturesKHR", name)) {
                 *addr = (void *)GetDeviceGroupPeerMemoryFeaturesKHR;
                 return true;
             }
             break;
-        case 0xcf5f61a3u:
+        case XXH3_vkCmdSetDeviceMaskKHR:
             if (!strcmp("vkCmdSetDeviceMaskKHR", name)) {
                 *addr = (void *)CmdSetDeviceMaskKHR;
                 return true;
             }
             break;
-        case 0x3fed8b1cu:
+        case XXH3_vkCmdDispatchBaseKHR:
             if (!strcmp("vkCmdDispatchBaseKHR", name)) {
                 *addr = (void *)CmdDispatchBaseKHR;
                 return true;
@@ -14707,7 +14707,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_maintenance1 extension commands
-        case 0x87745984u:
+        case XXH3_vkTrimCommandPoolKHR:
             if (!strcmp("vkTrimCommandPoolKHR", name)) {
                 *addr = (void *)TrimCommandPoolKHR;
                 return true;
@@ -14715,7 +14715,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_device_group_creation extension commands
-        case 0xd9a7ffcau:
+        case XXH3_vkEnumeratePhysicalDeviceGroupsKHR:
             if (!strcmp("vkEnumeratePhysicalDeviceGroupsKHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_device_group_creation == 1)
                              ? (void *)vkEnumeratePhysicalDeviceGroups
@@ -14725,7 +14725,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_external_memory_capabilities extension commands
-        case 0x373d8898u:
+        case XXH3_vkGetPhysicalDeviceExternalBufferPropertiesKHR:
             if (!strcmp("vkGetPhysicalDeviceExternalBufferPropertiesKHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_external_memory_capabilities == 1)
                              ? (void *)vkGetPhysicalDeviceExternalBufferProperties
@@ -14736,7 +14736,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_KHR_external_memory_win32 extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xa63e7441u:
+        case XXH3_vkGetMemoryWin32HandleKHR:
             if (!strcmp("vkGetMemoryWin32HandleKHR", name)) {
                 *addr = (void *)GetMemoryWin32HandleKHR;
                 return true;
@@ -14744,7 +14744,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x3fd1754au:
+        case XXH3_vkGetMemoryWin32HandlePropertiesKHR:
             if (!strcmp("vkGetMemoryWin32HandlePropertiesKHR", name)) {
                 *addr = (void *)GetMemoryWin32HandlePropertiesKHR;
                 return true;
@@ -14753,13 +14753,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_KHR_external_memory_fd extension commands
-        case 0xdad4337au:
+        case XXH3_vkGetMemoryFdKHR:
             if (!strcmp("vkGetMemoryFdKHR", name)) {
                 *addr = (void *)GetMemoryFdKHR;
                 return true;
             }
             break;
-        case 0x040c9cadu:
+        case XXH3_vkGetMemoryFdPropertiesKHR:
             if (!strcmp("vkGetMemoryFdPropertiesKHR", name)) {
                 *addr = (void *)GetMemoryFdPropertiesKHR;
                 return true;
@@ -14767,7 +14767,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_external_semaphore_capabilities extension commands
-        case 0x87e82fb8u:
+        case XXH3_vkGetPhysicalDeviceExternalSemaphorePropertiesKHR:
             if (!strcmp("vkGetPhysicalDeviceExternalSemaphorePropertiesKHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_external_semaphore_capabilities == 1)
                              ? (void *)vkGetPhysicalDeviceExternalSemaphoreProperties
@@ -14778,7 +14778,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_KHR_external_semaphore_win32 extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x03b7a903u:
+        case XXH3_vkImportSemaphoreWin32HandleKHR:
             if (!strcmp("vkImportSemaphoreWin32HandleKHR", name)) {
                 *addr = (void *)ImportSemaphoreWin32HandleKHR;
                 return true;
@@ -14786,7 +14786,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x650df93cu:
+        case XXH3_vkGetSemaphoreWin32HandleKHR:
             if (!strcmp("vkGetSemaphoreWin32HandleKHR", name)) {
                 *addr = (void *)GetSemaphoreWin32HandleKHR;
                 return true;
@@ -14795,13 +14795,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_KHR_external_semaphore_fd extension commands
-        case 0xc07a1bd8u:
+        case XXH3_vkImportSemaphoreFdKHR:
             if (!strcmp("vkImportSemaphoreFdKHR", name)) {
                 *addr = (void *)ImportSemaphoreFdKHR;
                 return true;
             }
             break;
-        case 0x119d3c25u:
+        case XXH3_vkGetSemaphoreFdKHR:
             if (!strcmp("vkGetSemaphoreFdKHR", name)) {
                 *addr = (void *)GetSemaphoreFdKHR;
                 return true;
@@ -14809,13 +14809,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_push_descriptor extension commands
-        case 0x3339de70u:
+        case XXH3_vkCmdPushDescriptorSetKHR:
             if (!strcmp("vkCmdPushDescriptorSetKHR", name)) {
                 *addr = (void *)CmdPushDescriptorSetKHR;
                 return true;
             }
             break;
-        case 0xe9d2872eu:
+        case XXH3_vkCmdPushDescriptorSetWithTemplateKHR:
             if (!strcmp("vkCmdPushDescriptorSetWithTemplateKHR", name)) {
                 *addr = (void *)CmdPushDescriptorSetWithTemplateKHR;
                 return true;
@@ -14823,19 +14823,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_descriptor_update_template extension commands
-        case 0xa4f4fd03u:
+        case XXH3_vkCreateDescriptorUpdateTemplateKHR:
             if (!strcmp("vkCreateDescriptorUpdateTemplateKHR", name)) {
                 *addr = (void *)CreateDescriptorUpdateTemplateKHR;
                 return true;
             }
             break;
-        case 0x18228c51u:
+        case XXH3_vkDestroyDescriptorUpdateTemplateKHR:
             if (!strcmp("vkDestroyDescriptorUpdateTemplateKHR", name)) {
                 *addr = (void *)DestroyDescriptorUpdateTemplateKHR;
                 return true;
             }
             break;
-        case 0xdecdb927u:
+        case XXH3_vkUpdateDescriptorSetWithTemplateKHR:
             if (!strcmp("vkUpdateDescriptorSetWithTemplateKHR", name)) {
                 *addr = (void *)UpdateDescriptorSetWithTemplateKHR;
                 return true;
@@ -14843,25 +14843,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_create_renderpass2 extension commands
-        case 0xc11e93aau:
+        case XXH3_vkCreateRenderPass2KHR:
             if (!strcmp("vkCreateRenderPass2KHR", name)) {
                 *addr = (void *)CreateRenderPass2KHR;
                 return true;
             }
             break;
-        case 0x13c1d8dbu:
+        case XXH3_vkCmdBeginRenderPass2KHR:
             if (!strcmp("vkCmdBeginRenderPass2KHR", name)) {
                 *addr = (void *)CmdBeginRenderPass2KHR;
                 return true;
             }
             break;
-        case 0x4d9f6ddbu:
+        case XXH3_vkCmdNextSubpass2KHR:
             if (!strcmp("vkCmdNextSubpass2KHR", name)) {
                 *addr = (void *)CmdNextSubpass2KHR;
                 return true;
             }
             break;
-        case 0x77f38a73u:
+        case XXH3_vkCmdEndRenderPass2KHR:
             if (!strcmp("vkCmdEndRenderPass2KHR", name)) {
                 *addr = (void *)CmdEndRenderPass2KHR;
                 return true;
@@ -14869,7 +14869,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_shared_presentable_image extension commands
-        case 0x5596f083u:
+        case XXH3_vkGetSwapchainStatusKHR:
             if (!strcmp("vkGetSwapchainStatusKHR", name)) {
                 *addr = (void *)GetSwapchainStatusKHR;
                 return true;
@@ -14877,7 +14877,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_external_fence_capabilities extension commands
-        case 0x0eb732b1u:
+        case XXH3_vkGetPhysicalDeviceExternalFencePropertiesKHR:
             if (!strcmp("vkGetPhysicalDeviceExternalFencePropertiesKHR", name)) {
                 *addr = (ptr_instance->enabled_extensions.khr_external_fence_capabilities == 1)
                              ? (void *)vkGetPhysicalDeviceExternalFenceProperties
@@ -14888,7 +14888,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_KHR_external_fence_win32 extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xf6d01c8cu:
+        case XXH3_vkImportFenceWin32HandleKHR:
             if (!strcmp("vkImportFenceWin32HandleKHR", name)) {
                 *addr = (void *)ImportFenceWin32HandleKHR;
                 return true;
@@ -14896,7 +14896,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x3fb4717bu:
+        case XXH3_vkGetFenceWin32HandleKHR:
             if (!strcmp("vkGetFenceWin32HandleKHR", name)) {
                 *addr = (void *)GetFenceWin32HandleKHR;
                 return true;
@@ -14905,13 +14905,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_KHR_external_fence_fd extension commands
-        case 0xdc1dfab5u:
+        case XXH3_vkImportFenceFdKHR:
             if (!strcmp("vkImportFenceFdKHR", name)) {
                 *addr = (void *)ImportFenceFdKHR;
                 return true;
             }
             break;
-        case 0xbfa75230u:
+        case XXH3_vkGetFenceFdKHR:
             if (!strcmp("vkGetFenceFdKHR", name)) {
                 *addr = (void *)GetFenceFdKHR;
                 return true;
@@ -14919,25 +14919,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_performance_query extension commands
-        case 0x426d36bcu:
+        case XXH3_vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR:
             if (!strcmp("vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR", name)) {
                 *addr = (void *)EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR;
                 return true;
             }
             break;
-        case 0x479085d6u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR:
             if (!strcmp("vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR", name)) {
                 *addr = (void *)GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR;
                 return true;
             }
             break;
-        case 0xbf49690eu:
+        case XXH3_vkAcquireProfilingLockKHR:
             if (!strcmp("vkAcquireProfilingLockKHR", name)) {
                 *addr = (void *)AcquireProfilingLockKHR;
                 return true;
             }
             break;
-        case 0xf4fdd0b7u:
+        case XXH3_vkReleaseProfilingLockKHR:
             if (!strcmp("vkReleaseProfilingLockKHR", name)) {
                 *addr = (void *)ReleaseProfilingLockKHR;
                 return true;
@@ -14945,19 +14945,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_get_memory_requirements2 extension commands
-        case 0xfc9ea975u:
+        case XXH3_vkGetImageMemoryRequirements2KHR:
             if (!strcmp("vkGetImageMemoryRequirements2KHR", name)) {
                 *addr = (void *)GetImageMemoryRequirements2KHR;
                 return true;
             }
             break;
-        case 0x820dae3eu:
+        case XXH3_vkGetBufferMemoryRequirements2KHR:
             if (!strcmp("vkGetBufferMemoryRequirements2KHR", name)) {
                 *addr = (void *)GetBufferMemoryRequirements2KHR;
                 return true;
             }
             break;
-        case 0xab26e3f1u:
+        case XXH3_vkGetImageSparseMemoryRequirements2KHR:
             if (!strcmp("vkGetImageSparseMemoryRequirements2KHR", name)) {
                 *addr = (void *)GetImageSparseMemoryRequirements2KHR;
                 return true;
@@ -14965,13 +14965,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_sampler_ycbcr_conversion extension commands
-        case 0x6bc53830u:
+        case XXH3_vkCreateSamplerYcbcrConversionKHR:
             if (!strcmp("vkCreateSamplerYcbcrConversionKHR", name)) {
                 *addr = (void *)CreateSamplerYcbcrConversionKHR;
                 return true;
             }
             break;
-        case 0xd8c4ae62u:
+        case XXH3_vkDestroySamplerYcbcrConversionKHR:
             if (!strcmp("vkDestroySamplerYcbcrConversionKHR", name)) {
                 *addr = (void *)DestroySamplerYcbcrConversionKHR;
                 return true;
@@ -14979,13 +14979,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_bind_memory2 extension commands
-        case 0xd9ba5d21u:
+        case XXH3_vkBindBufferMemory2KHR:
             if (!strcmp("vkBindBufferMemory2KHR", name)) {
                 *addr = (void *)BindBufferMemory2KHR;
                 return true;
             }
             break;
-        case 0x8ee1dbecu:
+        case XXH3_vkBindImageMemory2KHR:
             if (!strcmp("vkBindImageMemory2KHR", name)) {
                 *addr = (void *)BindImageMemory2KHR;
                 return true;
@@ -14993,7 +14993,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_maintenance3 extension commands
-        case 0x42ad0c11u:
+        case XXH3_vkGetDescriptorSetLayoutSupportKHR:
             if (!strcmp("vkGetDescriptorSetLayoutSupportKHR", name)) {
                 *addr = (void *)GetDescriptorSetLayoutSupportKHR;
                 return true;
@@ -15001,13 +15001,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_draw_indirect_count extension commands
-        case 0x6299459cu:
+        case XXH3_vkCmdDrawIndirectCountKHR:
             if (!strcmp("vkCmdDrawIndirectCountKHR", name)) {
                 *addr = (void *)CmdDrawIndirectCountKHR;
                 return true;
             }
             break;
-        case 0xb0b6f3cdu:
+        case XXH3_vkCmdDrawIndexedIndirectCountKHR:
             if (!strcmp("vkCmdDrawIndexedIndirectCountKHR", name)) {
                 *addr = (void *)CmdDrawIndexedIndirectCountKHR;
                 return true;
@@ -15015,19 +15015,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_timeline_semaphore extension commands
-        case 0x198479b0u:
+        case XXH3_vkGetSemaphoreCounterValueKHR:
             if (!strcmp("vkGetSemaphoreCounterValueKHR", name)) {
                 *addr = (void *)GetSemaphoreCounterValueKHR;
                 return true;
             }
             break;
-        case 0x0b86bd93u:
+        case XXH3_vkWaitSemaphoresKHR:
             if (!strcmp("vkWaitSemaphoresKHR", name)) {
                 *addr = (void *)WaitSemaphoresKHR;
                 return true;
             }
             break;
-        case 0x31b70fcbu:
+        case XXH3_vkSignalSemaphoreKHR:
             if (!strcmp("vkSignalSemaphoreKHR", name)) {
                 *addr = (void *)SignalSemaphoreKHR;
                 return true;
@@ -15035,13 +15035,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_fragment_shading_rate extension commands
-        case 0x9e1664efu:
+        case XXH3_vkGetPhysicalDeviceFragmentShadingRatesKHR:
             if (!strcmp("vkGetPhysicalDeviceFragmentShadingRatesKHR", name)) {
                 *addr = (void *)GetPhysicalDeviceFragmentShadingRatesKHR;
                 return true;
             }
             break;
-        case 0xe95260c9u:
+        case XXH3_vkCmdSetFragmentShadingRateKHR:
             if (!strcmp("vkCmdSetFragmentShadingRateKHR", name)) {
                 *addr = (void *)CmdSetFragmentShadingRateKHR;
                 return true;
@@ -15049,13 +15049,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_dynamic_rendering_local_read extension commands
-        case 0xd09e8cd4u:
+        case XXH3_vkCmdSetRenderingAttachmentLocationsKHR:
             if (!strcmp("vkCmdSetRenderingAttachmentLocationsKHR", name)) {
                 *addr = (void *)CmdSetRenderingAttachmentLocationsKHR;
                 return true;
             }
             break;
-        case 0x320a55cfu:
+        case XXH3_vkCmdSetRenderingInputAttachmentIndicesKHR:
             if (!strcmp("vkCmdSetRenderingInputAttachmentIndicesKHR", name)) {
                 *addr = (void *)CmdSetRenderingInputAttachmentIndicesKHR;
                 return true;
@@ -15063,7 +15063,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_present_wait extension commands
-        case 0x3c1884f0u:
+        case XXH3_vkWaitForPresentKHR:
             if (!strcmp("vkWaitForPresentKHR", name)) {
                 *addr = (void *)WaitForPresentKHR;
                 return true;
@@ -15071,19 +15071,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_buffer_device_address extension commands
-        case 0x68d0b905u:
+        case XXH3_vkGetBufferDeviceAddressKHR:
             if (!strcmp("vkGetBufferDeviceAddressKHR", name)) {
                 *addr = (void *)GetBufferDeviceAddressKHR;
                 return true;
             }
             break;
-        case 0x00727514u:
+        case XXH3_vkGetBufferOpaqueCaptureAddressKHR:
             if (!strcmp("vkGetBufferOpaqueCaptureAddressKHR", name)) {
                 *addr = (void *)GetBufferOpaqueCaptureAddressKHR;
                 return true;
             }
             break;
-        case 0x876c582du:
+        case XXH3_vkGetDeviceMemoryOpaqueCaptureAddressKHR:
             if (!strcmp("vkGetDeviceMemoryOpaqueCaptureAddressKHR", name)) {
                 *addr = (void *)GetDeviceMemoryOpaqueCaptureAddressKHR;
                 return true;
@@ -15091,31 +15091,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_deferred_host_operations extension commands
-        case 0xd11de4c1u:
+        case XXH3_vkCreateDeferredOperationKHR:
             if (!strcmp("vkCreateDeferredOperationKHR", name)) {
                 *addr = (void *)CreateDeferredOperationKHR;
                 return true;
             }
             break;
-        case 0x44492b6bu:
+        case XXH3_vkDestroyDeferredOperationKHR:
             if (!strcmp("vkDestroyDeferredOperationKHR", name)) {
                 *addr = (void *)DestroyDeferredOperationKHR;
                 return true;
             }
             break;
-        case 0x95756ffeu:
+        case XXH3_vkGetDeferredOperationMaxConcurrencyKHR:
             if (!strcmp("vkGetDeferredOperationMaxConcurrencyKHR", name)) {
                 *addr = (void *)GetDeferredOperationMaxConcurrencyKHR;
                 return true;
             }
             break;
-        case 0xeaac343eu:
+        case XXH3_vkGetDeferredOperationResultKHR:
             if (!strcmp("vkGetDeferredOperationResultKHR", name)) {
                 *addr = (void *)GetDeferredOperationResultKHR;
                 return true;
             }
             break;
-        case 0xa7aaddb1u:
+        case XXH3_vkDeferredOperationJoinKHR:
             if (!strcmp("vkDeferredOperationJoinKHR", name)) {
                 *addr = (void *)DeferredOperationJoinKHR;
                 return true;
@@ -15123,19 +15123,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_pipeline_executable_properties extension commands
-        case 0xffdef8d8u:
+        case XXH3_vkGetPipelineExecutablePropertiesKHR:
             if (!strcmp("vkGetPipelineExecutablePropertiesKHR", name)) {
                 *addr = (void *)GetPipelineExecutablePropertiesKHR;
                 return true;
             }
             break;
-        case 0x3e749262u:
+        case XXH3_vkGetPipelineExecutableStatisticsKHR:
             if (!strcmp("vkGetPipelineExecutableStatisticsKHR", name)) {
                 *addr = (void *)GetPipelineExecutableStatisticsKHR;
                 return true;
             }
             break;
-        case 0xb1c36b30u:
+        case XXH3_vkGetPipelineExecutableInternalRepresentationsKHR:
             if (!strcmp("vkGetPipelineExecutableInternalRepresentationsKHR", name)) {
                 *addr = (void *)GetPipelineExecutableInternalRepresentationsKHR;
                 return true;
@@ -15143,13 +15143,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_map_memory2 extension commands
-        case 0xeb122386u:
+        case XXH3_vkMapMemory2KHR:
             if (!strcmp("vkMapMemory2KHR", name)) {
                 *addr = (void *)MapMemory2KHR;
                 return true;
             }
             break;
-        case 0x69ace323u:
+        case XXH3_vkUnmapMemory2KHR:
             if (!strcmp("vkUnmapMemory2KHR", name)) {
                 *addr = (void *)UnmapMemory2KHR;
                 return true;
@@ -15157,19 +15157,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_video_encode_queue extension commands
-        case 0x3eb5f251u:
+        case XXH3_vkGetPhysicalDeviceVideoEncodeQualityLevelPropertiesKHR:
             if (!strcmp("vkGetPhysicalDeviceVideoEncodeQualityLevelPropertiesKHR", name)) {
                 *addr = (void *)GetPhysicalDeviceVideoEncodeQualityLevelPropertiesKHR;
                 return true;
             }
             break;
-        case 0xc71a28a4u:
+        case XXH3_vkGetEncodedVideoSessionParametersKHR:
             if (!strcmp("vkGetEncodedVideoSessionParametersKHR", name)) {
                 *addr = (void *)GetEncodedVideoSessionParametersKHR;
                 return true;
             }
             break;
-        case 0xce295edau:
+        case XXH3_vkCmdEncodeVideoKHR:
             if (!strcmp("vkCmdEncodeVideoKHR", name)) {
                 *addr = (void *)CmdEncodeVideoKHR;
                 return true;
@@ -15177,37 +15177,37 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_synchronization2 extension commands
-        case 0x92a07673u:
+        case XXH3_vkCmdSetEvent2KHR:
             if (!strcmp("vkCmdSetEvent2KHR", name)) {
                 *addr = (void *)CmdSetEvent2KHR;
                 return true;
             }
             break;
-        case 0xa1fb0bf6u:
+        case XXH3_vkCmdResetEvent2KHR:
             if (!strcmp("vkCmdResetEvent2KHR", name)) {
                 *addr = (void *)CmdResetEvent2KHR;
                 return true;
             }
             break;
-        case 0x8f02f937u:
+        case XXH3_vkCmdWaitEvents2KHR:
             if (!strcmp("vkCmdWaitEvents2KHR", name)) {
                 *addr = (void *)CmdWaitEvents2KHR;
                 return true;
             }
             break;
-        case 0x76af21b6u:
+        case XXH3_vkCmdPipelineBarrier2KHR:
             if (!strcmp("vkCmdPipelineBarrier2KHR", name)) {
                 *addr = (void *)CmdPipelineBarrier2KHR;
                 return true;
             }
             break;
-        case 0xb4125402u:
+        case XXH3_vkCmdWriteTimestamp2KHR:
             if (!strcmp("vkCmdWriteTimestamp2KHR", name)) {
                 *addr = (void *)CmdWriteTimestamp2KHR;
                 return true;
             }
             break;
-        case 0x60afde40u:
+        case XXH3_vkQueueSubmit2KHR:
             if (!strcmp("vkQueueSubmit2KHR", name)) {
                 *addr = (void *)QueueSubmit2KHR;
                 return true;
@@ -15215,133 +15215,133 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_device_address_commands extension commands
-        case 0xa1f9614du:
+        case XXH3_vkCmdBindIndexBuffer3KHR:
             if (!strcmp("vkCmdBindIndexBuffer3KHR", name)) {
                 *addr = (void *)CmdBindIndexBuffer3KHR;
                 return true;
             }
             break;
-        case 0xbd9c3a3eu:
+        case XXH3_vkCmdBindVertexBuffers3KHR:
             if (!strcmp("vkCmdBindVertexBuffers3KHR", name)) {
                 *addr = (void *)CmdBindVertexBuffers3KHR;
                 return true;
             }
             break;
-        case 0x8cd787dfu:
+        case XXH3_vkCmdDrawIndirect2KHR:
             if (!strcmp("vkCmdDrawIndirect2KHR", name)) {
                 *addr = (void *)CmdDrawIndirect2KHR;
                 return true;
             }
             break;
-        case 0x64332152u:
+        case XXH3_vkCmdDrawIndexedIndirect2KHR:
             if (!strcmp("vkCmdDrawIndexedIndirect2KHR", name)) {
                 *addr = (void *)CmdDrawIndexedIndirect2KHR;
                 return true;
             }
             break;
-        case 0x092e217fu:
+        case XXH3_vkCmdDispatchIndirect2KHR:
             if (!strcmp("vkCmdDispatchIndirect2KHR", name)) {
                 *addr = (void *)CmdDispatchIndirect2KHR;
                 return true;
             }
             break;
-        case 0x73ba7ee7u:
+        case XXH3_vkCmdCopyMemoryKHR:
             if (!strcmp("vkCmdCopyMemoryKHR", name)) {
                 *addr = (void *)CmdCopyMemoryKHR;
                 return true;
             }
             break;
-        case 0x90f0fa81u:
+        case XXH3_vkCmdCopyMemoryToImageKHR:
             if (!strcmp("vkCmdCopyMemoryToImageKHR", name)) {
                 *addr = (void *)CmdCopyMemoryToImageKHR;
                 return true;
             }
             break;
-        case 0x10b7a061u:
+        case XXH3_vkCmdCopyImageToMemoryKHR:
             if (!strcmp("vkCmdCopyImageToMemoryKHR", name)) {
                 *addr = (void *)CmdCopyImageToMemoryKHR;
                 return true;
             }
             break;
-        case 0xe8021733u:
+        case XXH3_vkCmdUpdateMemoryKHR:
             if (!strcmp("vkCmdUpdateMemoryKHR", name)) {
                 *addr = (void *)CmdUpdateMemoryKHR;
                 return true;
             }
             break;
-        case 0x28b40f37u:
+        case XXH3_vkCmdFillMemoryKHR:
             if (!strcmp("vkCmdFillMemoryKHR", name)) {
                 *addr = (void *)CmdFillMemoryKHR;
                 return true;
             }
             break;
-        case 0x165313dcu:
+        case XXH3_vkCmdCopyQueryPoolResultsToMemoryKHR:
             if (!strcmp("vkCmdCopyQueryPoolResultsToMemoryKHR", name)) {
                 *addr = (void *)CmdCopyQueryPoolResultsToMemoryKHR;
                 return true;
             }
             break;
-        case 0x2887066cu:
+        case XXH3_vkCmdDrawIndirectCount2KHR:
             if (!strcmp("vkCmdDrawIndirectCount2KHR", name)) {
                 *addr = (void *)CmdDrawIndirectCount2KHR;
                 return true;
             }
             break;
-        case 0x4749a4afu:
+        case XXH3_vkCmdDrawIndexedIndirectCount2KHR:
             if (!strcmp("vkCmdDrawIndexedIndirectCount2KHR", name)) {
                 *addr = (void *)CmdDrawIndexedIndirectCount2KHR;
                 return true;
             }
             break;
-        case 0x46c592c2u:
+        case XXH3_vkCmdBeginConditionalRendering2EXT:
             if (!strcmp("vkCmdBeginConditionalRendering2EXT", name)) {
                 *addr = (void *)CmdBeginConditionalRendering2EXT;
                 return true;
             }
             break;
-        case 0xe8529c96u:
+        case XXH3_vkCmdBindTransformFeedbackBuffers2EXT:
             if (!strcmp("vkCmdBindTransformFeedbackBuffers2EXT", name)) {
                 *addr = (void *)CmdBindTransformFeedbackBuffers2EXT;
                 return true;
             }
             break;
-        case 0xcc1b550bu:
+        case XXH3_vkCmdBeginTransformFeedback2EXT:
             if (!strcmp("vkCmdBeginTransformFeedback2EXT", name)) {
                 *addr = (void *)CmdBeginTransformFeedback2EXT;
                 return true;
             }
             break;
-        case 0xe5fc3313u:
+        case XXH3_vkCmdEndTransformFeedback2EXT:
             if (!strcmp("vkCmdEndTransformFeedback2EXT", name)) {
                 *addr = (void *)CmdEndTransformFeedback2EXT;
                 return true;
             }
             break;
-        case 0x9eb747feu:
+        case XXH3_vkCmdDrawIndirectByteCount2EXT:
             if (!strcmp("vkCmdDrawIndirectByteCount2EXT", name)) {
                 *addr = (void *)CmdDrawIndirectByteCount2EXT;
                 return true;
             }
             break;
-        case 0x501aa80au:
+        case XXH3_vkCmdDrawMeshTasksIndirect2EXT:
             if (!strcmp("vkCmdDrawMeshTasksIndirect2EXT", name)) {
                 *addr = (void *)CmdDrawMeshTasksIndirect2EXT;
                 return true;
             }
             break;
-        case 0xf11fb6c7u:
+        case XXH3_vkCmdDrawMeshTasksIndirectCount2EXT:
             if (!strcmp("vkCmdDrawMeshTasksIndirectCount2EXT", name)) {
                 *addr = (void *)CmdDrawMeshTasksIndirectCount2EXT;
                 return true;
             }
             break;
-        case 0xd91f33a1u:
+        case XXH3_vkCmdWriteMarkerToMemoryAMD:
             if (!strcmp("vkCmdWriteMarkerToMemoryAMD", name)) {
                 *addr = (void *)CmdWriteMarkerToMemoryAMD;
                 return true;
             }
             break;
-        case 0xac2bd68eu:
+        case XXH3_vkCreateAccelerationStructure2KHR:
             if (!strcmp("vkCreateAccelerationStructure2KHR", name)) {
                 *addr = (void *)CreateAccelerationStructure2KHR;
                 return true;
@@ -15349,37 +15349,37 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_copy_commands2 extension commands
-        case 0xa0c8b948u:
+        case XXH3_vkCmdCopyBuffer2KHR:
             if (!strcmp("vkCmdCopyBuffer2KHR", name)) {
                 *addr = (void *)CmdCopyBuffer2KHR;
                 return true;
             }
             break;
-        case 0x589da3cdu:
+        case XXH3_vkCmdCopyImage2KHR:
             if (!strcmp("vkCmdCopyImage2KHR", name)) {
                 *addr = (void *)CmdCopyImage2KHR;
                 return true;
             }
             break;
-        case 0x866f8fe4u:
+        case XXH3_vkCmdCopyBufferToImage2KHR:
             if (!strcmp("vkCmdCopyBufferToImage2KHR", name)) {
                 *addr = (void *)CmdCopyBufferToImage2KHR;
                 return true;
             }
             break;
-        case 0x03ac3d82u:
+        case XXH3_vkCmdCopyImageToBuffer2KHR:
             if (!strcmp("vkCmdCopyImageToBuffer2KHR", name)) {
                 *addr = (void *)CmdCopyImageToBuffer2KHR;
                 return true;
             }
             break;
-        case 0x9c4f6ffbu:
+        case XXH3_vkCmdBlitImage2KHR:
             if (!strcmp("vkCmdBlitImage2KHR", name)) {
                 *addr = (void *)CmdBlitImage2KHR;
                 return true;
             }
             break;
-        case 0xefa437aeu:
+        case XXH3_vkCmdResolveImage2KHR:
             if (!strcmp("vkCmdResolveImage2KHR", name)) {
                 *addr = (void *)CmdResolveImage2KHR;
                 return true;
@@ -15387,7 +15387,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_ray_tracing_maintenance1 extension commands
-        case 0x6f48f771u:
+        case XXH3_vkCmdTraceRaysIndirect2KHR:
             if (!strcmp("vkCmdTraceRaysIndirect2KHR", name)) {
                 *addr = (void *)CmdTraceRaysIndirect2KHR;
                 return true;
@@ -15395,19 +15395,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_maintenance4 extension commands
-        case 0xd3fc2644u:
+        case XXH3_vkGetDeviceBufferMemoryRequirementsKHR:
             if (!strcmp("vkGetDeviceBufferMemoryRequirementsKHR", name)) {
                 *addr = (void *)GetDeviceBufferMemoryRequirementsKHR;
                 return true;
             }
             break;
-        case 0x4fe780f9u:
+        case XXH3_vkGetDeviceImageMemoryRequirementsKHR:
             if (!strcmp("vkGetDeviceImageMemoryRequirementsKHR", name)) {
                 *addr = (void *)GetDeviceImageMemoryRequirementsKHR;
                 return true;
             }
             break;
-        case 0x2f12a841u:
+        case XXH3_vkGetDeviceImageSparseMemoryRequirementsKHR:
             if (!strcmp("vkGetDeviceImageSparseMemoryRequirementsKHR", name)) {
                 *addr = (void *)GetDeviceImageSparseMemoryRequirementsKHR;
                 return true;
@@ -15415,25 +15415,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_maintenance5 extension commands
-        case 0x5ec4ce18u:
+        case XXH3_vkCmdBindIndexBuffer2KHR:
             if (!strcmp("vkCmdBindIndexBuffer2KHR", name)) {
                 *addr = (void *)CmdBindIndexBuffer2KHR;
                 return true;
             }
             break;
-        case 0x3923dda4u:
+        case XXH3_vkGetRenderingAreaGranularityKHR:
             if (!strcmp("vkGetRenderingAreaGranularityKHR", name)) {
                 *addr = (void *)GetRenderingAreaGranularityKHR;
                 return true;
             }
             break;
-        case 0x326cc29eu:
+        case XXH3_vkGetDeviceImageSubresourceLayoutKHR:
             if (!strcmp("vkGetDeviceImageSubresourceLayoutKHR", name)) {
                 *addr = (void *)GetDeviceImageSubresourceLayoutKHR;
                 return true;
             }
             break;
-        case 0x885710e4u:
+        case XXH3_vkGetImageSubresourceLayout2KHR:
             if (!strcmp("vkGetImageSubresourceLayout2KHR", name)) {
                 *addr = (void *)GetImageSubresourceLayout2KHR;
                 return true;
@@ -15441,7 +15441,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_present_wait2 extension commands
-        case 0xff77eae8u:
+        case XXH3_vkWaitForPresent2KHR:
             if (!strcmp("vkWaitForPresent2KHR", name)) {
                 *addr = (void *)WaitForPresent2KHR;
                 return true;
@@ -15449,31 +15449,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_pipeline_binary extension commands
-        case 0x382c4a9cu:
+        case XXH3_vkCreatePipelineBinariesKHR:
             if (!strcmp("vkCreatePipelineBinariesKHR", name)) {
                 *addr = (void *)CreatePipelineBinariesKHR;
                 return true;
             }
             break;
-        case 0xd70e4d1au:
+        case XXH3_vkDestroyPipelineBinaryKHR:
             if (!strcmp("vkDestroyPipelineBinaryKHR", name)) {
                 *addr = (void *)DestroyPipelineBinaryKHR;
                 return true;
             }
             break;
-        case 0x675e256eu:
+        case XXH3_vkGetPipelineKeyKHR:
             if (!strcmp("vkGetPipelineKeyKHR", name)) {
                 *addr = (void *)GetPipelineKeyKHR;
                 return true;
             }
             break;
-        case 0xccc48a58u:
+        case XXH3_vkGetPipelineBinaryDataKHR:
             if (!strcmp("vkGetPipelineBinaryDataKHR", name)) {
                 *addr = (void *)GetPipelineBinaryDataKHR;
                 return true;
             }
             break;
-        case 0x89d1145au:
+        case XXH3_vkReleaseCapturedPipelineDataKHR:
             if (!strcmp("vkReleaseCapturedPipelineDataKHR", name)) {
                 *addr = (void *)ReleaseCapturedPipelineDataKHR;
                 return true;
@@ -15481,7 +15481,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_swapchain_maintenance1 extension commands
-        case 0xaf6ecc7au:
+        case XXH3_vkReleaseSwapchainImagesKHR:
             if (!strcmp("vkReleaseSwapchainImagesKHR", name)) {
                 *addr = (void *)ReleaseSwapchainImagesKHR;
                 return true;
@@ -15489,7 +15489,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_cooperative_matrix extension commands
-        case 0xd4e169e3u:
+        case XXH3_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR:
             if (!strcmp("vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR", name)) {
                 *addr = (void *)GetPhysicalDeviceCooperativeMatrixPropertiesKHR;
                 return true;
@@ -15497,7 +15497,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_line_rasterization extension commands
-        case 0x4819f988u:
+        case XXH3_vkCmdSetLineStippleKHR:
             if (!strcmp("vkCmdSetLineStippleKHR", name)) {
                 *addr = (void *)CmdSetLineStippleKHR;
                 return true;
@@ -15505,13 +15505,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_calibrated_timestamps extension commands
-        case 0xda63f0cbu:
+        case XXH3_vkGetPhysicalDeviceCalibrateableTimeDomainsKHR:
             if (!strcmp("vkGetPhysicalDeviceCalibrateableTimeDomainsKHR", name)) {
                 *addr = (void *)GetPhysicalDeviceCalibrateableTimeDomainsKHR;
                 return true;
             }
             break;
-        case 0x4a8edbdfu:
+        case XXH3_vkGetCalibratedTimestampsKHR:
             if (!strcmp("vkGetCalibratedTimestampsKHR", name)) {
                 *addr = (void *)GetCalibratedTimestampsKHR;
                 return true;
@@ -15519,37 +15519,37 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_maintenance6 extension commands
-        case 0xfabb4c90u:
+        case XXH3_vkCmdBindDescriptorSets2KHR:
             if (!strcmp("vkCmdBindDescriptorSets2KHR", name)) {
                 *addr = (void *)CmdBindDescriptorSets2KHR;
                 return true;
             }
             break;
-        case 0x059e6dc2u:
+        case XXH3_vkCmdPushConstants2KHR:
             if (!strcmp("vkCmdPushConstants2KHR", name)) {
                 *addr = (void *)CmdPushConstants2KHR;
                 return true;
             }
             break;
-        case 0x88f7cf68u:
+        case XXH3_vkCmdPushDescriptorSet2KHR:
             if (!strcmp("vkCmdPushDescriptorSet2KHR", name)) {
                 *addr = (void *)CmdPushDescriptorSet2KHR;
                 return true;
             }
             break;
-        case 0x2eed8a9eu:
+        case XXH3_vkCmdPushDescriptorSetWithTemplate2KHR:
             if (!strcmp("vkCmdPushDescriptorSetWithTemplate2KHR", name)) {
                 *addr = (void *)CmdPushDescriptorSetWithTemplate2KHR;
                 return true;
             }
             break;
-        case 0x04fc7abau:
+        case XXH3_vkCmdSetDescriptorBufferOffsets2EXT:
             if (!strcmp("vkCmdSetDescriptorBufferOffsets2EXT", name)) {
                 *addr = (void *)CmdSetDescriptorBufferOffsets2EXT;
                 return true;
             }
             break;
-        case 0x626a0368u:
+        case XXH3_vkCmdBindDescriptorBufferEmbeddedSamplers2EXT:
             if (!strcmp("vkCmdBindDescriptorBufferEmbeddedSamplers2EXT", name)) {
                 *addr = (void *)CmdBindDescriptorBufferEmbeddedSamplers2EXT;
                 return true;
@@ -15557,13 +15557,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_copy_memory_indirect extension commands
-        case 0xc9b0f639u:
+        case XXH3_vkCmdCopyMemoryIndirectKHR:
             if (!strcmp("vkCmdCopyMemoryIndirectKHR", name)) {
                 *addr = (void *)CmdCopyMemoryIndirectKHR;
                 return true;
             }
             break;
-        case 0xdf5508a7u:
+        case XXH3_vkCmdCopyMemoryToImageIndirectKHR:
             if (!strcmp("vkCmdCopyMemoryToImageIndirectKHR", name)) {
                 *addr = (void *)CmdCopyMemoryToImageIndirectKHR;
                 return true;
@@ -15571,13 +15571,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_device_fault extension commands
-        case 0xed0bdb5eu:
+        case XXH3_vkGetDeviceFaultReportsKHR:
             if (!strcmp("vkGetDeviceFaultReportsKHR", name)) {
                 *addr = (void *)GetDeviceFaultReportsKHR;
                 return true;
             }
             break;
-        case 0xf4ed1e26u:
+        case XXH3_vkGetDeviceFaultDebugInfoKHR:
             if (!strcmp("vkGetDeviceFaultDebugInfoKHR", name)) {
                 *addr = (void *)GetDeviceFaultDebugInfoKHR;
                 return true;
@@ -15585,7 +15585,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_maintenance10 extension commands
-        case 0xa8171ea8u:
+        case XXH3_vkCmdEndRendering2KHR:
             if (!strcmp("vkCmdEndRendering2KHR", name)) {
                 *addr = (void *)CmdEndRendering2KHR;
                 return true;
@@ -15593,31 +15593,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_debug_marker extension commands
-        case 0x5a37c8bdu:
+        case XXH3_vkDebugMarkerSetObjectTagEXT:
             if (!strcmp("vkDebugMarkerSetObjectTagEXT", name)) {
                 *addr = (void *)DebugMarkerSetObjectTagEXT;
                 return true;
             }
             break;
-        case 0xecefbfccu:
+        case XXH3_vkDebugMarkerSetObjectNameEXT:
             if (!strcmp("vkDebugMarkerSetObjectNameEXT", name)) {
                 *addr = (void *)DebugMarkerSetObjectNameEXT;
                 return true;
             }
             break;
-        case 0xafc387cfu:
+        case XXH3_vkCmdDebugMarkerBeginEXT:
             if (!strcmp("vkCmdDebugMarkerBeginEXT", name)) {
                 *addr = (void *)CmdDebugMarkerBeginEXT;
                 return true;
             }
             break;
-        case 0x362846c3u:
+        case XXH3_vkCmdDebugMarkerEndEXT:
             if (!strcmp("vkCmdDebugMarkerEndEXT", name)) {
                 *addr = (void *)CmdDebugMarkerEndEXT;
                 return true;
             }
             break;
-        case 0x8cb31949u:
+        case XXH3_vkCmdDebugMarkerInsertEXT:
             if (!strcmp("vkCmdDebugMarkerInsertEXT", name)) {
                 *addr = (void *)CmdDebugMarkerInsertEXT;
                 return true;
@@ -15625,37 +15625,37 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_transform_feedback extension commands
-        case 0xc5148846u:
+        case XXH3_vkCmdBindTransformFeedbackBuffersEXT:
             if (!strcmp("vkCmdBindTransformFeedbackBuffersEXT", name)) {
                 *addr = (void *)CmdBindTransformFeedbackBuffersEXT;
                 return true;
             }
             break;
-        case 0xf8339c31u:
+        case XXH3_vkCmdBeginTransformFeedbackEXT:
             if (!strcmp("vkCmdBeginTransformFeedbackEXT", name)) {
                 *addr = (void *)CmdBeginTransformFeedbackEXT;
                 return true;
             }
             break;
-        case 0x026d39e9u:
+        case XXH3_vkCmdEndTransformFeedbackEXT:
             if (!strcmp("vkCmdEndTransformFeedbackEXT", name)) {
                 *addr = (void *)CmdEndTransformFeedbackEXT;
                 return true;
             }
             break;
-        case 0x58a08dcdu:
+        case XXH3_vkCmdBeginQueryIndexedEXT:
             if (!strcmp("vkCmdBeginQueryIndexedEXT", name)) {
                 *addr = (void *)CmdBeginQueryIndexedEXT;
                 return true;
             }
             break;
-        case 0xeb029c35u:
+        case XXH3_vkCmdEndQueryIndexedEXT:
             if (!strcmp("vkCmdEndQueryIndexedEXT", name)) {
                 *addr = (void *)CmdEndQueryIndexedEXT;
                 return true;
             }
             break;
-        case 0x729b759eu:
+        case XXH3_vkCmdDrawIndirectByteCountEXT:
             if (!strcmp("vkCmdDrawIndirectByteCountEXT", name)) {
                 *addr = (void *)CmdDrawIndirectByteCountEXT;
                 return true;
@@ -15663,31 +15663,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NVX_binary_import extension commands
-        case 0xaacb8e6eu:
+        case XXH3_vkCreateCuModuleNVX:
             if (!strcmp("vkCreateCuModuleNVX", name)) {
                 *addr = (void *)CreateCuModuleNVX;
                 return true;
             }
             break;
-        case 0x77d9e0f6u:
+        case XXH3_vkCreateCuFunctionNVX:
             if (!strcmp("vkCreateCuFunctionNVX", name)) {
                 *addr = (void *)CreateCuFunctionNVX;
                 return true;
             }
             break;
-        case 0x830c2290u:
+        case XXH3_vkDestroyCuModuleNVX:
             if (!strcmp("vkDestroyCuModuleNVX", name)) {
                 *addr = (void *)DestroyCuModuleNVX;
                 return true;
             }
             break;
-        case 0x24a4e0c0u:
+        case XXH3_vkDestroyCuFunctionNVX:
             if (!strcmp("vkDestroyCuFunctionNVX", name)) {
                 *addr = (void *)DestroyCuFunctionNVX;
                 return true;
             }
             break;
-        case 0x1ce778a8u:
+        case XXH3_vkCmdCuLaunchKernelNVX:
             if (!strcmp("vkCmdCuLaunchKernelNVX", name)) {
                 *addr = (void *)CmdCuLaunchKernelNVX;
                 return true;
@@ -15695,25 +15695,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NVX_image_view_handle extension commands
-        case 0xe19409e8u:
+        case XXH3_vkGetImageViewHandleNVX:
             if (!strcmp("vkGetImageViewHandleNVX", name)) {
                 *addr = (void *)GetImageViewHandleNVX;
                 return true;
             }
             break;
-        case 0x389e19deu:
+        case XXH3_vkGetImageViewHandle64NVX:
             if (!strcmp("vkGetImageViewHandle64NVX", name)) {
                 *addr = (void *)GetImageViewHandle64NVX;
                 return true;
             }
             break;
-        case 0x66e84002u:
+        case XXH3_vkGetImageViewAddressNVX:
             if (!strcmp("vkGetImageViewAddressNVX", name)) {
                 *addr = (void *)GetImageViewAddressNVX;
                 return true;
             }
             break;
-        case 0xb9ebf630u:
+        case XXH3_vkGetDeviceCombinedImageSamplerIndexNVX:
             if (!strcmp("vkGetDeviceCombinedImageSamplerIndexNVX", name)) {
                 *addr = (void *)GetDeviceCombinedImageSamplerIndexNVX;
                 return true;
@@ -15721,13 +15721,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_AMD_draw_indirect_count extension commands
-        case 0xf2cb30b5u:
+        case XXH3_vkCmdDrawIndirectCountAMD:
             if (!strcmp("vkCmdDrawIndirectCountAMD", name)) {
                 *addr = (void *)CmdDrawIndirectCountAMD;
                 return true;
             }
             break;
-        case 0x6b4245f4u:
+        case XXH3_vkCmdDrawIndexedIndirectCountAMD:
             if (!strcmp("vkCmdDrawIndexedIndirectCountAMD", name)) {
                 *addr = (void *)CmdDrawIndexedIndirectCountAMD;
                 return true;
@@ -15735,7 +15735,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_AMD_shader_info extension commands
-        case 0xd29bd973u:
+        case XXH3_vkGetShaderInfoAMD:
             if (!strcmp("vkGetShaderInfoAMD", name)) {
                 *addr = (void *)GetShaderInfoAMD;
                 return true;
@@ -15743,7 +15743,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_external_memory_capabilities extension commands
-        case 0x7e02661du:
+        case XXH3_vkGetPhysicalDeviceExternalImageFormatPropertiesNV:
             if (!strcmp("vkGetPhysicalDeviceExternalImageFormatPropertiesNV", name)) {
                 *addr = (ptr_instance->enabled_extensions.nv_external_memory_capabilities == 1)
                              ? (void *)GetPhysicalDeviceExternalImageFormatPropertiesNV
@@ -15754,7 +15754,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_NV_external_memory_win32 extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x73543d06u:
+        case XXH3_vkGetMemoryWin32HandleNV:
             if (!strcmp("vkGetMemoryWin32HandleNV", name)) {
                 *addr = (void *)GetMemoryWin32HandleNV;
                 return true;
@@ -15763,13 +15763,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_EXT_conditional_rendering extension commands
-        case 0xa200aefau:
+        case XXH3_vkCmdBeginConditionalRenderingEXT:
             if (!strcmp("vkCmdBeginConditionalRenderingEXT", name)) {
                 *addr = (void *)CmdBeginConditionalRenderingEXT;
                 return true;
             }
             break;
-        case 0x9ff6ef02u:
+        case XXH3_vkCmdEndConditionalRenderingEXT:
             if (!strcmp("vkCmdEndConditionalRenderingEXT", name)) {
                 *addr = (void *)CmdEndConditionalRenderingEXT;
                 return true;
@@ -15777,7 +15777,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_clip_space_w_scaling extension commands
-        case 0xc316e89eu:
+        case XXH3_vkCmdSetViewportWScalingNV:
             if (!strcmp("vkCmdSetViewportWScalingNV", name)) {
                 *addr = (void *)CmdSetViewportWScalingNV;
                 return true;
@@ -15785,7 +15785,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_direct_mode_display extension commands
-        case 0x8a28db5au:
+        case XXH3_vkReleaseDisplayEXT:
             if (!strcmp("vkReleaseDisplayEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_direct_mode_display == 1)
                              ? (void *)ReleaseDisplayEXT
@@ -15796,7 +15796,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_EXT_acquire_xlib_display extension commands
 #if defined(VK_USE_PLATFORM_XLIB_XRANDR_EXT)
-        case 0x380de190u:
+        case XXH3_vkAcquireXlibDisplayEXT:
             if (!strcmp("vkAcquireXlibDisplayEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_acquire_xlib_display == 1)
                              ? (void *)AcquireXlibDisplayEXT
@@ -15806,7 +15806,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #if defined(VK_USE_PLATFORM_XLIB_XRANDR_EXT)
-        case 0xe72424d5u:
+        case XXH3_vkGetRandROutputDisplayEXT:
             if (!strcmp("vkGetRandROutputDisplayEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_acquire_xlib_display == 1)
                              ? (void *)GetRandROutputDisplayEXT
@@ -15817,7 +15817,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 
         // ---- VK_EXT_display_surface_counter extension commands
-        case 0xb811cc3bu:
+        case XXH3_vkGetPhysicalDeviceSurfaceCapabilities2EXT:
             if (!strcmp("vkGetPhysicalDeviceSurfaceCapabilities2EXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_display_surface_counter == 1)
                              ? (void *)GetPhysicalDeviceSurfaceCapabilities2EXT
@@ -15827,25 +15827,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_display_control extension commands
-        case 0xf97f8b25u:
+        case XXH3_vkDisplayPowerControlEXT:
             if (!strcmp("vkDisplayPowerControlEXT", name)) {
                 *addr = (void *)DisplayPowerControlEXT;
                 return true;
             }
             break;
-        case 0x2effdcc2u:
+        case XXH3_vkRegisterDeviceEventEXT:
             if (!strcmp("vkRegisterDeviceEventEXT", name)) {
                 *addr = (void *)RegisterDeviceEventEXT;
                 return true;
             }
             break;
-        case 0xadc421e4u:
+        case XXH3_vkRegisterDisplayEventEXT:
             if (!strcmp("vkRegisterDisplayEventEXT", name)) {
                 *addr = (void *)RegisterDisplayEventEXT;
                 return true;
             }
             break;
-        case 0x302569e5u:
+        case XXH3_vkGetSwapchainCounterEXT:
             if (!strcmp("vkGetSwapchainCounterEXT", name)) {
                 *addr = (void *)GetSwapchainCounterEXT;
                 return true;
@@ -15853,13 +15853,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_GOOGLE_display_timing extension commands
-        case 0x277dc056u:
+        case XXH3_vkGetRefreshCycleDurationGOOGLE:
             if (!strcmp("vkGetRefreshCycleDurationGOOGLE", name)) {
                 *addr = (void *)GetRefreshCycleDurationGOOGLE;
                 return true;
             }
             break;
-        case 0xaa7a8c67u:
+        case XXH3_vkGetPastPresentationTimingGOOGLE:
             if (!strcmp("vkGetPastPresentationTimingGOOGLE", name)) {
                 *addr = (void *)GetPastPresentationTimingGOOGLE;
                 return true;
@@ -15867,19 +15867,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_discard_rectangles extension commands
-        case 0x746a9b6cu:
+        case XXH3_vkCmdSetDiscardRectangleEXT:
             if (!strcmp("vkCmdSetDiscardRectangleEXT", name)) {
                 *addr = (void *)CmdSetDiscardRectangleEXT;
                 return true;
             }
             break;
-        case 0x228ac2c5u:
+        case XXH3_vkCmdSetDiscardRectangleEnableEXT:
             if (!strcmp("vkCmdSetDiscardRectangleEnableEXT", name)) {
                 *addr = (void *)CmdSetDiscardRectangleEnableEXT;
                 return true;
             }
             break;
-        case 0xe2eab3f1u:
+        case XXH3_vkCmdSetDiscardRectangleModeEXT:
             if (!strcmp("vkCmdSetDiscardRectangleModeEXT", name)) {
                 *addr = (void *)CmdSetDiscardRectangleModeEXT;
                 return true;
@@ -15887,7 +15887,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_hdr_metadata extension commands
-        case 0x04d97c94u:
+        case XXH3_vkSetHdrMetadataEXT:
             if (!strcmp("vkSetHdrMetadataEXT", name)) {
                 *addr = (void *)SetHdrMetadataEXT;
                 return true;
@@ -15895,7 +15895,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_debug_utils extension commands
-        case 0xd89ff139u:
+        case XXH3_vkSetDebugUtilsObjectNameEXT:
             if (!strcmp("vkSetDebugUtilsObjectNameEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_debug_utils == 1)
                              ? (void *)SetDebugUtilsObjectNameEXT
@@ -15903,7 +15903,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0x5e0dab22u:
+        case XXH3_vkSetDebugUtilsObjectTagEXT:
             if (!strcmp("vkSetDebugUtilsObjectTagEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_debug_utils == 1)
                              ? (void *)SetDebugUtilsObjectTagEXT
@@ -15911,7 +15911,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0x46b78797u:
+        case XXH3_vkQueueBeginDebugUtilsLabelEXT:
             if (!strcmp("vkQueueBeginDebugUtilsLabelEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_debug_utils == 1)
                              ? (void *)QueueBeginDebugUtilsLabelEXT
@@ -15919,7 +15919,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0x6aea05b3u:
+        case XXH3_vkQueueEndDebugUtilsLabelEXT:
             if (!strcmp("vkQueueEndDebugUtilsLabelEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_debug_utils == 1)
                              ? (void *)QueueEndDebugUtilsLabelEXT
@@ -15927,7 +15927,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0x963e0d79u:
+        case XXH3_vkQueueInsertDebugUtilsLabelEXT:
             if (!strcmp("vkQueueInsertDebugUtilsLabelEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_debug_utils == 1)
                              ? (void *)QueueInsertDebugUtilsLabelEXT
@@ -15935,7 +15935,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0x26ebe05au:
+        case XXH3_vkCmdBeginDebugUtilsLabelEXT:
             if (!strcmp("vkCmdBeginDebugUtilsLabelEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_debug_utils == 1)
                              ? (void *)CmdBeginDebugUtilsLabelEXT
@@ -15943,7 +15943,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0x8cc22c12u:
+        case XXH3_vkCmdEndDebugUtilsLabelEXT:
             if (!strcmp("vkCmdEndDebugUtilsLabelEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_debug_utils == 1)
                              ? (void *)CmdEndDebugUtilsLabelEXT
@@ -15951,7 +15951,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0x95502ba6u:
+        case XXH3_vkCmdInsertDebugUtilsLabelEXT:
             if (!strcmp("vkCmdInsertDebugUtilsLabelEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_debug_utils == 1)
                              ? (void *)CmdInsertDebugUtilsLabelEXT
@@ -15962,7 +15962,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_ANDROID_external_memory_android_hardware_buffer extension commands
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-        case 0x80069229u:
+        case XXH3_vkGetAndroidHardwareBufferPropertiesANDROID:
             if (!strcmp("vkGetAndroidHardwareBufferPropertiesANDROID", name)) {
                 *addr = (void *)GetAndroidHardwareBufferPropertiesANDROID;
                 return true;
@@ -15970,7 +15970,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-        case 0x3e53800du:
+        case XXH3_vkGetMemoryAndroidHardwareBufferANDROID:
             if (!strcmp("vkGetMemoryAndroidHardwareBufferANDROID", name)) {
                 *addr = (void *)GetMemoryAndroidHardwareBufferANDROID;
                 return true;
@@ -15979,73 +15979,73 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 
         // ---- VK_AMD_gpa_interface extension commands
-        case 0xd789c54au:
+        case XXH3_vkCreateGpaSessionAMD:
             if (!strcmp("vkCreateGpaSessionAMD", name)) {
                 *addr = (void *)CreateGpaSessionAMD;
                 return true;
             }
             break;
-        case 0xb29a89c4u:
+        case XXH3_vkDestroyGpaSessionAMD:
             if (!strcmp("vkDestroyGpaSessionAMD", name)) {
                 *addr = (void *)DestroyGpaSessionAMD;
                 return true;
             }
             break;
-        case 0xbb069f3bu:
+        case XXH3_vkSetGpaDeviceClockModeAMD:
             if (!strcmp("vkSetGpaDeviceClockModeAMD", name)) {
                 *addr = (void *)SetGpaDeviceClockModeAMD;
                 return true;
             }
             break;
-        case 0xe4341cbeu:
+        case XXH3_vkGetGpaDeviceClockInfoAMD:
             if (!strcmp("vkGetGpaDeviceClockInfoAMD", name)) {
                 *addr = (void *)GetGpaDeviceClockInfoAMD;
                 return true;
             }
             break;
-        case 0x5f05b499u:
+        case XXH3_vkCmdBeginGpaSessionAMD:
             if (!strcmp("vkCmdBeginGpaSessionAMD", name)) {
                 *addr = (void *)CmdBeginGpaSessionAMD;
                 return true;
             }
             break;
-        case 0x6e076d51u:
+        case XXH3_vkCmdEndGpaSessionAMD:
             if (!strcmp("vkCmdEndGpaSessionAMD", name)) {
                 *addr = (void *)CmdEndGpaSessionAMD;
                 return true;
             }
             break;
-        case 0x7cc05ee5u:
+        case XXH3_vkCmdBeginGpaSampleAMD:
             if (!strcmp("vkCmdBeginGpaSampleAMD", name)) {
                 *addr = (void *)CmdBeginGpaSampleAMD;
                 return true;
             }
             break;
-        case 0x2c317b7du:
+        case XXH3_vkCmdEndGpaSampleAMD:
             if (!strcmp("vkCmdEndGpaSampleAMD", name)) {
                 *addr = (void *)CmdEndGpaSampleAMD;
                 return true;
             }
             break;
-        case 0x2672bbd8u:
+        case XXH3_vkGetGpaSessionStatusAMD:
             if (!strcmp("vkGetGpaSessionStatusAMD", name)) {
                 *addr = (void *)GetGpaSessionStatusAMD;
                 return true;
             }
             break;
-        case 0x65a12c9cu:
+        case XXH3_vkGetGpaSessionResultsAMD:
             if (!strcmp("vkGetGpaSessionResultsAMD", name)) {
                 *addr = (void *)GetGpaSessionResultsAMD;
                 return true;
             }
             break;
-        case 0x36805213u:
+        case XXH3_vkResetGpaSessionAMD:
             if (!strcmp("vkResetGpaSessionAMD", name)) {
                 *addr = (void *)ResetGpaSessionAMD;
                 return true;
             }
             break;
-        case 0xd7c3d911u:
+        case XXH3_vkCmdCopyGpaSessionResultsAMD:
             if (!strcmp("vkCmdCopyGpaSessionResultsAMD", name)) {
                 *addr = (void *)CmdCopyGpaSessionResultsAMD;
                 return true;
@@ -16054,7 +16054,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_AMDX_shader_enqueue extension commands
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x7b968f75u:
+        case XXH3_vkCreateExecutionGraphPipelinesAMDX:
             if (!strcmp("vkCreateExecutionGraphPipelinesAMDX", name)) {
                 *addr = (void *)CreateExecutionGraphPipelinesAMDX;
                 return true;
@@ -16062,7 +16062,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x7364c23bu:
+        case XXH3_vkGetExecutionGraphPipelineScratchSizeAMDX:
             if (!strcmp("vkGetExecutionGraphPipelineScratchSizeAMDX", name)) {
                 *addr = (void *)GetExecutionGraphPipelineScratchSizeAMDX;
                 return true;
@@ -16070,7 +16070,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x6012ab70u:
+        case XXH3_vkGetExecutionGraphPipelineNodeIndexAMDX:
             if (!strcmp("vkGetExecutionGraphPipelineNodeIndexAMDX", name)) {
                 *addr = (void *)GetExecutionGraphPipelineNodeIndexAMDX;
                 return true;
@@ -16078,7 +16078,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x5c7a8d67u:
+        case XXH3_vkCmdInitializeGraphScratchMemoryAMDX:
             if (!strcmp("vkCmdInitializeGraphScratchMemoryAMDX", name)) {
                 *addr = (void *)CmdInitializeGraphScratchMemoryAMDX;
                 return true;
@@ -16086,7 +16086,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x9cbe6feau:
+        case XXH3_vkCmdDispatchGraphAMDX:
             if (!strcmp("vkCmdDispatchGraphAMDX", name)) {
                 *addr = (void *)CmdDispatchGraphAMDX;
                 return true;
@@ -16094,7 +16094,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0xb44e62c8u:
+        case XXH3_vkCmdDispatchGraphIndirectAMDX:
             if (!strcmp("vkCmdDispatchGraphIndirectAMDX", name)) {
                 *addr = (void *)CmdDispatchGraphIndirectAMDX;
                 return true;
@@ -16102,7 +16102,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0xe6456153u:
+        case XXH3_vkCmdDispatchGraphIndirectCountAMDX:
             if (!strcmp("vkCmdDispatchGraphIndirectCountAMDX", name)) {
                 *addr = (void *)CmdDispatchGraphIndirectCountAMDX;
                 return true;
@@ -16111,61 +16111,61 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
         // ---- VK_EXT_descriptor_heap extension commands
-        case 0x12566e46u:
+        case XXH3_vkWriteSamplerDescriptorsEXT:
             if (!strcmp("vkWriteSamplerDescriptorsEXT", name)) {
                 *addr = (void *)WriteSamplerDescriptorsEXT;
                 return true;
             }
             break;
-        case 0x21fac61cu:
+        case XXH3_vkWriteResourceDescriptorsEXT:
             if (!strcmp("vkWriteResourceDescriptorsEXT", name)) {
                 *addr = (void *)WriteResourceDescriptorsEXT;
                 return true;
             }
             break;
-        case 0xd1a21f20u:
+        case XXH3_vkCmdBindSamplerHeapEXT:
             if (!strcmp("vkCmdBindSamplerHeapEXT", name)) {
                 *addr = (void *)CmdBindSamplerHeapEXT;
                 return true;
             }
             break;
-        case 0x865cf5c2u:
+        case XXH3_vkCmdBindResourceHeapEXT:
             if (!strcmp("vkCmdBindResourceHeapEXT", name)) {
                 *addr = (void *)CmdBindResourceHeapEXT;
                 return true;
             }
             break;
-        case 0x5e36495du:
+        case XXH3_vkCmdPushDataEXT:
             if (!strcmp("vkCmdPushDataEXT", name)) {
                 *addr = (void *)CmdPushDataEXT;
                 return true;
             }
             break;
-        case 0x31351c8du:
+        case XXH3_vkGetImageOpaqueCaptureDataEXT:
             if (!strcmp("vkGetImageOpaqueCaptureDataEXT", name)) {
                 *addr = (void *)GetImageOpaqueCaptureDataEXT;
                 return true;
             }
             break;
-        case 0x4e07bea8u:
+        case XXH3_vkGetPhysicalDeviceDescriptorSizeEXT:
             if (!strcmp("vkGetPhysicalDeviceDescriptorSizeEXT", name)) {
                 *addr = (void *)GetPhysicalDeviceDescriptorSizeEXT;
                 return true;
             }
             break;
-        case 0x9102c8b4u:
+        case XXH3_vkRegisterCustomBorderColorEXT:
             if (!strcmp("vkRegisterCustomBorderColorEXT", name)) {
                 *addr = (void *)RegisterCustomBorderColorEXT;
                 return true;
             }
             break;
-        case 0x80e56873u:
+        case XXH3_vkUnregisterCustomBorderColorEXT:
             if (!strcmp("vkUnregisterCustomBorderColorEXT", name)) {
                 *addr = (void *)UnregisterCustomBorderColorEXT;
                 return true;
             }
             break;
-        case 0x3f96c78cu:
+        case XXH3_vkGetTensorOpaqueCaptureDataARM:
             if (!strcmp("vkGetTensorOpaqueCaptureDataARM", name)) {
                 *addr = (void *)GetTensorOpaqueCaptureDataARM;
                 return true;
@@ -16173,13 +16173,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_sample_locations extension commands
-        case 0x893ad3bbu:
+        case XXH3_vkCmdSetSampleLocationsEXT:
             if (!strcmp("vkCmdSetSampleLocationsEXT", name)) {
                 *addr = (void *)CmdSetSampleLocationsEXT;
                 return true;
             }
             break;
-        case 0x84f1eedcu:
+        case XXH3_vkGetPhysicalDeviceMultisamplePropertiesEXT:
             if (!strcmp("vkGetPhysicalDeviceMultisamplePropertiesEXT", name)) {
                 *addr = (void *)GetPhysicalDeviceMultisamplePropertiesEXT;
                 return true;
@@ -16187,7 +16187,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_image_drm_format_modifier extension commands
-        case 0xe442e9b6u:
+        case XXH3_vkGetImageDrmFormatModifierPropertiesEXT:
             if (!strcmp("vkGetImageDrmFormatModifierPropertiesEXT", name)) {
                 *addr = (void *)GetImageDrmFormatModifierPropertiesEXT;
                 return true;
@@ -16195,25 +16195,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_validation_cache extension commands
-        case 0x6b0b7d18u:
+        case XXH3_vkCreateValidationCacheEXT:
             if (!strcmp("vkCreateValidationCacheEXT", name)) {
                 *addr = (void *)CreateValidationCacheEXT;
                 return true;
             }
             break;
-        case 0x82240b92u:
+        case XXH3_vkDestroyValidationCacheEXT:
             if (!strcmp("vkDestroyValidationCacheEXT", name)) {
                 *addr = (void *)DestroyValidationCacheEXT;
                 return true;
             }
             break;
-        case 0x6d50d069u:
+        case XXH3_vkMergeValidationCachesEXT:
             if (!strcmp("vkMergeValidationCachesEXT", name)) {
                 *addr = (void *)MergeValidationCachesEXT;
                 return true;
             }
             break;
-        case 0x0b761148u:
+        case XXH3_vkGetValidationCacheDataEXT:
             if (!strcmp("vkGetValidationCacheDataEXT", name)) {
                 *addr = (void *)GetValidationCacheDataEXT;
                 return true;
@@ -16221,19 +16221,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_shading_rate_image extension commands
-        case 0x2c3dec58u:
+        case XXH3_vkCmdBindShadingRateImageNV:
             if (!strcmp("vkCmdBindShadingRateImageNV", name)) {
                 *addr = (void *)CmdBindShadingRateImageNV;
                 return true;
             }
             break;
-        case 0x315e890fu:
+        case XXH3_vkCmdSetViewportShadingRatePaletteNV:
             if (!strcmp("vkCmdSetViewportShadingRatePaletteNV", name)) {
                 *addr = (void *)CmdSetViewportShadingRatePaletteNV;
                 return true;
             }
             break;
-        case 0xd826e0a7u:
+        case XXH3_vkCmdSetCoarseSampleOrderNV:
             if (!strcmp("vkCmdSetCoarseSampleOrderNV", name)) {
                 *addr = (void *)CmdSetCoarseSampleOrderNV;
                 return true;
@@ -16241,49 +16241,49 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_ray_tracing extension commands
-        case 0x9b585c4bu:
+        case XXH3_vkCreateAccelerationStructureNV:
             if (!strcmp("vkCreateAccelerationStructureNV", name)) {
                 *addr = (void *)CreateAccelerationStructureNV;
                 return true;
             }
             break;
-        case 0xe40f2851u:
+        case XXH3_vkDestroyAccelerationStructureNV:
             if (!strcmp("vkDestroyAccelerationStructureNV", name)) {
                 *addr = (void *)DestroyAccelerationStructureNV;
                 return true;
             }
             break;
-        case 0xb92c8ff8u:
+        case XXH3_vkGetAccelerationStructureMemoryRequirementsNV:
             if (!strcmp("vkGetAccelerationStructureMemoryRequirementsNV", name)) {
                 *addr = (void *)GetAccelerationStructureMemoryRequirementsNV;
                 return true;
             }
             break;
-        case 0xa8bf8249u:
+        case XXH3_vkBindAccelerationStructureMemoryNV:
             if (!strcmp("vkBindAccelerationStructureMemoryNV", name)) {
                 *addr = (void *)BindAccelerationStructureMemoryNV;
                 return true;
             }
             break;
-        case 0xb2f111c7u:
+        case XXH3_vkCmdBuildAccelerationStructureNV:
             if (!strcmp("vkCmdBuildAccelerationStructureNV", name)) {
                 *addr = (void *)CmdBuildAccelerationStructureNV;
                 return true;
             }
             break;
-        case 0x2df19290u:
+        case XXH3_vkCmdCopyAccelerationStructureNV:
             if (!strcmp("vkCmdCopyAccelerationStructureNV", name)) {
                 *addr = (void *)CmdCopyAccelerationStructureNV;
                 return true;
             }
             break;
-        case 0x5c2e0b66u:
+        case XXH3_vkCmdTraceRaysNV:
             if (!strcmp("vkCmdTraceRaysNV", name)) {
                 *addr = (void *)CmdTraceRaysNV;
                 return true;
             }
             break;
-        case 0x30a351a3u:
+        case XXH3_vkCreateRayTracingPipelinesNV:
             if (!strcmp("vkCreateRayTracingPipelinesNV", name)) {
                 *addr = (void *)CreateRayTracingPipelinesNV;
                 return true;
@@ -16291,7 +16291,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_ray_tracing_pipeline extension commands
-        case 0x1ce51b26u:
+        case XXH3_vkGetRayTracingShaderGroupHandlesKHR:
             if (!strcmp("vkGetRayTracingShaderGroupHandlesKHR", name)) {
                 *addr = (void *)GetRayTracingShaderGroupHandlesKHR;
                 return true;
@@ -16299,25 +16299,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_ray_tracing extension commands
-        case 0x7321d653u:
+        case XXH3_vkGetRayTracingShaderGroupHandlesNV:
             if (!strcmp("vkGetRayTracingShaderGroupHandlesNV", name)) {
                 *addr = (void *)GetRayTracingShaderGroupHandlesNV;
                 return true;
             }
             break;
-        case 0x0da9ca8du:
+        case XXH3_vkGetAccelerationStructureHandleNV:
             if (!strcmp("vkGetAccelerationStructureHandleNV", name)) {
                 *addr = (void *)GetAccelerationStructureHandleNV;
                 return true;
             }
             break;
-        case 0xe06f0976u:
+        case XXH3_vkCmdWriteAccelerationStructuresPropertiesNV:
             if (!strcmp("vkCmdWriteAccelerationStructuresPropertiesNV", name)) {
                 *addr = (void *)CmdWriteAccelerationStructuresPropertiesNV;
                 return true;
             }
             break;
-        case 0x730a5d24u:
+        case XXH3_vkCompileDeferredNV:
             if (!strcmp("vkCompileDeferredNV", name)) {
                 *addr = (void *)CompileDeferredNV;
                 return true;
@@ -16325,7 +16325,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_external_memory_host extension commands
-        case 0x21c55ba0u:
+        case XXH3_vkGetMemoryHostPointerPropertiesEXT:
             if (!strcmp("vkGetMemoryHostPointerPropertiesEXT", name)) {
                 *addr = (void *)GetMemoryHostPointerPropertiesEXT;
                 return true;
@@ -16333,13 +16333,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_AMD_buffer_marker extension commands
-        case 0x5f238d75u:
+        case XXH3_vkCmdWriteBufferMarkerAMD:
             if (!strcmp("vkCmdWriteBufferMarkerAMD", name)) {
                 *addr = (void *)CmdWriteBufferMarkerAMD;
                 return true;
             }
             break;
-        case 0xbb790f25u:
+        case XXH3_vkCmdWriteBufferMarker2AMD:
             if (!strcmp("vkCmdWriteBufferMarker2AMD", name)) {
                 *addr = (void *)CmdWriteBufferMarker2AMD;
                 return true;
@@ -16347,13 +16347,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_calibrated_timestamps extension commands
-        case 0x3eabd5a3u:
+        case XXH3_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT:
             if (!strcmp("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT", name)) {
                 *addr = (void *)GetPhysicalDeviceCalibrateableTimeDomainsEXT;
                 return true;
             }
             break;
-        case 0x6f9a7c47u:
+        case XXH3_vkGetCalibratedTimestampsEXT:
             if (!strcmp("vkGetCalibratedTimestampsEXT", name)) {
                 *addr = (void *)GetCalibratedTimestampsEXT;
                 return true;
@@ -16361,19 +16361,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_mesh_shader extension commands
-        case 0x1dac242du:
+        case XXH3_vkCmdDrawMeshTasksNV:
             if (!strcmp("vkCmdDrawMeshTasksNV", name)) {
                 *addr = (void *)CmdDrawMeshTasksNV;
                 return true;
             }
             break;
-        case 0xec7d509fu:
+        case XXH3_vkCmdDrawMeshTasksIndirectNV:
             if (!strcmp("vkCmdDrawMeshTasksIndirectNV", name)) {
                 *addr = (void *)CmdDrawMeshTasksIndirectNV;
                 return true;
             }
             break;
-        case 0xa99feebau:
+        case XXH3_vkCmdDrawMeshTasksIndirectCountNV:
             if (!strcmp("vkCmdDrawMeshTasksIndirectCountNV", name)) {
                 *addr = (void *)CmdDrawMeshTasksIndirectCountNV;
                 return true;
@@ -16381,13 +16381,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_scissor_exclusive extension commands
-        case 0x58b52163u:
+        case XXH3_vkCmdSetExclusiveScissorEnableNV:
             if (!strcmp("vkCmdSetExclusiveScissorEnableNV", name)) {
                 *addr = (void *)CmdSetExclusiveScissorEnableNV;
                 return true;
             }
             break;
-        case 0xd9937028u:
+        case XXH3_vkCmdSetExclusiveScissorNV:
             if (!strcmp("vkCmdSetExclusiveScissorNV", name)) {
                 *addr = (void *)CmdSetExclusiveScissorNV;
                 return true;
@@ -16395,19 +16395,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_device_diagnostic_checkpoints extension commands
-        case 0x4e5fa984u:
+        case XXH3_vkCmdSetCheckpointNV:
             if (!strcmp("vkCmdSetCheckpointNV", name)) {
                 *addr = (void *)CmdSetCheckpointNV;
                 return true;
             }
             break;
-        case 0x274abca7u:
+        case XXH3_vkGetQueueCheckpointDataNV:
             if (!strcmp("vkGetQueueCheckpointDataNV", name)) {
                 *addr = (void *)GetQueueCheckpointDataNV;
                 return true;
             }
             break;
-        case 0xd0e192dfu:
+        case XXH3_vkGetQueueCheckpointData2NV:
             if (!strcmp("vkGetQueueCheckpointData2NV", name)) {
                 *addr = (void *)GetQueueCheckpointData2NV;
                 return true;
@@ -16415,25 +16415,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_present_timing extension commands
-        case 0x21473122u:
+        case XXH3_vkSetSwapchainPresentTimingQueueSizeEXT:
             if (!strcmp("vkSetSwapchainPresentTimingQueueSizeEXT", name)) {
                 *addr = (void *)SetSwapchainPresentTimingQueueSizeEXT;
                 return true;
             }
             break;
-        case 0xf05d4e9cu:
+        case XXH3_vkGetSwapchainTimingPropertiesEXT:
             if (!strcmp("vkGetSwapchainTimingPropertiesEXT", name)) {
                 *addr = (void *)GetSwapchainTimingPropertiesEXT;
                 return true;
             }
             break;
-        case 0xeafcc5a1u:
+        case XXH3_vkGetSwapchainTimeDomainPropertiesEXT:
             if (!strcmp("vkGetSwapchainTimeDomainPropertiesEXT", name)) {
                 *addr = (void *)GetSwapchainTimeDomainPropertiesEXT;
                 return true;
             }
             break;
-        case 0x6ce1695bu:
+        case XXH3_vkGetPastPresentationTimingEXT:
             if (!strcmp("vkGetPastPresentationTimingEXT", name)) {
                 *addr = (void *)GetPastPresentationTimingEXT;
                 return true;
@@ -16441,55 +16441,55 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_INTEL_performance_query extension commands
-        case 0x5ec63556u:
+        case XXH3_vkInitializePerformanceApiINTEL:
             if (!strcmp("vkInitializePerformanceApiINTEL", name)) {
                 *addr = (void *)InitializePerformanceApiINTEL;
                 return true;
             }
             break;
-        case 0x51a2c77fu:
+        case XXH3_vkUninitializePerformanceApiINTEL:
             if (!strcmp("vkUninitializePerformanceApiINTEL", name)) {
                 *addr = (void *)UninitializePerformanceApiINTEL;
                 return true;
             }
             break;
-        case 0x58912d22u:
+        case XXH3_vkCmdSetPerformanceMarkerINTEL:
             if (!strcmp("vkCmdSetPerformanceMarkerINTEL", name)) {
                 *addr = (void *)CmdSetPerformanceMarkerINTEL;
                 return true;
             }
             break;
-        case 0x3520d412u:
+        case XXH3_vkCmdSetPerformanceStreamMarkerINTEL:
             if (!strcmp("vkCmdSetPerformanceStreamMarkerINTEL", name)) {
                 *addr = (void *)CmdSetPerformanceStreamMarkerINTEL;
                 return true;
             }
             break;
-        case 0xf39c2628u:
+        case XXH3_vkCmdSetPerformanceOverrideINTEL:
             if (!strcmp("vkCmdSetPerformanceOverrideINTEL", name)) {
                 *addr = (void *)CmdSetPerformanceOverrideINTEL;
                 return true;
             }
             break;
-        case 0x7cbef10au:
+        case XXH3_vkAcquirePerformanceConfigurationINTEL:
             if (!strcmp("vkAcquirePerformanceConfigurationINTEL", name)) {
                 *addr = (void *)AcquirePerformanceConfigurationINTEL;
                 return true;
             }
             break;
-        case 0x9c935fddu:
+        case XXH3_vkReleasePerformanceConfigurationINTEL:
             if (!strcmp("vkReleasePerformanceConfigurationINTEL", name)) {
                 *addr = (void *)ReleasePerformanceConfigurationINTEL;
                 return true;
             }
             break;
-        case 0x227fcb85u:
+        case XXH3_vkQueueSetPerformanceConfigurationINTEL:
             if (!strcmp("vkQueueSetPerformanceConfigurationINTEL", name)) {
                 *addr = (void *)QueueSetPerformanceConfigurationINTEL;
                 return true;
             }
             break;
-        case 0xa2ea440du:
+        case XXH3_vkGetPerformanceParameterINTEL:
             if (!strcmp("vkGetPerformanceParameterINTEL", name)) {
                 *addr = (void *)GetPerformanceParameterINTEL;
                 return true;
@@ -16497,7 +16497,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_AMD_display_native_hdr extension commands
-        case 0xfb6098ceu:
+        case XXH3_vkSetLocalDimmingAMD:
             if (!strcmp("vkSetLocalDimmingAMD", name)) {
                 *addr = (void *)SetLocalDimmingAMD;
                 return true;
@@ -16505,7 +16505,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_buffer_device_address extension commands
-        case 0x0439224du:
+        case XXH3_vkGetBufferDeviceAddressEXT:
             if (!strcmp("vkGetBufferDeviceAddressEXT", name)) {
                 *addr = (void *)GetBufferDeviceAddressEXT;
                 return true;
@@ -16513,7 +16513,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_tooling_info extension commands
-        case 0x4d69a41du:
+        case XXH3_vkGetPhysicalDeviceToolPropertiesEXT:
             if (!strcmp("vkGetPhysicalDeviceToolPropertiesEXT", name)) {
                 *addr = (void *)GetPhysicalDeviceToolPropertiesEXT;
                 return true;
@@ -16521,7 +16521,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_cooperative_matrix extension commands
-        case 0x35f7976cu:
+        case XXH3_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV:
             if (!strcmp("vkGetPhysicalDeviceCooperativeMatrixPropertiesNV", name)) {
                 *addr = (void *)GetPhysicalDeviceCooperativeMatrixPropertiesNV;
                 return true;
@@ -16529,7 +16529,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_coverage_reduction_mode extension commands
-        case 0xf9a13cfau:
+        case XXH3_vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV:
             if (!strcmp("vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV", name)) {
                 *addr = (void *)GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV;
                 return true;
@@ -16538,7 +16538,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_EXT_full_screen_exclusive extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xdcfd64b0u:
+        case XXH3_vkGetPhysicalDeviceSurfacePresentModes2EXT:
             if (!strcmp("vkGetPhysicalDeviceSurfacePresentModes2EXT", name)) {
                 *addr = (void *)GetPhysicalDeviceSurfacePresentModes2EXT;
                 return true;
@@ -16546,7 +16546,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x826c6745u:
+        case XXH3_vkAcquireFullScreenExclusiveModeEXT:
             if (!strcmp("vkAcquireFullScreenExclusiveModeEXT", name)) {
                 *addr = (void *)AcquireFullScreenExclusiveModeEXT;
                 return true;
@@ -16554,7 +16554,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0xad8bf02cu:
+        case XXH3_vkReleaseFullScreenExclusiveModeEXT:
             if (!strcmp("vkReleaseFullScreenExclusiveModeEXT", name)) {
                 *addr = (void *)ReleaseFullScreenExclusiveModeEXT;
                 return true;
@@ -16562,7 +16562,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x46d74ae6u:
+        case XXH3_vkGetDeviceGroupSurfacePresentModes2EXT:
             if (!strcmp("vkGetDeviceGroupSurfacePresentModes2EXT", name)) {
                 *addr = (void *)GetDeviceGroupSurfacePresentModes2EXT;
                 return true;
@@ -16571,7 +16571,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_EXT_line_rasterization extension commands
-        case 0x7c80d680u:
+        case XXH3_vkCmdSetLineStippleEXT:
             if (!strcmp("vkCmdSetLineStippleEXT", name)) {
                 *addr = (void *)CmdSetLineStippleEXT;
                 return true;
@@ -16579,7 +16579,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_host_query_reset extension commands
-        case 0xa4673a84u:
+        case XXH3_vkResetQueryPoolEXT:
             if (!strcmp("vkResetQueryPoolEXT", name)) {
                 *addr = (void *)ResetQueryPoolEXT;
                 return true;
@@ -16587,73 +16587,73 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_extended_dynamic_state extension commands
-        case 0x74f8fcccu:
+        case XXH3_vkCmdSetCullModeEXT:
             if (!strcmp("vkCmdSetCullModeEXT", name)) {
                 *addr = (void *)CmdSetCullModeEXT;
                 return true;
             }
             break;
-        case 0xeb32bae3u:
+        case XXH3_vkCmdSetFrontFaceEXT:
             if (!strcmp("vkCmdSetFrontFaceEXT", name)) {
                 *addr = (void *)CmdSetFrontFaceEXT;
                 return true;
             }
             break;
-        case 0x5965de89u:
+        case XXH3_vkCmdSetPrimitiveTopologyEXT:
             if (!strcmp("vkCmdSetPrimitiveTopologyEXT", name)) {
                 *addr = (void *)CmdSetPrimitiveTopologyEXT;
                 return true;
             }
             break;
-        case 0x3574db42u:
+        case XXH3_vkCmdSetViewportWithCountEXT:
             if (!strcmp("vkCmdSetViewportWithCountEXT", name)) {
                 *addr = (void *)CmdSetViewportWithCountEXT;
                 return true;
             }
             break;
-        case 0x0e3b094eu:
+        case XXH3_vkCmdSetScissorWithCountEXT:
             if (!strcmp("vkCmdSetScissorWithCountEXT", name)) {
                 *addr = (void *)CmdSetScissorWithCountEXT;
                 return true;
             }
             break;
-        case 0x481f705bu:
+        case XXH3_vkCmdBindVertexBuffers2EXT:
             if (!strcmp("vkCmdBindVertexBuffers2EXT", name)) {
                 *addr = (void *)CmdBindVertexBuffers2EXT;
                 return true;
             }
             break;
-        case 0xa9d85657u:
+        case XXH3_vkCmdSetDepthTestEnableEXT:
             if (!strcmp("vkCmdSetDepthTestEnableEXT", name)) {
                 *addr = (void *)CmdSetDepthTestEnableEXT;
                 return true;
             }
             break;
-        case 0x612d1f30u:
+        case XXH3_vkCmdSetDepthWriteEnableEXT:
             if (!strcmp("vkCmdSetDepthWriteEnableEXT", name)) {
                 *addr = (void *)CmdSetDepthWriteEnableEXT;
                 return true;
             }
             break;
-        case 0x5d725d28u:
+        case XXH3_vkCmdSetDepthCompareOpEXT:
             if (!strcmp("vkCmdSetDepthCompareOpEXT", name)) {
                 *addr = (void *)CmdSetDepthCompareOpEXT;
                 return true;
             }
             break;
-        case 0x02593548u:
+        case XXH3_vkCmdSetDepthBoundsTestEnableEXT:
             if (!strcmp("vkCmdSetDepthBoundsTestEnableEXT", name)) {
                 *addr = (void *)CmdSetDepthBoundsTestEnableEXT;
                 return true;
             }
             break;
-        case 0xf481ae18u:
+        case XXH3_vkCmdSetStencilTestEnableEXT:
             if (!strcmp("vkCmdSetStencilTestEnableEXT", name)) {
                 *addr = (void *)CmdSetStencilTestEnableEXT;
                 return true;
             }
             break;
-        case 0xdc736664u:
+        case XXH3_vkCmdSetStencilOpEXT:
             if (!strcmp("vkCmdSetStencilOpEXT", name)) {
                 *addr = (void *)CmdSetStencilOpEXT;
                 return true;
@@ -16661,31 +16661,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_host_image_copy extension commands
-        case 0x45cbebe9u:
+        case XXH3_vkCopyMemoryToImageEXT:
             if (!strcmp("vkCopyMemoryToImageEXT", name)) {
                 *addr = (void *)CopyMemoryToImageEXT;
                 return true;
             }
             break;
-        case 0x624ce809u:
+        case XXH3_vkCopyImageToMemoryEXT:
             if (!strcmp("vkCopyImageToMemoryEXT", name)) {
                 *addr = (void *)CopyImageToMemoryEXT;
                 return true;
             }
             break;
-        case 0x30b94dadu:
+        case XXH3_vkCopyImageToImageEXT:
             if (!strcmp("vkCopyImageToImageEXT", name)) {
                 *addr = (void *)CopyImageToImageEXT;
                 return true;
             }
             break;
-        case 0x0c5d69f7u:
+        case XXH3_vkTransitionImageLayoutEXT:
             if (!strcmp("vkTransitionImageLayoutEXT", name)) {
                 *addr = (void *)TransitionImageLayoutEXT;
                 return true;
             }
             break;
-        case 0x8ae815ecu:
+        case XXH3_vkGetImageSubresourceLayout2EXT:
             if (!strcmp("vkGetImageSubresourceLayout2EXT", name)) {
                 *addr = (void *)GetImageSubresourceLayout2EXT;
                 return true;
@@ -16693,7 +16693,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_swapchain_maintenance1 extension commands
-        case 0x29712c72u:
+        case XXH3_vkReleaseSwapchainImagesEXT:
             if (!strcmp("vkReleaseSwapchainImagesEXT", name)) {
                 *addr = (void *)ReleaseSwapchainImagesEXT;
                 return true;
@@ -16701,37 +16701,37 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_device_generated_commands extension commands
-        case 0x0efe4856u:
+        case XXH3_vkGetGeneratedCommandsMemoryRequirementsNV:
             if (!strcmp("vkGetGeneratedCommandsMemoryRequirementsNV", name)) {
                 *addr = (void *)GetGeneratedCommandsMemoryRequirementsNV;
                 return true;
             }
             break;
-        case 0xd51d611bu:
+        case XXH3_vkCmdPreprocessGeneratedCommandsNV:
             if (!strcmp("vkCmdPreprocessGeneratedCommandsNV", name)) {
                 *addr = (void *)CmdPreprocessGeneratedCommandsNV;
                 return true;
             }
             break;
-        case 0x46cedc84u:
+        case XXH3_vkCmdExecuteGeneratedCommandsNV:
             if (!strcmp("vkCmdExecuteGeneratedCommandsNV", name)) {
                 *addr = (void *)CmdExecuteGeneratedCommandsNV;
                 return true;
             }
             break;
-        case 0xdbc079a1u:
+        case XXH3_vkCmdBindPipelineShaderGroupNV:
             if (!strcmp("vkCmdBindPipelineShaderGroupNV", name)) {
                 *addr = (void *)CmdBindPipelineShaderGroupNV;
                 return true;
             }
             break;
-        case 0x75e65408u:
+        case XXH3_vkCreateIndirectCommandsLayoutNV:
             if (!strcmp("vkCreateIndirectCommandsLayoutNV", name)) {
                 *addr = (void *)CreateIndirectCommandsLayoutNV;
                 return true;
             }
             break;
-        case 0x9978b97eu:
+        case XXH3_vkDestroyIndirectCommandsLayoutNV:
             if (!strcmp("vkDestroyIndirectCommandsLayoutNV", name)) {
                 *addr = (void *)DestroyIndirectCommandsLayoutNV;
                 return true;
@@ -16739,7 +16739,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_depth_bias_control extension commands
-        case 0xb1d6fe7fu:
+        case XXH3_vkCmdSetDepthBias2EXT:
             if (!strcmp("vkCmdSetDepthBias2EXT", name)) {
                 *addr = (void *)CmdSetDepthBias2EXT;
                 return true;
@@ -16747,7 +16747,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_acquire_drm_display extension commands
-        case 0x76d69256u:
+        case XXH3_vkAcquireDrmDisplayEXT:
             if (!strcmp("vkAcquireDrmDisplayEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_acquire_drm_display == 1)
                              ? (void *)AcquireDrmDisplayEXT
@@ -16755,7 +16755,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
                 return true;
             }
             break;
-        case 0xad32ea62u:
+        case XXH3_vkGetDrmDisplayEXT:
             if (!strcmp("vkGetDrmDisplayEXT", name)) {
                 *addr = (ptr_instance->enabled_extensions.ext_acquire_drm_display == 1)
                              ? (void *)GetDrmDisplayEXT
@@ -16765,25 +16765,25 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_private_data extension commands
-        case 0xadaebc24u:
+        case XXH3_vkCreatePrivateDataSlotEXT:
             if (!strcmp("vkCreatePrivateDataSlotEXT", name)) {
                 *addr = (void *)CreatePrivateDataSlotEXT;
                 return true;
             }
             break;
-        case 0x859c259au:
+        case XXH3_vkDestroyPrivateDataSlotEXT:
             if (!strcmp("vkDestroyPrivateDataSlotEXT", name)) {
                 *addr = (void *)DestroyPrivateDataSlotEXT;
                 return true;
             }
             break;
-        case 0xc86055ecu:
+        case XXH3_vkSetPrivateDataEXT:
             if (!strcmp("vkSetPrivateDataEXT", name)) {
                 *addr = (void *)SetPrivateDataEXT;
                 return true;
             }
             break;
-        case 0xa9075848u:
+        case XXH3_vkGetPrivateDataEXT:
             if (!strcmp("vkGetPrivateDataEXT", name)) {
                 *addr = (void *)GetPrivateDataEXT;
                 return true;
@@ -16791,7 +16791,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_QCOM_queue_perf_hint extension commands
-        case 0x9217f6e5u:
+        case XXH3_vkQueueSetPerfHintQCOM:
             if (!strcmp("vkQueueSetPerfHintQCOM", name)) {
                 *addr = (void *)QueueSetPerfHintQCOM;
                 return true;
@@ -16800,7 +16800,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_NV_cuda_kernel_launch extension commands
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x909d1551u:
+        case XXH3_vkCreateCudaModuleNV:
             if (!strcmp("vkCreateCudaModuleNV", name)) {
                 *addr = (void *)CreateCudaModuleNV;
                 return true;
@@ -16808,7 +16808,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0xf59cd861u:
+        case XXH3_vkGetCudaModuleCacheNV:
             if (!strcmp("vkGetCudaModuleCacheNV", name)) {
                 *addr = (void *)GetCudaModuleCacheNV;
                 return true;
@@ -16816,7 +16816,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x5a95d88du:
+        case XXH3_vkCreateCudaFunctionNV:
             if (!strcmp("vkCreateCudaFunctionNV", name)) {
                 *addr = (void *)CreateCudaFunctionNV;
                 return true;
@@ -16824,7 +16824,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0xf3148947u:
+        case XXH3_vkDestroyCudaModuleNV:
             if (!strcmp("vkDestroyCudaModuleNV", name)) {
                 *addr = (void *)DestroyCudaModuleNV;
                 return true;
@@ -16832,7 +16832,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0xfe0a46ebu:
+        case XXH3_vkDestroyCudaFunctionNV:
             if (!strcmp("vkDestroyCudaFunctionNV", name)) {
                 *addr = (void *)DestroyCudaFunctionNV;
                 return true;
@@ -16840,7 +16840,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #if defined(VK_ENABLE_BETA_EXTENSIONS)
-        case 0x27675697u:
+        case XXH3_vkCmdCudaLaunchKernelNV:
             if (!strcmp("vkCmdCudaLaunchKernelNV", name)) {
                 *addr = (void *)CmdCudaLaunchKernelNV;
                 return true;
@@ -16849,19 +16849,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
         // ---- VK_QCOM_tile_shading extension commands
-        case 0xe937e864u:
+        case XXH3_vkCmdDispatchTileQCOM:
             if (!strcmp("vkCmdDispatchTileQCOM", name)) {
                 *addr = (void *)CmdDispatchTileQCOM;
                 return true;
             }
             break;
-        case 0xd4695d04u:
+        case XXH3_vkCmdBeginPerTileExecutionQCOM:
             if (!strcmp("vkCmdBeginPerTileExecutionQCOM", name)) {
                 *addr = (void *)CmdBeginPerTileExecutionQCOM;
                 return true;
             }
             break;
-        case 0xa349f12cu:
+        case XXH3_vkCmdEndPerTileExecutionQCOM:
             if (!strcmp("vkCmdEndPerTileExecutionQCOM", name)) {
                 *addr = (void *)CmdEndPerTileExecutionQCOM;
                 return true;
@@ -16869,43 +16869,43 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_low_latency extension commands
-        case 0xb818690fu:
+        case XXH3_vkSetLatencySleepModeLegacyNV:
             if (!strcmp("vkSetLatencySleepModeLegacyNV", name)) {
                 *addr = (void *)SetLatencySleepModeLegacyNV;
                 return true;
             }
             break;
-        case 0xed33a41cu:
+        case XXH3_vkLatencySleepLegacyNV:
             if (!strcmp("vkLatencySleepLegacyNV", name)) {
                 *addr = (void *)LatencySleepLegacyNV;
                 return true;
             }
             break;
-        case 0x6eb616adu:
+        case XXH3_vkSetLatencyMarkerLegacyNV:
             if (!strcmp("vkSetLatencyMarkerLegacyNV", name)) {
                 *addr = (void *)SetLatencyMarkerLegacyNV;
                 return true;
             }
             break;
-        case 0x3a5796a0u:
+        case XXH3_vkGetLatencyTimingsLegacyNV:
             if (!strcmp("vkGetLatencyTimingsLegacyNV", name)) {
                 *addr = (void *)GetLatencyTimingsLegacyNV;
                 return true;
             }
             break;
-        case 0x88b325edu:
+        case XXH3_vkQueueNotifyOutOfBandLegacyNV:
             if (!strcmp("vkQueueNotifyOutOfBandLegacyNV", name)) {
                 *addr = (void *)QueueNotifyOutOfBandLegacyNV;
                 return true;
             }
             break;
-        case 0xc33bd8acu:
+        case XXH3_vkGetSleepStatusLegacyNV:
             if (!strcmp("vkGetSleepStatusLegacyNV", name)) {
                 *addr = (void *)GetSleepStatusLegacyNV;
                 return true;
             }
             break;
-        case 0x39657283u:
+        case XXH3_vkShutdownLatencyDeviceLegacyNV:
             if (!strcmp("vkShutdownLatencyDeviceLegacyNV", name)) {
                 *addr = (void *)ShutdownLatencyDeviceLegacyNV;
                 return true;
@@ -16914,7 +16914,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_EXT_metal_objects extension commands
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-        case 0x6dfe8a9cu:
+        case XXH3_vkExportMetalObjectsEXT:
             if (!strcmp("vkExportMetalObjectsEXT", name)) {
                 *addr = (void *)ExportMetalObjectsEXT;
                 return true;
@@ -16923,67 +16923,67 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_METAL_EXT
 
         // ---- VK_EXT_descriptor_buffer extension commands
-        case 0xa98826ddu:
+        case XXH3_vkGetDescriptorSetLayoutSizeEXT:
             if (!strcmp("vkGetDescriptorSetLayoutSizeEXT", name)) {
                 *addr = (void *)GetDescriptorSetLayoutSizeEXT;
                 return true;
             }
             break;
-        case 0x75521736u:
+        case XXH3_vkGetDescriptorSetLayoutBindingOffsetEXT:
             if (!strcmp("vkGetDescriptorSetLayoutBindingOffsetEXT", name)) {
                 *addr = (void *)GetDescriptorSetLayoutBindingOffsetEXT;
                 return true;
             }
             break;
-        case 0xc4a8fd6au:
+        case XXH3_vkGetDescriptorEXT:
             if (!strcmp("vkGetDescriptorEXT", name)) {
                 *addr = (void *)GetDescriptorEXT;
                 return true;
             }
             break;
-        case 0x1589b0b6u:
+        case XXH3_vkCmdBindDescriptorBuffersEXT:
             if (!strcmp("vkCmdBindDescriptorBuffersEXT", name)) {
                 *addr = (void *)CmdBindDescriptorBuffersEXT;
                 return true;
             }
             break;
-        case 0x04e6c462u:
+        case XXH3_vkCmdSetDescriptorBufferOffsetsEXT:
             if (!strcmp("vkCmdSetDescriptorBufferOffsetsEXT", name)) {
                 *addr = (void *)CmdSetDescriptorBufferOffsetsEXT;
                 return true;
             }
             break;
-        case 0x216fc7f0u:
+        case XXH3_vkCmdBindDescriptorBufferEmbeddedSamplersEXT:
             if (!strcmp("vkCmdBindDescriptorBufferEmbeddedSamplersEXT", name)) {
                 *addr = (void *)CmdBindDescriptorBufferEmbeddedSamplersEXT;
                 return true;
             }
             break;
-        case 0x70ed62fdu:
+        case XXH3_vkGetBufferOpaqueCaptureDescriptorDataEXT:
             if (!strcmp("vkGetBufferOpaqueCaptureDescriptorDataEXT", name)) {
                 *addr = (void *)GetBufferOpaqueCaptureDescriptorDataEXT;
                 return true;
             }
             break;
-        case 0x939f2d56u:
+        case XXH3_vkGetImageOpaqueCaptureDescriptorDataEXT:
             if (!strcmp("vkGetImageOpaqueCaptureDescriptorDataEXT", name)) {
                 *addr = (void *)GetImageOpaqueCaptureDescriptorDataEXT;
                 return true;
             }
             break;
-        case 0xc48efe1bu:
+        case XXH3_vkGetImageViewOpaqueCaptureDescriptorDataEXT:
             if (!strcmp("vkGetImageViewOpaqueCaptureDescriptorDataEXT", name)) {
                 *addr = (void *)GetImageViewOpaqueCaptureDescriptorDataEXT;
                 return true;
             }
             break;
-        case 0x30c51247u:
+        case XXH3_vkGetSamplerOpaqueCaptureDescriptorDataEXT:
             if (!strcmp("vkGetSamplerOpaqueCaptureDescriptorDataEXT", name)) {
                 *addr = (void *)GetSamplerOpaqueCaptureDescriptorDataEXT;
                 return true;
             }
             break;
-        case 0x3a4b708au:
+        case XXH3_vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT:
             if (!strcmp("vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT", name)) {
                 *addr = (void *)GetAccelerationStructureOpaqueCaptureDescriptorDataEXT;
                 return true;
@@ -16991,7 +16991,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_fragment_shading_rate_enums extension commands
-        case 0x1867bd3bu:
+        case XXH3_vkCmdSetFragmentShadingRateEnumNV:
             if (!strcmp("vkCmdSetFragmentShadingRateEnumNV", name)) {
                 *addr = (void *)CmdSetFragmentShadingRateEnumNV;
                 return true;
@@ -16999,7 +16999,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_device_fault extension commands
-        case 0x45e8bd97u:
+        case XXH3_vkGetDeviceFaultInfoEXT:
             if (!strcmp("vkGetDeviceFaultInfoEXT", name)) {
                 *addr = (void *)GetDeviceFaultInfoEXT;
                 return true;
@@ -17008,7 +17008,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_NV_acquire_winrt_display extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x6a89f660u:
+        case XXH3_vkAcquireWinrtDisplayNV:
             if (!strcmp("vkAcquireWinrtDisplayNV", name)) {
                 *addr = (void *)AcquireWinrtDisplayNV;
                 return true;
@@ -17016,7 +17016,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        case 0x6f0cbf1cu:
+        case XXH3_vkGetWinrtDisplayNV:
             if (!strcmp("vkGetWinrtDisplayNV", name)) {
                 *addr = (void *)GetWinrtDisplayNV;
                 return true;
@@ -17025,7 +17025,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
         // ---- VK_EXT_vertex_input_dynamic_state extension commands
-        case 0x3298ff83u:
+        case XXH3_vkCmdSetVertexInputEXT:
             if (!strcmp("vkCmdSetVertexInputEXT", name)) {
                 *addr = (void *)CmdSetVertexInputEXT;
                 return true;
@@ -17034,7 +17034,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_FUCHSIA_external_memory extension commands
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xefb0e1a9u:
+        case XXH3_vkGetMemoryZirconHandleFUCHSIA:
             if (!strcmp("vkGetMemoryZirconHandleFUCHSIA", name)) {
                 *addr = (void *)GetMemoryZirconHandleFUCHSIA;
                 return true;
@@ -17042,7 +17042,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x7d63fff2u:
+        case XXH3_vkGetMemoryZirconHandlePropertiesFUCHSIA:
             if (!strcmp("vkGetMemoryZirconHandlePropertiesFUCHSIA", name)) {
                 *addr = (void *)GetMemoryZirconHandlePropertiesFUCHSIA;
                 return true;
@@ -17052,7 +17052,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_FUCHSIA_external_semaphore extension commands
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xfc5f7b8fu:
+        case XXH3_vkImportSemaphoreZirconHandleFUCHSIA:
             if (!strcmp("vkImportSemaphoreZirconHandleFUCHSIA", name)) {
                 *addr = (void *)ImportSemaphoreZirconHandleFUCHSIA;
                 return true;
@@ -17060,7 +17060,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xabe59ff6u:
+        case XXH3_vkGetSemaphoreZirconHandleFUCHSIA:
             if (!strcmp("vkGetSemaphoreZirconHandleFUCHSIA", name)) {
                 *addr = (void *)GetSemaphoreZirconHandleFUCHSIA;
                 return true;
@@ -17070,7 +17070,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_FUCHSIA_buffer_collection extension commands
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xcaea62a1u:
+        case XXH3_vkCreateBufferCollectionFUCHSIA:
             if (!strcmp("vkCreateBufferCollectionFUCHSIA", name)) {
                 *addr = (void *)CreateBufferCollectionFUCHSIA;
                 return true;
@@ -17078,7 +17078,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x511c72d4u:
+        case XXH3_vkSetBufferCollectionImageConstraintsFUCHSIA:
             if (!strcmp("vkSetBufferCollectionImageConstraintsFUCHSIA", name)) {
                 *addr = (void *)SetBufferCollectionImageConstraintsFUCHSIA;
                 return true;
@@ -17086,7 +17086,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x65252663u:
+        case XXH3_vkSetBufferCollectionBufferConstraintsFUCHSIA:
             if (!strcmp("vkSetBufferCollectionBufferConstraintsFUCHSIA", name)) {
                 *addr = (void *)SetBufferCollectionBufferConstraintsFUCHSIA;
                 return true;
@@ -17094,7 +17094,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0xa20fd2f3u:
+        case XXH3_vkDestroyBufferCollectionFUCHSIA:
             if (!strcmp("vkDestroyBufferCollectionFUCHSIA", name)) {
                 *addr = (void *)DestroyBufferCollectionFUCHSIA;
                 return true;
@@ -17102,7 +17102,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        case 0x5114fbaau:
+        case XXH3_vkGetBufferCollectionPropertiesFUCHSIA:
             if (!strcmp("vkGetBufferCollectionPropertiesFUCHSIA", name)) {
                 *addr = (void *)GetBufferCollectionPropertiesFUCHSIA;
                 return true;
@@ -17111,13 +17111,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_FUCHSIA
 
         // ---- VK_HUAWEI_subpass_shading extension commands
-        case 0xde26acd1u:
+        case XXH3_vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI:
             if (!strcmp("vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI", name)) {
                 *addr = (void *)GetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI;
                 return true;
             }
             break;
-        case 0x8e391e10u:
+        case XXH3_vkCmdSubpassShadingHUAWEI:
             if (!strcmp("vkCmdSubpassShadingHUAWEI", name)) {
                 *addr = (void *)CmdSubpassShadingHUAWEI;
                 return true;
@@ -17125,7 +17125,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_HUAWEI_invocation_mask extension commands
-        case 0xb7e36fbeu:
+        case XXH3_vkCmdBindInvocationMaskHUAWEI:
             if (!strcmp("vkCmdBindInvocationMaskHUAWEI", name)) {
                 *addr = (void *)CmdBindInvocationMaskHUAWEI;
                 return true;
@@ -17133,7 +17133,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_external_memory_rdma extension commands
-        case 0x8ea6a5d9u:
+        case XXH3_vkGetMemoryRemoteAddressNV:
             if (!strcmp("vkGetMemoryRemoteAddressNV", name)) {
                 *addr = (void *)GetMemoryRemoteAddressNV;
                 return true;
@@ -17141,7 +17141,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_pipeline_properties extension commands
-        case 0xe5c5ddc8u:
+        case XXH3_vkGetPipelinePropertiesEXT:
             if (!strcmp("vkGetPipelinePropertiesEXT", name)) {
                 *addr = (void *)GetPipelinePropertiesEXT;
                 return true;
@@ -17149,31 +17149,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_extended_dynamic_state2 extension commands
-        case 0x2c78d559u:
+        case XXH3_vkCmdSetPatchControlPointsEXT:
             if (!strcmp("vkCmdSetPatchControlPointsEXT", name)) {
                 *addr = (void *)CmdSetPatchControlPointsEXT;
                 return true;
             }
             break;
-        case 0x711bc26fu:
+        case XXH3_vkCmdSetRasterizerDiscardEnableEXT:
             if (!strcmp("vkCmdSetRasterizerDiscardEnableEXT", name)) {
                 *addr = (void *)CmdSetRasterizerDiscardEnableEXT;
                 return true;
             }
             break;
-        case 0xad4bca4cu:
+        case XXH3_vkCmdSetDepthBiasEnableEXT:
             if (!strcmp("vkCmdSetDepthBiasEnableEXT", name)) {
                 *addr = (void *)CmdSetDepthBiasEnableEXT;
                 return true;
             }
             break;
-        case 0x0eefc5f6u:
+        case XXH3_vkCmdSetLogicOpEXT:
             if (!strcmp("vkCmdSetLogicOpEXT", name)) {
                 *addr = (void *)CmdSetLogicOpEXT;
                 return true;
             }
             break;
-        case 0x29891200u:
+        case XXH3_vkCmdSetPrimitiveRestartEnableEXT:
             if (!strcmp("vkCmdSetPrimitiveRestartEnableEXT", name)) {
                 *addr = (void *)CmdSetPrimitiveRestartEnableEXT;
                 return true;
@@ -17181,7 +17181,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_color_write_enable extension commands
-        case 0x2151479au:
+        case XXH3_vkCmdSetColorWriteEnableEXT:
             if (!strcmp("vkCmdSetColorWriteEnableEXT", name)) {
                 *addr = (void *)CmdSetColorWriteEnableEXT;
                 return true;
@@ -17189,13 +17189,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_multi_draw extension commands
-        case 0x774a67e4u:
+        case XXH3_vkCmdDrawMultiEXT:
             if (!strcmp("vkCmdDrawMultiEXT", name)) {
                 *addr = (void *)CmdDrawMultiEXT;
                 return true;
             }
             break;
-        case 0x3f52ede1u:
+        case XXH3_vkCmdDrawMultiIndexedEXT:
             if (!strcmp("vkCmdDrawMultiIndexedEXT", name)) {
                 *addr = (void *)CmdDrawMultiIndexedEXT;
                 return true;
@@ -17203,85 +17203,85 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_opacity_micromap extension commands
-        case 0xe2a15fc3u:
+        case XXH3_vkCreateMicromapEXT:
             if (!strcmp("vkCreateMicromapEXT", name)) {
                 *addr = (void *)CreateMicromapEXT;
                 return true;
             }
             break;
-        case 0xbba690d1u:
+        case XXH3_vkDestroyMicromapEXT:
             if (!strcmp("vkDestroyMicromapEXT", name)) {
                 *addr = (void *)DestroyMicromapEXT;
                 return true;
             }
             break;
-        case 0x0697ed14u:
+        case XXH3_vkCmdBuildMicromapsEXT:
             if (!strcmp("vkCmdBuildMicromapsEXT", name)) {
                 *addr = (void *)CmdBuildMicromapsEXT;
                 return true;
             }
             break;
-        case 0x17ff5424u:
+        case XXH3_vkBuildMicromapsEXT:
             if (!strcmp("vkBuildMicromapsEXT", name)) {
                 *addr = (void *)BuildMicromapsEXT;
                 return true;
             }
             break;
-        case 0xbb1b22c4u:
+        case XXH3_vkCopyMicromapEXT:
             if (!strcmp("vkCopyMicromapEXT", name)) {
                 *addr = (void *)CopyMicromapEXT;
                 return true;
             }
             break;
-        case 0x5e4746fau:
+        case XXH3_vkCopyMicromapToMemoryEXT:
             if (!strcmp("vkCopyMicromapToMemoryEXT", name)) {
                 *addr = (void *)CopyMicromapToMemoryEXT;
                 return true;
             }
             break;
-        case 0xba5a10beu:
+        case XXH3_vkCopyMemoryToMicromapEXT:
             if (!strcmp("vkCopyMemoryToMicromapEXT", name)) {
                 *addr = (void *)CopyMemoryToMicromapEXT;
                 return true;
             }
             break;
-        case 0xc3e1f2e0u:
+        case XXH3_vkWriteMicromapsPropertiesEXT:
             if (!strcmp("vkWriteMicromapsPropertiesEXT", name)) {
                 *addr = (void *)WriteMicromapsPropertiesEXT;
                 return true;
             }
             break;
-        case 0x781554b4u:
+        case XXH3_vkCmdCopyMicromapEXT:
             if (!strcmp("vkCmdCopyMicromapEXT", name)) {
                 *addr = (void *)CmdCopyMicromapEXT;
                 return true;
             }
             break;
-        case 0xc4999e4au:
+        case XXH3_vkCmdCopyMicromapToMemoryEXT:
             if (!strcmp("vkCmdCopyMicromapToMemoryEXT", name)) {
                 *addr = (void *)CmdCopyMicromapToMemoryEXT;
                 return true;
             }
             break;
-        case 0x3f5a94ceu:
+        case XXH3_vkCmdCopyMemoryToMicromapEXT:
             if (!strcmp("vkCmdCopyMemoryToMicromapEXT", name)) {
                 *addr = (void *)CmdCopyMemoryToMicromapEXT;
                 return true;
             }
             break;
-        case 0x5ca21bd0u:
+        case XXH3_vkCmdWriteMicromapsPropertiesEXT:
             if (!strcmp("vkCmdWriteMicromapsPropertiesEXT", name)) {
                 *addr = (void *)CmdWriteMicromapsPropertiesEXT;
                 return true;
             }
             break;
-        case 0x5e20636du:
+        case XXH3_vkGetDeviceMicromapCompatibilityEXT:
             if (!strcmp("vkGetDeviceMicromapCompatibilityEXT", name)) {
                 *addr = (void *)GetDeviceMicromapCompatibilityEXT;
                 return true;
             }
             break;
-        case 0x7168fc65u:
+        case XXH3_vkGetMicromapBuildSizesEXT:
             if (!strcmp("vkGetMicromapBuildSizesEXT", name)) {
                 *addr = (void *)GetMicromapBuildSizesEXT;
                 return true;
@@ -17289,13 +17289,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_HUAWEI_cluster_culling_shader extension commands
-        case 0x6baca76bu:
+        case XXH3_vkCmdDrawClusterHUAWEI:
             if (!strcmp("vkCmdDrawClusterHUAWEI", name)) {
                 *addr = (void *)CmdDrawClusterHUAWEI;
                 return true;
             }
             break;
-        case 0x3d3b79f1u:
+        case XXH3_vkCmdDrawClusterIndirectHUAWEI:
             if (!strcmp("vkCmdDrawClusterIndirectHUAWEI", name)) {
                 *addr = (void *)CmdDrawClusterIndirectHUAWEI;
                 return true;
@@ -17303,7 +17303,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_pageable_device_local_memory extension commands
-        case 0xc8a6efc6u:
+        case XXH3_vkSetDeviceMemoryPriorityEXT:
             if (!strcmp("vkSetDeviceMemoryPriorityEXT", name)) {
                 *addr = (void *)SetDeviceMemoryPriorityEXT;
                 return true;
@@ -17311,7 +17311,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_ARM_scheduling_controls extension commands
-        case 0x89324726u:
+        case XXH3_vkCmdSetDispatchParametersARM:
             if (!strcmp("vkCmdSetDispatchParametersARM", name)) {
                 *addr = (void *)CmdSetDispatchParametersARM;
                 return true;
@@ -17319,13 +17319,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_VALVE_descriptor_set_host_mapping extension commands
-        case 0x18c2f31du:
+        case XXH3_vkGetDescriptorSetLayoutHostMappingInfoVALVE:
             if (!strcmp("vkGetDescriptorSetLayoutHostMappingInfoVALVE", name)) {
                 *addr = (void *)GetDescriptorSetLayoutHostMappingInfoVALVE;
                 return true;
             }
             break;
-        case 0x9ac1c313u:
+        case XXH3_vkGetDescriptorSetHostMappingVALVE:
             if (!strcmp("vkGetDescriptorSetHostMappingVALVE", name)) {
                 *addr = (void *)GetDescriptorSetHostMappingVALVE;
                 return true;
@@ -17333,13 +17333,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_copy_memory_indirect extension commands
-        case 0x4f4f7f1eu:
+        case XXH3_vkCmdCopyMemoryIndirectNV:
             if (!strcmp("vkCmdCopyMemoryIndirectNV", name)) {
                 *addr = (void *)CmdCopyMemoryIndirectNV;
                 return true;
             }
             break;
-        case 0xdb801f38u:
+        case XXH3_vkCmdCopyMemoryToImageIndirectNV:
             if (!strcmp("vkCmdCopyMemoryToImageIndirectNV", name)) {
                 *addr = (void *)CmdCopyMemoryToImageIndirectNV;
                 return true;
@@ -17347,13 +17347,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_memory_decompression extension commands
-        case 0x095995c6u:
+        case XXH3_vkCmdDecompressMemoryNV:
             if (!strcmp("vkCmdDecompressMemoryNV", name)) {
                 *addr = (void *)CmdDecompressMemoryNV;
                 return true;
             }
             break;
-        case 0x0072c3bbu:
+        case XXH3_vkCmdDecompressMemoryIndirectCountNV:
             if (!strcmp("vkCmdDecompressMemoryIndirectCountNV", name)) {
                 *addr = (void *)CmdDecompressMemoryIndirectCountNV;
                 return true;
@@ -17361,19 +17361,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_device_generated_commands_compute extension commands
-        case 0x8f995229u:
+        case XXH3_vkGetPipelineIndirectMemoryRequirementsNV:
             if (!strcmp("vkGetPipelineIndirectMemoryRequirementsNV", name)) {
                 *addr = (void *)GetPipelineIndirectMemoryRequirementsNV;
                 return true;
             }
             break;
-        case 0x8ae92cd1u:
+        case XXH3_vkCmdUpdatePipelineIndirectBufferNV:
             if (!strcmp("vkCmdUpdatePipelineIndirectBufferNV", name)) {
                 *addr = (void *)CmdUpdatePipelineIndirectBufferNV;
                 return true;
             }
             break;
-        case 0xe875d4a8u:
+        case XXH3_vkGetPipelineIndirectDeviceAddressNV:
             if (!strcmp("vkGetPipelineIndirectDeviceAddressNV", name)) {
                 *addr = (void *)GetPipelineIndirectDeviceAddressNV;
                 return true;
@@ -17382,7 +17382,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_OHOS_external_memory extension commands
 #if defined(VK_USE_PLATFORM_OHOS)
-        case 0x021dab57u:
+        case XXH3_vkGetNativeBufferPropertiesOHOS:
             if (!strcmp("vkGetNativeBufferPropertiesOHOS", name)) {
                 *addr = (void *)GetNativeBufferPropertiesOHOS;
                 return true;
@@ -17390,7 +17390,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_OHOS
 #if defined(VK_USE_PLATFORM_OHOS)
-        case 0x8ba0c7e5u:
+        case XXH3_vkGetMemoryNativeBufferOHOS:
             if (!strcmp("vkGetMemoryNativeBufferOHOS", name)) {
                 *addr = (void *)GetMemoryNativeBufferOHOS;
                 return true;
@@ -17399,187 +17399,187 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_OHOS
 
         // ---- VK_EXT_extended_dynamic_state3 extension commands
-        case 0x70c3dc4cu:
+        case XXH3_vkCmdSetDepthClampEnableEXT:
             if (!strcmp("vkCmdSetDepthClampEnableEXT", name)) {
                 *addr = (void *)CmdSetDepthClampEnableEXT;
                 return true;
             }
             break;
-        case 0xc2274b7eu:
+        case XXH3_vkCmdSetPolygonModeEXT:
             if (!strcmp("vkCmdSetPolygonModeEXT", name)) {
                 *addr = (void *)CmdSetPolygonModeEXT;
                 return true;
             }
             break;
-        case 0xcb2e03afu:
+        case XXH3_vkCmdSetRasterizationSamplesEXT:
             if (!strcmp("vkCmdSetRasterizationSamplesEXT", name)) {
                 *addr = (void *)CmdSetRasterizationSamplesEXT;
                 return true;
             }
             break;
-        case 0x84362607u:
+        case XXH3_vkCmdSetSampleMaskEXT:
             if (!strcmp("vkCmdSetSampleMaskEXT", name)) {
                 *addr = (void *)CmdSetSampleMaskEXT;
                 return true;
             }
             break;
-        case 0xf1aeece5u:
+        case XXH3_vkCmdSetAlphaToCoverageEnableEXT:
             if (!strcmp("vkCmdSetAlphaToCoverageEnableEXT", name)) {
                 *addr = (void *)CmdSetAlphaToCoverageEnableEXT;
                 return true;
             }
             break;
-        case 0x0267c1a9u:
+        case XXH3_vkCmdSetAlphaToOneEnableEXT:
             if (!strcmp("vkCmdSetAlphaToOneEnableEXT", name)) {
                 *addr = (void *)CmdSetAlphaToOneEnableEXT;
                 return true;
             }
             break;
-        case 0xe515737fu:
+        case XXH3_vkCmdSetLogicOpEnableEXT:
             if (!strcmp("vkCmdSetLogicOpEnableEXT", name)) {
                 *addr = (void *)CmdSetLogicOpEnableEXT;
                 return true;
             }
             break;
-        case 0x708b5766u:
+        case XXH3_vkCmdSetColorBlendEnableEXT:
             if (!strcmp("vkCmdSetColorBlendEnableEXT", name)) {
                 *addr = (void *)CmdSetColorBlendEnableEXT;
                 return true;
             }
             break;
-        case 0xe944ce11u:
+        case XXH3_vkCmdSetColorBlendEquationEXT:
             if (!strcmp("vkCmdSetColorBlendEquationEXT", name)) {
                 *addr = (void *)CmdSetColorBlendEquationEXT;
                 return true;
             }
             break;
-        case 0x0bb69c73u:
+        case XXH3_vkCmdSetColorWriteMaskEXT:
             if (!strcmp("vkCmdSetColorWriteMaskEXT", name)) {
                 *addr = (void *)CmdSetColorWriteMaskEXT;
                 return true;
             }
             break;
-        case 0x8b317d1cu:
+        case XXH3_vkCmdSetTessellationDomainOriginEXT:
             if (!strcmp("vkCmdSetTessellationDomainOriginEXT", name)) {
                 *addr = (void *)CmdSetTessellationDomainOriginEXT;
                 return true;
             }
             break;
-        case 0xbc2ebd0cu:
+        case XXH3_vkCmdSetRasterizationStreamEXT:
             if (!strcmp("vkCmdSetRasterizationStreamEXT", name)) {
                 *addr = (void *)CmdSetRasterizationStreamEXT;
                 return true;
             }
             break;
-        case 0x124bf5b0u:
+        case XXH3_vkCmdSetConservativeRasterizationModeEXT:
             if (!strcmp("vkCmdSetConservativeRasterizationModeEXT", name)) {
                 *addr = (void *)CmdSetConservativeRasterizationModeEXT;
                 return true;
             }
             break;
-        case 0xc7b6d34cu:
+        case XXH3_vkCmdSetExtraPrimitiveOverestimationSizeEXT:
             if (!strcmp("vkCmdSetExtraPrimitiveOverestimationSizeEXT", name)) {
                 *addr = (void *)CmdSetExtraPrimitiveOverestimationSizeEXT;
                 return true;
             }
             break;
-        case 0xebe3b851u:
+        case XXH3_vkCmdSetDepthClipEnableEXT:
             if (!strcmp("vkCmdSetDepthClipEnableEXT", name)) {
                 *addr = (void *)CmdSetDepthClipEnableEXT;
                 return true;
             }
             break;
-        case 0xc8b1e79au:
+        case XXH3_vkCmdSetSampleLocationsEnableEXT:
             if (!strcmp("vkCmdSetSampleLocationsEnableEXT", name)) {
                 *addr = (void *)CmdSetSampleLocationsEnableEXT;
                 return true;
             }
             break;
-        case 0x80112225u:
+        case XXH3_vkCmdSetColorBlendAdvancedEXT:
             if (!strcmp("vkCmdSetColorBlendAdvancedEXT", name)) {
                 *addr = (void *)CmdSetColorBlendAdvancedEXT;
                 return true;
             }
             break;
-        case 0xda32b61bu:
+        case XXH3_vkCmdSetProvokingVertexModeEXT:
             if (!strcmp("vkCmdSetProvokingVertexModeEXT", name)) {
                 *addr = (void *)CmdSetProvokingVertexModeEXT;
                 return true;
             }
             break;
-        case 0x7d324e7bu:
+        case XXH3_vkCmdSetLineRasterizationModeEXT:
             if (!strcmp("vkCmdSetLineRasterizationModeEXT", name)) {
                 *addr = (void *)CmdSetLineRasterizationModeEXT;
                 return true;
             }
             break;
-        case 0xd5f83099u:
+        case XXH3_vkCmdSetLineStippleEnableEXT:
             if (!strcmp("vkCmdSetLineStippleEnableEXT", name)) {
                 *addr = (void *)CmdSetLineStippleEnableEXT;
                 return true;
             }
             break;
-        case 0x659e99e8u:
+        case XXH3_vkCmdSetDepthClipNegativeOneToOneEXT:
             if (!strcmp("vkCmdSetDepthClipNegativeOneToOneEXT", name)) {
                 *addr = (void *)CmdSetDepthClipNegativeOneToOneEXT;
                 return true;
             }
             break;
-        case 0xa30c6369u:
+        case XXH3_vkCmdSetViewportWScalingEnableNV:
             if (!strcmp("vkCmdSetViewportWScalingEnableNV", name)) {
                 *addr = (void *)CmdSetViewportWScalingEnableNV;
                 return true;
             }
             break;
-        case 0x3909f03au:
+        case XXH3_vkCmdSetViewportSwizzleNV:
             if (!strcmp("vkCmdSetViewportSwizzleNV", name)) {
                 *addr = (void *)CmdSetViewportSwizzleNV;
                 return true;
             }
             break;
-        case 0x18a99affu:
+        case XXH3_vkCmdSetCoverageToColorEnableNV:
             if (!strcmp("vkCmdSetCoverageToColorEnableNV", name)) {
                 *addr = (void *)CmdSetCoverageToColorEnableNV;
                 return true;
             }
             break;
-        case 0x21c85b77u:
+        case XXH3_vkCmdSetCoverageToColorLocationNV:
             if (!strcmp("vkCmdSetCoverageToColorLocationNV", name)) {
                 *addr = (void *)CmdSetCoverageToColorLocationNV;
                 return true;
             }
             break;
-        case 0x6322bf31u:
+        case XXH3_vkCmdSetCoverageModulationModeNV:
             if (!strcmp("vkCmdSetCoverageModulationModeNV", name)) {
                 *addr = (void *)CmdSetCoverageModulationModeNV;
                 return true;
             }
             break;
-        case 0x5009815du:
+        case XXH3_vkCmdSetCoverageModulationTableEnableNV:
             if (!strcmp("vkCmdSetCoverageModulationTableEnableNV", name)) {
                 *addr = (void *)CmdSetCoverageModulationTableEnableNV;
                 return true;
             }
             break;
-        case 0x16a7fbc2u:
+        case XXH3_vkCmdSetCoverageModulationTableNV:
             if (!strcmp("vkCmdSetCoverageModulationTableNV", name)) {
                 *addr = (void *)CmdSetCoverageModulationTableNV;
                 return true;
             }
             break;
-        case 0x1b5e8f3cu:
+        case XXH3_vkCmdSetShadingRateImageEnableNV:
             if (!strcmp("vkCmdSetShadingRateImageEnableNV", name)) {
                 *addr = (void *)CmdSetShadingRateImageEnableNV;
                 return true;
             }
             break;
-        case 0xd737b6e4u:
+        case XXH3_vkCmdSetRepresentativeFragmentTestEnableNV:
             if (!strcmp("vkCmdSetRepresentativeFragmentTestEnableNV", name)) {
                 *addr = (void *)CmdSetRepresentativeFragmentTestEnableNV;
                 return true;
             }
             break;
-        case 0xc02eb37eu:
+        case XXH3_vkCmdSetCoverageReductionModeNV:
             if (!strcmp("vkCmdSetCoverageReductionModeNV", name)) {
                 *addr = (void *)CmdSetCoverageReductionModeNV;
                 return true;
@@ -17587,67 +17587,67 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_ARM_tensors extension commands
-        case 0xf6195cbbu:
+        case XXH3_vkCreateTensorARM:
             if (!strcmp("vkCreateTensorARM", name)) {
                 *addr = (void *)CreateTensorARM;
                 return true;
             }
             break;
-        case 0x5926a701u:
+        case XXH3_vkDestroyTensorARM:
             if (!strcmp("vkDestroyTensorARM", name)) {
                 *addr = (void *)DestroyTensorARM;
                 return true;
             }
             break;
-        case 0x149afb70u:
+        case XXH3_vkCreateTensorViewARM:
             if (!strcmp("vkCreateTensorViewARM", name)) {
                 *addr = (void *)CreateTensorViewARM;
                 return true;
             }
             break;
-        case 0xc6b6e2a6u:
+        case XXH3_vkDestroyTensorViewARM:
             if (!strcmp("vkDestroyTensorViewARM", name)) {
                 *addr = (void *)DestroyTensorViewARM;
                 return true;
             }
             break;
-        case 0xbedb253eu:
+        case XXH3_vkGetTensorMemoryRequirementsARM:
             if (!strcmp("vkGetTensorMemoryRequirementsARM", name)) {
                 *addr = (void *)GetTensorMemoryRequirementsARM;
                 return true;
             }
             break;
-        case 0x3cec6c97u:
+        case XXH3_vkBindTensorMemoryARM:
             if (!strcmp("vkBindTensorMemoryARM", name)) {
                 *addr = (void *)BindTensorMemoryARM;
                 return true;
             }
             break;
-        case 0xfda86420u:
+        case XXH3_vkGetDeviceTensorMemoryRequirementsARM:
             if (!strcmp("vkGetDeviceTensorMemoryRequirementsARM", name)) {
                 *addr = (void *)GetDeviceTensorMemoryRequirementsARM;
                 return true;
             }
             break;
-        case 0xa3426cd4u:
+        case XXH3_vkCmdCopyTensorARM:
             if (!strcmp("vkCmdCopyTensorARM", name)) {
                 *addr = (void *)CmdCopyTensorARM;
                 return true;
             }
             break;
-        case 0x1e4faf6cu:
+        case XXH3_vkGetPhysicalDeviceExternalTensorPropertiesARM:
             if (!strcmp("vkGetPhysicalDeviceExternalTensorPropertiesARM", name)) {
                 *addr = (void *)GetPhysicalDeviceExternalTensorPropertiesARM;
                 return true;
             }
             break;
-        case 0x07a05987u:
+        case XXH3_vkGetTensorOpaqueCaptureDescriptorDataARM:
             if (!strcmp("vkGetTensorOpaqueCaptureDescriptorDataARM", name)) {
                 *addr = (void *)GetTensorOpaqueCaptureDescriptorDataARM;
                 return true;
             }
             break;
-        case 0x3c934486u:
+        case XXH3_vkGetTensorViewOpaqueCaptureDescriptorDataARM:
             if (!strcmp("vkGetTensorViewOpaqueCaptureDescriptorDataARM", name)) {
                 *addr = (void *)GetTensorViewOpaqueCaptureDescriptorDataARM;
                 return true;
@@ -17655,13 +17655,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_shader_module_identifier extension commands
-        case 0x3be5dd87u:
+        case XXH3_vkGetShaderModuleIdentifierEXT:
             if (!strcmp("vkGetShaderModuleIdentifierEXT", name)) {
                 *addr = (void *)GetShaderModuleIdentifierEXT;
                 return true;
             }
             break;
-        case 0xa26b8c93u:
+        case XXH3_vkGetShaderModuleCreateInfoIdentifierEXT:
             if (!strcmp("vkGetShaderModuleCreateInfoIdentifierEXT", name)) {
                 *addr = (void *)GetShaderModuleCreateInfoIdentifierEXT;
                 return true;
@@ -17669,31 +17669,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_optical_flow extension commands
-        case 0xfddda5a0u:
+        case XXH3_vkGetPhysicalDeviceOpticalFlowImageFormatsNV:
             if (!strcmp("vkGetPhysicalDeviceOpticalFlowImageFormatsNV", name)) {
                 *addr = (void *)GetPhysicalDeviceOpticalFlowImageFormatsNV;
                 return true;
             }
             break;
-        case 0x3f15b50eu:
+        case XXH3_vkCreateOpticalFlowSessionNV:
             if (!strcmp("vkCreateOpticalFlowSessionNV", name)) {
                 *addr = (void *)CreateOpticalFlowSessionNV;
                 return true;
             }
             break;
-        case 0xa7e6392cu:
+        case XXH3_vkDestroyOpticalFlowSessionNV:
             if (!strcmp("vkDestroyOpticalFlowSessionNV", name)) {
                 *addr = (void *)DestroyOpticalFlowSessionNV;
                 return true;
             }
             break;
-        case 0xfbc22612u:
+        case XXH3_vkBindOpticalFlowSessionImageNV:
             if (!strcmp("vkBindOpticalFlowSessionImageNV", name)) {
                 *addr = (void *)BindOpticalFlowSessionImageNV;
                 return true;
             }
             break;
-        case 0x55963f59u:
+        case XXH3_vkCmdOpticalFlowExecuteNV:
             if (!strcmp("vkCmdOpticalFlowExecuteNV", name)) {
                 *addr = (void *)CmdOpticalFlowExecuteNV;
                 return true;
@@ -17701,7 +17701,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_AMD_anti_lag extension commands
-        case 0x6680cf67u:
+        case XXH3_vkAntiLagUpdateAMD:
             if (!strcmp("vkAntiLagUpdateAMD", name)) {
                 *addr = (void *)AntiLagUpdateAMD;
                 return true;
@@ -17709,31 +17709,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_shader_object extension commands
-        case 0xdddadc2bu:
+        case XXH3_vkCreateShadersEXT:
             if (!strcmp("vkCreateShadersEXT", name)) {
                 *addr = (void *)CreateShadersEXT;
                 return true;
             }
             break;
-        case 0xb433af00u:
+        case XXH3_vkDestroyShaderEXT:
             if (!strcmp("vkDestroyShaderEXT", name)) {
                 *addr = (void *)DestroyShaderEXT;
                 return true;
             }
             break;
-        case 0xb7a55e95u:
+        case XXH3_vkGetShaderBinaryDataEXT:
             if (!strcmp("vkGetShaderBinaryDataEXT", name)) {
                 *addr = (void *)GetShaderBinaryDataEXT;
                 return true;
             }
             break;
-        case 0x053358a8u:
+        case XXH3_vkCmdBindShadersEXT:
             if (!strcmp("vkCmdBindShadersEXT", name)) {
                 *addr = (void *)CmdBindShadersEXT;
                 return true;
             }
             break;
-        case 0x7deb21c6u:
+        case XXH3_vkCmdSetDepthClampRangeEXT:
             if (!strcmp("vkCmdSetDepthClampRangeEXT", name)) {
                 *addr = (void *)CmdSetDepthClampRangeEXT;
                 return true;
@@ -17741,13 +17741,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_QCOM_tile_properties extension commands
-        case 0x970c751cu:
+        case XXH3_vkGetFramebufferTilePropertiesQCOM:
             if (!strcmp("vkGetFramebufferTilePropertiesQCOM", name)) {
                 *addr = (void *)GetFramebufferTilePropertiesQCOM;
                 return true;
             }
             break;
-        case 0xc2879ca0u:
+        case XXH3_vkGetDynamicRenderingTilePropertiesQCOM:
             if (!strcmp("vkGetDynamicRenderingTilePropertiesQCOM", name)) {
                 *addr = (void *)GetDynamicRenderingTilePropertiesQCOM;
                 return true;
@@ -17755,19 +17755,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_cooperative_vector extension commands
-        case 0xb25f9422u:
+        case XXH3_vkGetPhysicalDeviceCooperativeVectorPropertiesNV:
             if (!strcmp("vkGetPhysicalDeviceCooperativeVectorPropertiesNV", name)) {
                 *addr = (void *)GetPhysicalDeviceCooperativeVectorPropertiesNV;
                 return true;
             }
             break;
-        case 0x7e5327eeu:
+        case XXH3_vkConvertCooperativeVectorMatrixNV:
             if (!strcmp("vkConvertCooperativeVectorMatrixNV", name)) {
                 *addr = (void *)ConvertCooperativeVectorMatrixNV;
                 return true;
             }
             break;
-        case 0xe7c4b1feu:
+        case XXH3_vkCmdConvertCooperativeVectorMatrixNV:
             if (!strcmp("vkCmdConvertCooperativeVectorMatrixNV", name)) {
                 *addr = (void *)CmdConvertCooperativeVectorMatrixNV;
                 return true;
@@ -17775,31 +17775,31 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_low_latency2 extension commands
-        case 0xec9bf164u:
+        case XXH3_vkSetLatencySleepModeNV:
             if (!strcmp("vkSetLatencySleepModeNV", name)) {
                 *addr = (void *)SetLatencySleepModeNV;
                 return true;
             }
             break;
-        case 0x2f2b0b4fu:
+        case XXH3_vkLatencySleepNV:
             if (!strcmp("vkLatencySleepNV", name)) {
                 *addr = (void *)LatencySleepNV;
                 return true;
             }
             break;
-        case 0xd06a9a12u:
+        case XXH3_vkSetLatencyMarkerNV:
             if (!strcmp("vkSetLatencyMarkerNV", name)) {
                 *addr = (void *)SetLatencyMarkerNV;
                 return true;
             }
             break;
-        case 0xd4280bbbu:
+        case XXH3_vkGetLatencyTimingsNV:
             if (!strcmp("vkGetLatencyTimingsNV", name)) {
                 *addr = (void *)GetLatencyTimingsNV;
                 return true;
             }
             break;
-        case 0x78476952u:
+        case XXH3_vkQueueNotifyOutOfBandNV:
             if (!strcmp("vkQueueNotifyOutOfBandNV", name)) {
                 *addr = (void *)QueueNotifyOutOfBandNV;
                 return true;
@@ -17807,67 +17807,67 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_ARM_data_graph extension commands
-        case 0x3265bb35u:
+        case XXH3_vkCreateDataGraphPipelinesARM:
             if (!strcmp("vkCreateDataGraphPipelinesARM", name)) {
                 *addr = (void *)CreateDataGraphPipelinesARM;
                 return true;
             }
             break;
-        case 0xe318170au:
+        case XXH3_vkCreateDataGraphPipelineSessionARM:
             if (!strcmp("vkCreateDataGraphPipelineSessionARM", name)) {
                 *addr = (void *)CreateDataGraphPipelineSessionARM;
                 return true;
             }
             break;
-        case 0x7b53b18bu:
+        case XXH3_vkGetDataGraphPipelineSessionBindPointRequirementsARM:
             if (!strcmp("vkGetDataGraphPipelineSessionBindPointRequirementsARM", name)) {
                 *addr = (void *)GetDataGraphPipelineSessionBindPointRequirementsARM;
                 return true;
             }
             break;
-        case 0x975501a7u:
+        case XXH3_vkGetDataGraphPipelineSessionMemoryRequirementsARM:
             if (!strcmp("vkGetDataGraphPipelineSessionMemoryRequirementsARM", name)) {
                 *addr = (void *)GetDataGraphPipelineSessionMemoryRequirementsARM;
                 return true;
             }
             break;
-        case 0xc6b55726u:
+        case XXH3_vkBindDataGraphPipelineSessionMemoryARM:
             if (!strcmp("vkBindDataGraphPipelineSessionMemoryARM", name)) {
                 *addr = (void *)BindDataGraphPipelineSessionMemoryARM;
                 return true;
             }
             break;
-        case 0x5374b188u:
+        case XXH3_vkDestroyDataGraphPipelineSessionARM:
             if (!strcmp("vkDestroyDataGraphPipelineSessionARM", name)) {
                 *addr = (void *)DestroyDataGraphPipelineSessionARM;
                 return true;
             }
             break;
-        case 0xe33fbab6u:
+        case XXH3_vkCmdDispatchDataGraphARM:
             if (!strcmp("vkCmdDispatchDataGraphARM", name)) {
                 *addr = (void *)CmdDispatchDataGraphARM;
                 return true;
             }
             break;
-        case 0xeea25bf0u:
+        case XXH3_vkGetDataGraphPipelineAvailablePropertiesARM:
             if (!strcmp("vkGetDataGraphPipelineAvailablePropertiesARM", name)) {
                 *addr = (void *)GetDataGraphPipelineAvailablePropertiesARM;
                 return true;
             }
             break;
-        case 0x0cc73139u:
+        case XXH3_vkGetDataGraphPipelinePropertiesARM:
             if (!strcmp("vkGetDataGraphPipelinePropertiesARM", name)) {
                 *addr = (void *)GetDataGraphPipelinePropertiesARM;
                 return true;
             }
             break;
-        case 0x71d6f639u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyDataGraphPropertiesARM:
             if (!strcmp("vkGetPhysicalDeviceQueueFamilyDataGraphPropertiesARM", name)) {
                 *addr = (void *)GetPhysicalDeviceQueueFamilyDataGraphPropertiesARM;
                 return true;
             }
             break;
-        case 0xb42dbc4au:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyDataGraphProcessingEnginePropertiesARM:
             if (!strcmp("vkGetPhysicalDeviceQueueFamilyDataGraphProcessingEnginePropertiesARM", name)) {
                 *addr = (void *)GetPhysicalDeviceQueueFamilyDataGraphProcessingEnginePropertiesARM;
                 return true;
@@ -17875,7 +17875,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_ARM_data_graph_instruction_set_tosa extension commands
-        case 0x3622b7dcu:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyDataGraphEngineOperationPropertiesARM:
             if (!strcmp("vkGetPhysicalDeviceQueueFamilyDataGraphEngineOperationPropertiesARM", name)) {
                 *addr = (void *)GetPhysicalDeviceQueueFamilyDataGraphEngineOperationPropertiesARM;
                 return true;
@@ -17883,7 +17883,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_attachment_feedback_loop_dynamic_state extension commands
-        case 0xd128dc3cu:
+        case XXH3_vkCmdSetAttachmentFeedbackLoopEnableEXT:
             if (!strcmp("vkCmdSetAttachmentFeedbackLoopEnableEXT", name)) {
                 *addr = (void *)CmdSetAttachmentFeedbackLoopEnableEXT;
                 return true;
@@ -17892,7 +17892,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_QNX_external_memory_screen_buffer extension commands
 #if defined(VK_USE_PLATFORM_SCREEN_QNX)
-        case 0xfed75262u:
+        case XXH3_vkGetScreenBufferPropertiesQNX:
             if (!strcmp("vkGetScreenBufferPropertiesQNX", name)) {
                 *addr = (void *)GetScreenBufferPropertiesQNX;
                 return true;
@@ -17901,7 +17901,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 
         // ---- VK_QCOM_tile_memory_heap extension commands
-        case 0xdd00e73au:
+        case XXH3_vkCmdBindTileMemoryQCOM:
             if (!strcmp("vkCmdBindTileMemoryQCOM", name)) {
                 *addr = (void *)CmdBindTileMemoryQCOM;
                 return true;
@@ -17909,13 +17909,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_memory_decompression extension commands
-        case 0x6a605599u:
+        case XXH3_vkCmdDecompressMemoryEXT:
             if (!strcmp("vkCmdDecompressMemoryEXT", name)) {
                 *addr = (void *)CmdDecompressMemoryEXT;
                 return true;
             }
             break;
-        case 0x66af0db6u:
+        case XXH3_vkCmdDecompressMemoryIndirectCountEXT:
             if (!strcmp("vkCmdDecompressMemoryIndirectCountEXT", name)) {
                 *addr = (void *)CmdDecompressMemoryIndirectCountEXT;
                 return true;
@@ -17923,19 +17923,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_external_compute_queue extension commands
-        case 0x51f34629u:
+        case XXH3_vkCreateExternalComputeQueueNV:
             if (!strcmp("vkCreateExternalComputeQueueNV", name)) {
                 *addr = (void *)CreateExternalComputeQueueNV;
                 return true;
             }
             break;
-        case 0x1d6bd8c7u:
+        case XXH3_vkDestroyExternalComputeQueueNV:
             if (!strcmp("vkDestroyExternalComputeQueueNV", name)) {
                 *addr = (void *)DestroyExternalComputeQueueNV;
                 return true;
             }
             break;
-        case 0x3a602df9u:
+        case XXH3_vkGetExternalComputeQueueDataNV:
             if (!strcmp("vkGetExternalComputeQueueDataNV", name)) {
                 *addr = (void *)GetExternalComputeQueueDataNV;
                 return true;
@@ -17943,13 +17943,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_cluster_acceleration_structure extension commands
-        case 0x6261636bu:
+        case XXH3_vkGetClusterAccelerationStructureBuildSizesNV:
             if (!strcmp("vkGetClusterAccelerationStructureBuildSizesNV", name)) {
                 *addr = (void *)GetClusterAccelerationStructureBuildSizesNV;
                 return true;
             }
             break;
-        case 0x9b35acc3u:
+        case XXH3_vkCmdBuildClusterAccelerationStructureIndirectNV:
             if (!strcmp("vkCmdBuildClusterAccelerationStructureIndirectNV", name)) {
                 *addr = (void *)CmdBuildClusterAccelerationStructureIndirectNV;
                 return true;
@@ -17957,13 +17957,13 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_partitioned_acceleration_structure extension commands
-        case 0x770d3569u:
+        case XXH3_vkGetPartitionedAccelerationStructuresBuildSizesNV:
             if (!strcmp("vkGetPartitionedAccelerationStructuresBuildSizesNV", name)) {
                 *addr = (void *)GetPartitionedAccelerationStructuresBuildSizesNV;
                 return true;
             }
             break;
-        case 0xb1f44da7u:
+        case XXH3_vkCmdBuildPartitionedAccelerationStructuresNV:
             if (!strcmp("vkCmdBuildPartitionedAccelerationStructuresNV", name)) {
                 *addr = (void *)CmdBuildPartitionedAccelerationStructuresNV;
                 return true;
@@ -17971,55 +17971,55 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_device_generated_commands extension commands
-        case 0x7de39ea9u:
+        case XXH3_vkGetGeneratedCommandsMemoryRequirementsEXT:
             if (!strcmp("vkGetGeneratedCommandsMemoryRequirementsEXT", name)) {
                 *addr = (void *)GetGeneratedCommandsMemoryRequirementsEXT;
                 return true;
             }
             break;
-        case 0x8e079756u:
+        case XXH3_vkCmdPreprocessGeneratedCommandsEXT:
             if (!strcmp("vkCmdPreprocessGeneratedCommandsEXT", name)) {
                 *addr = (void *)CmdPreprocessGeneratedCommandsEXT;
                 return true;
             }
             break;
-        case 0xb5bed6f3u:
+        case XXH3_vkCmdExecuteGeneratedCommandsEXT:
             if (!strcmp("vkCmdExecuteGeneratedCommandsEXT", name)) {
                 *addr = (void *)CmdExecuteGeneratedCommandsEXT;
                 return true;
             }
             break;
-        case 0x525f32efu:
+        case XXH3_vkCreateIndirectCommandsLayoutEXT:
             if (!strcmp("vkCreateIndirectCommandsLayoutEXT", name)) {
                 *addr = (void *)CreateIndirectCommandsLayoutEXT;
                 return true;
             }
             break;
-        case 0x71f89de1u:
+        case XXH3_vkDestroyIndirectCommandsLayoutEXT:
             if (!strcmp("vkDestroyIndirectCommandsLayoutEXT", name)) {
                 *addr = (void *)DestroyIndirectCommandsLayoutEXT;
                 return true;
             }
             break;
-        case 0xcc596329u:
+        case XXH3_vkCreateIndirectExecutionSetEXT:
             if (!strcmp("vkCreateIndirectExecutionSetEXT", name)) {
                 *addr = (void *)CreateIndirectExecutionSetEXT;
                 return true;
             }
             break;
-        case 0x299fac57u:
+        case XXH3_vkDestroyIndirectExecutionSetEXT:
             if (!strcmp("vkDestroyIndirectExecutionSetEXT", name)) {
                 *addr = (void *)DestroyIndirectExecutionSetEXT;
                 return true;
             }
             break;
-        case 0x911bed94u:
+        case XXH3_vkUpdateIndirectExecutionSetPipelineEXT:
             if (!strcmp("vkUpdateIndirectExecutionSetPipelineEXT", name)) {
                 *addr = (void *)UpdateIndirectExecutionSetPipelineEXT;
                 return true;
             }
             break;
-        case 0x15e51375u:
+        case XXH3_vkUpdateIndirectExecutionSetShaderEXT:
             if (!strcmp("vkUpdateIndirectExecutionSetShaderEXT", name)) {
                 *addr = (void *)UpdateIndirectExecutionSetShaderEXT;
                 return true;
@@ -18028,7 +18028,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_OHOS_surface extension commands
 #if defined(VK_USE_PLATFORM_OHOS)
-        case 0xf433c5d8u:
+        case XXH3_vkCreateSurfaceOHOS:
             if (!strcmp("vkCreateSurfaceOHOS", name)) {
                 *addr = (ptr_instance->enabled_extensions.ohos_surface == 1)
                              ? (void *)CreateSurfaceOHOS
@@ -18039,7 +18039,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_OHOS
 
         // ---- VK_NV_cooperative_matrix2 extension commands
-        case 0x41cdce56u:
+        case XXH3_vkGetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV:
             if (!strcmp("vkGetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV", name)) {
                 *addr = (void *)GetPhysicalDeviceCooperativeMatrixFlexibleDimensionsPropertiesNV;
                 return true;
@@ -18048,7 +18048,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_EXT_external_memory_metal extension commands
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-        case 0x9bfa7761u:
+        case XXH3_vkGetMemoryMetalHandleEXT:
             if (!strcmp("vkGetMemoryMetalHandleEXT", name)) {
                 *addr = (void *)GetMemoryMetalHandleEXT;
                 return true;
@@ -18056,7 +18056,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_METAL_EXT
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-        case 0xa92d688au:
+        case XXH3_vkGetMemoryMetalHandlePropertiesEXT:
             if (!strcmp("vkGetMemoryMetalHandlePropertiesEXT", name)) {
                 *addr = (void *)GetMemoryMetalHandlePropertiesEXT;
                 return true;
@@ -18065,7 +18065,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_METAL_EXT
 
         // ---- VK_ARM_performance_counters_by_region extension commands
-        case 0x3dc8df2eu:
+        case XXH3_vkEnumeratePhysicalDeviceQueueFamilyPerformanceCountersByRegionARM:
             if (!strcmp("vkEnumeratePhysicalDeviceQueueFamilyPerformanceCountersByRegionARM", name)) {
                 *addr = (void *)EnumeratePhysicalDeviceQueueFamilyPerformanceCountersByRegionARM;
                 return true;
@@ -18073,43 +18073,43 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_ARM_shader_instrumentation extension commands
-        case 0x50326e9du:
+        case XXH3_vkEnumeratePhysicalDeviceShaderInstrumentationMetricsARM:
             if (!strcmp("vkEnumeratePhysicalDeviceShaderInstrumentationMetricsARM", name)) {
                 *addr = (void *)EnumeratePhysicalDeviceShaderInstrumentationMetricsARM;
                 return true;
             }
             break;
-        case 0xa053fa07u:
+        case XXH3_vkCreateShaderInstrumentationARM:
             if (!strcmp("vkCreateShaderInstrumentationARM", name)) {
                 *addr = (void *)CreateShaderInstrumentationARM;
                 return true;
             }
             break;
-        case 0x175d6539u:
+        case XXH3_vkDestroyShaderInstrumentationARM:
             if (!strcmp("vkDestroyShaderInstrumentationARM", name)) {
                 *addr = (void *)DestroyShaderInstrumentationARM;
                 return true;
             }
             break;
-        case 0x2780a6a6u:
+        case XXH3_vkCmdBeginShaderInstrumentationARM:
             if (!strcmp("vkCmdBeginShaderInstrumentationARM", name)) {
                 *addr = (void *)CmdBeginShaderInstrumentationARM;
                 return true;
             }
             break;
-        case 0x32679bdeu:
+        case XXH3_vkCmdEndShaderInstrumentationARM:
             if (!strcmp("vkCmdEndShaderInstrumentationARM", name)) {
                 *addr = (void *)CmdEndShaderInstrumentationARM;
                 return true;
             }
             break;
-        case 0x19ed613du:
+        case XXH3_vkGetShaderInstrumentationValuesARM:
             if (!strcmp("vkGetShaderInstrumentationValuesARM", name)) {
                 *addr = (void *)GetShaderInstrumentationValuesARM;
                 return true;
             }
             break;
-        case 0x0d19a245u:
+        case XXH3_vkClearShaderInstrumentationMetricsARM:
             if (!strcmp("vkClearShaderInstrumentationMetricsARM", name)) {
                 *addr = (void *)ClearShaderInstrumentationMetricsARM;
                 return true;
@@ -18117,7 +18117,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_fragment_density_map_offset extension commands
-        case 0xdc7f8ea0u:
+        case XXH3_vkCmdEndRendering2EXT:
             if (!strcmp("vkCmdEndRendering2EXT", name)) {
                 *addr = (void *)CmdEndRendering2EXT;
                 return true;
@@ -18125,7 +18125,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_custom_resolve extension commands
-        case 0x3c20a20fu:
+        case XXH3_vkCmdBeginCustomResolveEXT:
             if (!strcmp("vkCmdBeginCustomResolveEXT", name)) {
                 *addr = (void *)CmdBeginCustomResolveEXT;
                 return true;
@@ -18133,7 +18133,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_ARM_data_graph_optical_flow extension commands
-        case 0x91722673u:
+        case XXH3_vkGetPhysicalDeviceQueueFamilyDataGraphOpticalFlowImageFormatsARM:
             if (!strcmp("vkGetPhysicalDeviceQueueFamilyDataGraphOpticalFlowImageFormatsARM", name)) {
                 *addr = (void *)GetPhysicalDeviceQueueFamilyDataGraphOpticalFlowImageFormatsARM;
                 return true;
@@ -18141,7 +18141,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_NV_compute_occupancy_priority extension commands
-        case 0xa3b990b8u:
+        case XXH3_vkCmdSetComputeOccupancyPriorityNV:
             if (!strcmp("vkCmdSetComputeOccupancyPriorityNV", name)) {
                 *addr = (void *)CmdSetComputeOccupancyPriorityNV;
                 return true;
@@ -18149,7 +18149,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_cooperative_matrix_maintenance1 extension commands
-        case 0x7959c3edu:
+        case XXH3_vkGetPhysicalDeviceCooperativeMatrixProperties2EXT:
             if (!strcmp("vkGetPhysicalDeviceCooperativeMatrixProperties2EXT", name)) {
                 *addr = (void *)GetPhysicalDeviceCooperativeMatrixProperties2EXT;
                 return true;
@@ -18158,7 +18158,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 
         // ---- VK_SEC_ubm_surface extension commands
 #if defined(VK_USE_PLATFORM_UBM_SEC)
-        case 0x9630af04u:
+        case XXH3_vkCreateUbmSurfaceSEC:
             if (!strcmp("vkCreateUbmSurfaceSEC", name)) {
                 *addr = (ptr_instance->enabled_extensions.sec_ubm_surface == 1)
                              ? (void *)CreateUbmSurfaceSEC
@@ -18168,7 +18168,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 #endif // VK_USE_PLATFORM_UBM_SEC
 #if defined(VK_USE_PLATFORM_UBM_SEC)
-        case 0x42f91885u:
+        case XXH3_vkGetPhysicalDeviceUbmPresentationSupportSEC:
             if (!strcmp("vkGetPhysicalDeviceUbmPresentationSupportSEC", name)) {
                 *addr = (ptr_instance->enabled_extensions.sec_ubm_surface == 1)
                              ? (void *)GetPhysicalDeviceUbmPresentationSupportSEC
@@ -18179,7 +18179,7 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 #endif // VK_USE_PLATFORM_UBM_SEC
 
         // ---- VK_EXT_primitive_restart_index extension commands
-        case 0x19fa512du:
+        case XXH3_vkCmdSetPrimitiveRestartIndexEXT:
             if (!strcmp("vkCmdSetPrimitiveRestartIndexEXT", name)) {
                 *addr = (void *)CmdSetPrimitiveRestartIndexEXT;
                 return true;
@@ -18187,97 +18187,97 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_acceleration_structure extension commands
-        case 0xc1a4729eu:
+        case XXH3_vkCreateAccelerationStructureKHR:
             if (!strcmp("vkCreateAccelerationStructureKHR", name)) {
                 *addr = (void *)CreateAccelerationStructureKHR;
                 return true;
             }
             break;
-        case 0xe47439f0u:
+        case XXH3_vkDestroyAccelerationStructureKHR:
             if (!strcmp("vkDestroyAccelerationStructureKHR", name)) {
                 *addr = (void *)DestroyAccelerationStructureKHR;
                 return true;
             }
             break;
-        case 0xd0f4160fu:
+        case XXH3_vkCmdBuildAccelerationStructuresKHR:
             if (!strcmp("vkCmdBuildAccelerationStructuresKHR", name)) {
                 *addr = (void *)CmdBuildAccelerationStructuresKHR;
                 return true;
             }
             break;
-        case 0xca119751u:
+        case XXH3_vkCmdBuildAccelerationStructuresIndirectKHR:
             if (!strcmp("vkCmdBuildAccelerationStructuresIndirectKHR", name)) {
                 *addr = (void *)CmdBuildAccelerationStructuresIndirectKHR;
                 return true;
             }
             break;
-        case 0x33eb707fu:
+        case XXH3_vkBuildAccelerationStructuresKHR:
             if (!strcmp("vkBuildAccelerationStructuresKHR", name)) {
                 *addr = (void *)BuildAccelerationStructuresKHR;
                 return true;
             }
             break;
-        case 0x681947afu:
+        case XXH3_vkCopyAccelerationStructureKHR:
             if (!strcmp("vkCopyAccelerationStructureKHR", name)) {
                 *addr = (void *)CopyAccelerationStructureKHR;
                 return true;
             }
             break;
-        case 0xe0d7cad5u:
+        case XXH3_vkCopyAccelerationStructureToMemoryKHR:
             if (!strcmp("vkCopyAccelerationStructureToMemoryKHR", name)) {
                 *addr = (void *)CopyAccelerationStructureToMemoryKHR;
                 return true;
             }
             break;
-        case 0xec40e9bdu:
+        case XXH3_vkCopyMemoryToAccelerationStructureKHR:
             if (!strcmp("vkCopyMemoryToAccelerationStructureKHR", name)) {
                 *addr = (void *)CopyMemoryToAccelerationStructureKHR;
                 return true;
             }
             break;
-        case 0x6485ef01u:
+        case XXH3_vkWriteAccelerationStructuresPropertiesKHR:
             if (!strcmp("vkWriteAccelerationStructuresPropertiesKHR", name)) {
                 *addr = (void *)WriteAccelerationStructuresPropertiesKHR;
                 return true;
             }
             break;
-        case 0x7fc5c33fu:
+        case XXH3_vkCmdCopyAccelerationStructureKHR:
             if (!strcmp("vkCmdCopyAccelerationStructureKHR", name)) {
                 *addr = (void *)CmdCopyAccelerationStructureKHR;
                 return true;
             }
             break;
-        case 0x6b70ae85u:
+        case XXH3_vkCmdCopyAccelerationStructureToMemoryKHR:
             if (!strcmp("vkCmdCopyAccelerationStructureToMemoryKHR", name)) {
                 *addr = (void *)CmdCopyAccelerationStructureToMemoryKHR;
                 return true;
             }
             break;
-        case 0x29df8fadu:
+        case XXH3_vkCmdCopyMemoryToAccelerationStructureKHR:
             if (!strcmp("vkCmdCopyMemoryToAccelerationStructureKHR", name)) {
                 *addr = (void *)CmdCopyMemoryToAccelerationStructureKHR;
                 return true;
             }
             break;
-        case 0xfe17968au:
+        case XXH3_vkGetAccelerationStructureDeviceAddressKHR:
             if (!strcmp("vkGetAccelerationStructureDeviceAddressKHR", name)) {
                 *addr = (void *)GetAccelerationStructureDeviceAddressKHR;
                 return true;
             }
             break;
-        case 0xf4a46011u:
+        case XXH3_vkCmdWriteAccelerationStructuresPropertiesKHR:
             if (!strcmp("vkCmdWriteAccelerationStructuresPropertiesKHR", name)) {
                 *addr = (void *)CmdWriteAccelerationStructuresPropertiesKHR;
                 return true;
             }
             break;
-        case 0x57005136u:
+        case XXH3_vkGetDeviceAccelerationStructureCompatibilityKHR:
             if (!strcmp("vkGetDeviceAccelerationStructureCompatibilityKHR", name)) {
                 *addr = (void *)GetDeviceAccelerationStructureCompatibilityKHR;
                 return true;
             }
             break;
-        case 0x3c23c8d8u:
+        case XXH3_vkGetAccelerationStructureBuildSizesKHR:
             if (!strcmp("vkGetAccelerationStructureBuildSizesKHR", name)) {
                 *addr = (void *)GetAccelerationStructureBuildSizesKHR;
                 return true;
@@ -18285,37 +18285,37 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_KHR_ray_tracing_pipeline extension commands
-        case 0x12a322e1u:
+        case XXH3_vkCmdTraceRaysKHR:
             if (!strcmp("vkCmdTraceRaysKHR", name)) {
                 *addr = (void *)CmdTraceRaysKHR;
                 return true;
             }
             break;
-        case 0x20a853d6u:
+        case XXH3_vkCreateRayTracingPipelinesKHR:
             if (!strcmp("vkCreateRayTracingPipelinesKHR", name)) {
                 *addr = (void *)CreateRayTracingPipelinesKHR;
                 return true;
             }
             break;
-        case 0xf1992945u:
+        case XXH3_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR:
             if (!strcmp("vkGetRayTracingCaptureReplayShaderGroupHandlesKHR", name)) {
                 *addr = (void *)GetRayTracingCaptureReplayShaderGroupHandlesKHR;
                 return true;
             }
             break;
-        case 0x2ad3ea47u:
+        case XXH3_vkCmdTraceRaysIndirectKHR:
             if (!strcmp("vkCmdTraceRaysIndirectKHR", name)) {
                 *addr = (void *)CmdTraceRaysIndirectKHR;
                 return true;
             }
             break;
-        case 0x51021694u:
+        case XXH3_vkGetRayTracingShaderGroupStackSizeKHR:
             if (!strcmp("vkGetRayTracingShaderGroupStackSizeKHR", name)) {
                 *addr = (void *)GetRayTracingShaderGroupStackSizeKHR;
                 return true;
             }
             break;
-        case 0x8237bff2u:
+        case XXH3_vkCmdSetRayTracingPipelineStackSizeKHR:
             if (!strcmp("vkCmdSetRayTracingPipelineStackSizeKHR", name)) {
                 *addr = (void *)CmdSetRayTracingPipelineStackSizeKHR;
                 return true;
@@ -18323,19 +18323,19 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
             break;
 
         // ---- VK_EXT_mesh_shader extension commands
-        case 0x3d5c136cu:
+        case XXH3_vkCmdDrawMeshTasksEXT:
             if (!strcmp("vkCmdDrawMeshTasksEXT", name)) {
                 *addr = (void *)CmdDrawMeshTasksEXT;
                 return true;
             }
             break;
-        case 0xd649c1b2u:
+        case XXH3_vkCmdDrawMeshTasksIndirectEXT:
             if (!strcmp("vkCmdDrawMeshTasksIndirectEXT", name)) {
                 *addr = (void *)CmdDrawMeshTasksIndirectEXT;
                 return true;
             }
             break;
-        case 0xc62120d5u:
+        case XXH3_vkCmdDrawMeshTasksIndirectCountEXT:
             if (!strcmp("vkCmdDrawMeshTasksIndirectCountEXT", name)) {
                 *addr = (void *)CmdDrawMeshTasksIndirectCountEXT;
                 return true;
@@ -18350,256 +18350,462 @@ bool extension_instance_gpa(struct loader_instance *ptr_instance, const char *na
 // Used to keep track of all enabled instance extensions
 void fill_out_enabled_instance_extensions(uint32_t extension_count, const char *const * extension_list, struct loader_instance_extension_enable_list* enables) {
     for (uint32_t i = 0; i < extension_count; i++) {
+        const uint64_t name_hash = loader_hash_string(extension_list[i]);
+        switch (name_hash) {
 
     // ---- VK_KHR_surface extension commands
-        if (0 == strcmp(extension_list[i], VK_KHR_SURFACE_EXTENSION_NAME)) { enables->khr_surface = 1; }
+        case XXH3_VK_KHR_surface:
+            if (!strcmp(extension_list[i], VK_KHR_SURFACE_EXTENSION_NAME)) {
+                enables->khr_surface = 1;
+            }
+            break;
 
     // ---- VK_KHR_display extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_DISPLAY_EXTENSION_NAME)) { enables->khr_display = 1; }
+        case XXH3_VK_KHR_display:
+            if (!strcmp(extension_list[i], VK_KHR_DISPLAY_EXTENSION_NAME)) {
+                enables->khr_display = 1;
+            }
+            break;
 
     // ---- VK_KHR_xlib_surface extension commands
 #if defined(VK_USE_PLATFORM_XLIB_KHR)
-        else if (0 == strcmp(extension_list[i], VK_KHR_XLIB_SURFACE_EXTENSION_NAME)) { enables->khr_xlib_surface = 1; }
+        case XXH3_VK_KHR_xlib_surface:
+            if (!strcmp(extension_list[i], VK_KHR_XLIB_SURFACE_EXTENSION_NAME)) {
+                enables->khr_xlib_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_XLIB_KHR
 
     // ---- VK_KHR_xcb_surface extension commands
 #if defined(VK_USE_PLATFORM_XCB_KHR)
-        else if (0 == strcmp(extension_list[i], VK_KHR_XCB_SURFACE_EXTENSION_NAME)) { enables->khr_xcb_surface = 1; }
+        case XXH3_VK_KHR_xcb_surface:
+            if (!strcmp(extension_list[i], VK_KHR_XCB_SURFACE_EXTENSION_NAME)) {
+                enables->khr_xcb_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_XCB_KHR
 
     // ---- VK_KHR_wayland_surface extension commands
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
-        else if (0 == strcmp(extension_list[i], VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME)) { enables->khr_wayland_surface = 1; }
+        case XXH3_VK_KHR_wayland_surface:
+            if (!strcmp(extension_list[i], VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME)) {
+                enables->khr_wayland_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
 
     // ---- VK_KHR_android_surface extension commands
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-        else if (0 == strcmp(extension_list[i], VK_KHR_ANDROID_SURFACE_EXTENSION_NAME)) { enables->khr_android_surface = 1; }
+        case XXH3_VK_KHR_android_surface:
+            if (!strcmp(extension_list[i], VK_KHR_ANDROID_SURFACE_EXTENSION_NAME)) {
+                enables->khr_android_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 
     // ---- VK_KHR_win32_surface extension commands
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-        else if (0 == strcmp(extension_list[i], VK_KHR_WIN32_SURFACE_EXTENSION_NAME)) { enables->khr_win32_surface = 1; }
+        case XXH3_VK_KHR_win32_surface:
+            if (!strcmp(extension_list[i], VK_KHR_WIN32_SURFACE_EXTENSION_NAME)) {
+                enables->khr_win32_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
 
     // ---- VK_KHR_get_physical_device_properties2 extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME)) { enables->khr_get_physical_device_properties2 = 1; }
+        case XXH3_VK_KHR_get_physical_device_properties2:
+            if (!strcmp(extension_list[i], VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME)) {
+                enables->khr_get_physical_device_properties2 = 1;
+            }
+            break;
 
     // ---- VK_KHR_device_group_creation extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME)) { enables->khr_device_group_creation = 1; }
+        case XXH3_VK_KHR_device_group_creation:
+            if (!strcmp(extension_list[i], VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME)) {
+                enables->khr_device_group_creation = 1;
+            }
+            break;
 
     // ---- VK_KHR_external_memory_capabilities extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME)) { enables->khr_external_memory_capabilities = 1; }
+        case XXH3_VK_KHR_external_memory_capabilities:
+            if (!strcmp(extension_list[i], VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME)) {
+                enables->khr_external_memory_capabilities = 1;
+            }
+            break;
 
     // ---- VK_KHR_external_semaphore_capabilities extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME)) { enables->khr_external_semaphore_capabilities = 1; }
+        case XXH3_VK_KHR_external_semaphore_capabilities:
+            if (!strcmp(extension_list[i], VK_KHR_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME)) {
+                enables->khr_external_semaphore_capabilities = 1;
+            }
+            break;
 
     // ---- VK_KHR_external_fence_capabilities extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_EXTERNAL_FENCE_CAPABILITIES_EXTENSION_NAME)) { enables->khr_external_fence_capabilities = 1; }
+        case XXH3_VK_KHR_external_fence_capabilities:
+            if (!strcmp(extension_list[i], VK_KHR_EXTERNAL_FENCE_CAPABILITIES_EXTENSION_NAME)) {
+                enables->khr_external_fence_capabilities = 1;
+            }
+            break;
 
     // ---- VK_KHR_get_surface_capabilities2 extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME)) { enables->khr_get_surface_capabilities2 = 1; }
+        case XXH3_VK_KHR_get_surface_capabilities2:
+            if (!strcmp(extension_list[i], VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME)) {
+                enables->khr_get_surface_capabilities2 = 1;
+            }
+            break;
 
     // ---- VK_KHR_get_display_properties2 extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_GET_DISPLAY_PROPERTIES_2_EXTENSION_NAME)) { enables->khr_get_display_properties2 = 1; }
+        case XXH3_VK_KHR_get_display_properties2:
+            if (!strcmp(extension_list[i], VK_KHR_GET_DISPLAY_PROPERTIES_2_EXTENSION_NAME)) {
+                enables->khr_get_display_properties2 = 1;
+            }
+            break;
 
     // ---- VK_KHR_surface_protected_capabilities extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_SURFACE_PROTECTED_CAPABILITIES_EXTENSION_NAME)) { enables->khr_surface_protected_capabilities = 1; }
+        case XXH3_VK_KHR_surface_protected_capabilities:
+            if (!strcmp(extension_list[i], VK_KHR_SURFACE_PROTECTED_CAPABILITIES_EXTENSION_NAME)) {
+                enables->khr_surface_protected_capabilities = 1;
+            }
+            break;
 
     // ---- VK_KHR_portability_enumeration extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)) { enables->khr_portability_enumeration = 1; }
+        case XXH3_VK_KHR_portability_enumeration:
+            if (!strcmp(extension_list[i], VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)) {
+                enables->khr_portability_enumeration = 1;
+            }
+            break;
 
     // ---- VK_KHR_surface_maintenance1 extension commands
-        else if (0 == strcmp(extension_list[i], VK_KHR_SURFACE_MAINTENANCE_1_EXTENSION_NAME)) { enables->khr_surface_maintenance1 = 1; }
+        case XXH3_VK_KHR_surface_maintenance1:
+            if (!strcmp(extension_list[i], VK_KHR_SURFACE_MAINTENANCE_1_EXTENSION_NAME)) {
+                enables->khr_surface_maintenance1 = 1;
+            }
+            break;
 
     // ---- VK_EXT_debug_report extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) { enables->ext_debug_report = 1; }
+        case XXH3_VK_EXT_debug_report:
+            if (!strcmp(extension_list[i], VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
+                enables->ext_debug_report = 1;
+            }
+            break;
 
     // ---- VK_GGP_stream_descriptor_surface extension commands
 #if defined(VK_USE_PLATFORM_GGP)
-        else if (0 == strcmp(extension_list[i], VK_GGP_STREAM_DESCRIPTOR_SURFACE_EXTENSION_NAME)) { enables->ggp_stream_descriptor_surface = 1; }
+        case XXH3_VK_GGP_stream_descriptor_surface:
+            if (!strcmp(extension_list[i], VK_GGP_STREAM_DESCRIPTOR_SURFACE_EXTENSION_NAME)) {
+                enables->ggp_stream_descriptor_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_GGP
 
     // ---- VK_NV_external_memory_capabilities extension commands
-        else if (0 == strcmp(extension_list[i], VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME)) { enables->nv_external_memory_capabilities = 1; }
+        case XXH3_VK_NV_external_memory_capabilities:
+            if (!strcmp(extension_list[i], VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME)) {
+                enables->nv_external_memory_capabilities = 1;
+            }
+            break;
 
     // ---- VK_EXT_validation_flags extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_VALIDATION_FLAGS_EXTENSION_NAME)) { enables->ext_validation_flags = 1; }
+        case XXH3_VK_EXT_validation_flags:
+            if (!strcmp(extension_list[i], VK_EXT_VALIDATION_FLAGS_EXTENSION_NAME)) {
+                enables->ext_validation_flags = 1;
+            }
+            break;
 
     // ---- VK_NN_vi_surface extension commands
 #if defined(VK_USE_PLATFORM_VI_NN)
-        else if (0 == strcmp(extension_list[i], VK_NN_VI_SURFACE_EXTENSION_NAME)) { enables->nn_vi_surface = 1; }
+        case XXH3_VK_NN_vi_surface:
+            if (!strcmp(extension_list[i], VK_NN_VI_SURFACE_EXTENSION_NAME)) {
+                enables->nn_vi_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_VI_NN
 
     // ---- VK_EXT_direct_mode_display extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_DIRECT_MODE_DISPLAY_EXTENSION_NAME)) { enables->ext_direct_mode_display = 1; }
+        case XXH3_VK_EXT_direct_mode_display:
+            if (!strcmp(extension_list[i], VK_EXT_DIRECT_MODE_DISPLAY_EXTENSION_NAME)) {
+                enables->ext_direct_mode_display = 1;
+            }
+            break;
 
     // ---- VK_EXT_acquire_xlib_display extension commands
 #if defined(VK_USE_PLATFORM_XLIB_XRANDR_EXT)
-        else if (0 == strcmp(extension_list[i], VK_EXT_ACQUIRE_XLIB_DISPLAY_EXTENSION_NAME)) { enables->ext_acquire_xlib_display = 1; }
+        case XXH3_VK_EXT_acquire_xlib_display:
+            if (!strcmp(extension_list[i], VK_EXT_ACQUIRE_XLIB_DISPLAY_EXTENSION_NAME)) {
+                enables->ext_acquire_xlib_display = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 
     // ---- VK_EXT_display_surface_counter extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_DISPLAY_SURFACE_COUNTER_EXTENSION_NAME)) { enables->ext_display_surface_counter = 1; }
+        case XXH3_VK_EXT_display_surface_counter:
+            if (!strcmp(extension_list[i], VK_EXT_DISPLAY_SURFACE_COUNTER_EXTENSION_NAME)) {
+                enables->ext_display_surface_counter = 1;
+            }
+            break;
 
     // ---- VK_EXT_swapchain_colorspace extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME)) { enables->ext_swapchain_colorspace = 1; }
+        case XXH3_VK_EXT_swapchain_colorspace:
+            if (!strcmp(extension_list[i], VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME)) {
+                enables->ext_swapchain_colorspace = 1;
+            }
+            break;
 
     // ---- VK_MVK_ios_surface extension commands
 #if defined(VK_USE_PLATFORM_IOS_MVK)
-        else if (0 == strcmp(extension_list[i], VK_MVK_IOS_SURFACE_EXTENSION_NAME)) { enables->mvk_ios_surface = 1; }
+        case XXH3_VK_MVK_ios_surface:
+            if (!strcmp(extension_list[i], VK_MVK_IOS_SURFACE_EXTENSION_NAME)) {
+                enables->mvk_ios_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_IOS_MVK
 
     // ---- VK_MVK_macos_surface extension commands
 #if defined(VK_USE_PLATFORM_MACOS_MVK)
-        else if (0 == strcmp(extension_list[i], VK_MVK_MACOS_SURFACE_EXTENSION_NAME)) { enables->mvk_macos_surface = 1; }
+        case XXH3_VK_MVK_macos_surface:
+            if (!strcmp(extension_list[i], VK_MVK_MACOS_SURFACE_EXTENSION_NAME)) {
+                enables->mvk_macos_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_MACOS_MVK
 
     // ---- VK_EXT_debug_utils extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) { enables->ext_debug_utils = 1; }
+        case XXH3_VK_EXT_debug_utils:
+            if (!strcmp(extension_list[i], VK_EXT_DEBUG_UTILS_EXTENSION_NAME)) {
+                enables->ext_debug_utils = 1;
+            }
+            break;
 
     // ---- VK_FUCHSIA_imagepipe_surface extension commands
 #if defined(VK_USE_PLATFORM_FUCHSIA)
-        else if (0 == strcmp(extension_list[i], VK_FUCHSIA_IMAGEPIPE_SURFACE_EXTENSION_NAME)) { enables->fuchsia_imagepipe_surface = 1; }
+        case XXH3_VK_FUCHSIA_imagepipe_surface:
+            if (!strcmp(extension_list[i], VK_FUCHSIA_IMAGEPIPE_SURFACE_EXTENSION_NAME)) {
+                enables->fuchsia_imagepipe_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_FUCHSIA
 
     // ---- VK_EXT_metal_surface extension commands
 #if defined(VK_USE_PLATFORM_METAL_EXT)
-        else if (0 == strcmp(extension_list[i], VK_EXT_METAL_SURFACE_EXTENSION_NAME)) { enables->ext_metal_surface = 1; }
+        case XXH3_VK_EXT_metal_surface:
+            if (!strcmp(extension_list[i], VK_EXT_METAL_SURFACE_EXTENSION_NAME)) {
+                enables->ext_metal_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_METAL_EXT
 
     // ---- VK_EXT_validation_features extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME)) { enables->ext_validation_features = 1; }
+        case XXH3_VK_EXT_validation_features:
+            if (!strcmp(extension_list[i], VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME)) {
+                enables->ext_validation_features = 1;
+            }
+            break;
 
     // ---- VK_EXT_headless_surface extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME)) { enables->ext_headless_surface = 1; }
+        case XXH3_VK_EXT_headless_surface:
+            if (!strcmp(extension_list[i], VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME)) {
+                enables->ext_headless_surface = 1;
+            }
+            break;
 
     // ---- VK_EXT_surface_maintenance1 extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME)) { enables->ext_surface_maintenance1 = 1; }
+        case XXH3_VK_EXT_surface_maintenance1:
+            if (!strcmp(extension_list[i], VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME)) {
+                enables->ext_surface_maintenance1 = 1;
+            }
+            break;
 
     // ---- VK_EXT_acquire_drm_display extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_ACQUIRE_DRM_DISPLAY_EXTENSION_NAME)) { enables->ext_acquire_drm_display = 1; }
+        case XXH3_VK_EXT_acquire_drm_display:
+            if (!strcmp(extension_list[i], VK_EXT_ACQUIRE_DRM_DISPLAY_EXTENSION_NAME)) {
+                enables->ext_acquire_drm_display = 1;
+            }
+            break;
 
     // ---- VK_EXT_directfb_surface extension commands
 #if defined(VK_USE_PLATFORM_DIRECTFB_EXT)
-        else if (0 == strcmp(extension_list[i], VK_EXT_DIRECTFB_SURFACE_EXTENSION_NAME)) { enables->ext_directfb_surface = 1; }
+        case XXH3_VK_EXT_directfb_surface:
+            if (!strcmp(extension_list[i], VK_EXT_DIRECTFB_SURFACE_EXTENSION_NAME)) {
+                enables->ext_directfb_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_DIRECTFB_EXT
 
     // ---- VK_QNX_screen_surface extension commands
 #if defined(VK_USE_PLATFORM_SCREEN_QNX)
-        else if (0 == strcmp(extension_list[i], VK_QNX_SCREEN_SURFACE_EXTENSION_NAME)) { enables->qnx_screen_surface = 1; }
+        case XXH3_VK_QNX_screen_surface:
+            if (!strcmp(extension_list[i], VK_QNX_SCREEN_SURFACE_EXTENSION_NAME)) {
+                enables->qnx_screen_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 
     // ---- VK_GOOGLE_surfaceless_query extension commands
-        else if (0 == strcmp(extension_list[i], VK_GOOGLE_SURFACELESS_QUERY_EXTENSION_NAME)) { enables->google_surfaceless_query = 1; }
+        case XXH3_VK_GOOGLE_surfaceless_query:
+            if (!strcmp(extension_list[i], VK_GOOGLE_SURFACELESS_QUERY_EXTENSION_NAME)) {
+                enables->google_surfaceless_query = 1;
+            }
+            break;
 
     // ---- VK_LUNARG_direct_driver_loading extension commands
-        else if (0 == strcmp(extension_list[i], VK_LUNARG_DIRECT_DRIVER_LOADING_EXTENSION_NAME)) { enables->lunarg_direct_driver_loading = 1; }
+        case XXH3_VK_LUNARG_direct_driver_loading:
+            if (!strcmp(extension_list[i], VK_LUNARG_DIRECT_DRIVER_LOADING_EXTENSION_NAME)) {
+                enables->lunarg_direct_driver_loading = 1;
+            }
+            break;
 
     // ---- VK_EXT_layer_settings extension commands
-        else if (0 == strcmp(extension_list[i], VK_EXT_LAYER_SETTINGS_EXTENSION_NAME)) { enables->ext_layer_settings = 1; }
+        case XXH3_VK_EXT_layer_settings:
+            if (!strcmp(extension_list[i], VK_EXT_LAYER_SETTINGS_EXTENSION_NAME)) {
+                enables->ext_layer_settings = 1;
+            }
+            break;
 
     // ---- VK_NV_display_stereo extension commands
-        else if (0 == strcmp(extension_list[i], VK_NV_DISPLAY_STEREO_EXTENSION_NAME)) { enables->nv_display_stereo = 1; }
+        case XXH3_VK_NV_display_stereo:
+            if (!strcmp(extension_list[i], VK_NV_DISPLAY_STEREO_EXTENSION_NAME)) {
+                enables->nv_display_stereo = 1;
+            }
+            break;
 
     // ---- VK_OHOS_surface extension commands
 #if defined(VK_USE_PLATFORM_OHOS)
-        else if (0 == strcmp(extension_list[i], VK_OHOS_SURFACE_EXTENSION_NAME)) { enables->ohos_surface = 1; }
+        case XXH3_VK_OHOS_surface:
+            if (!strcmp(extension_list[i], VK_OHOS_SURFACE_EXTENSION_NAME)) {
+                enables->ohos_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_OHOS
 
     // ---- VK_SEC_ubm_surface extension commands
 #if defined(VK_USE_PLATFORM_UBM_SEC)
-        else if (0 == strcmp(extension_list[i], VK_SEC_UBM_SURFACE_EXTENSION_NAME)) { enables->sec_ubm_surface = 1; }
+        case XXH3_VK_SEC_ubm_surface:
+            if (!strcmp(extension_list[i], VK_SEC_UBM_SURFACE_EXTENSION_NAME)) {
+                enables->sec_ubm_surface = 1;
+            }
+            break;
 #endif // VK_USE_PLATFORM_UBM_SEC
+        }
     }
 }
 
 // Some device commands still need a terminator because the loader needs to unwrap something about them.
 // In many cases, the item needing unwrapping is a VkPhysicalDevice or VkSurfaceKHR object.  But there may be other items
 // in the future.
-PFN_vkVoidFunction get_extension_device_proc_terminator(struct loader_device *dev, const char *name, bool* found_name) {
+PFN_vkVoidFunction get_extension_device_proc_terminator(struct loader_device *dev, const char *name, uint64_t name_hash, bool* found_name) {
     *found_name = false;
     if (!name || name[0] != 'v' || name[1] != 'k') {
         return NULL;
     }
-    name += 2;
+    switch (name_hash) {
     // ---- VK_KHR_swapchain extension commands
-    if (!strcmp(name, "CreateSwapchainKHR")) {
-        *found_name = true;
-        return dev->driver_extensions.khr_swapchain_enabled ?
-            (PFN_vkVoidFunction)terminator_CreateSwapchainKHR : NULL;
-    }
-    if (!strcmp(name, "GetDeviceGroupSurfacePresentModesKHR")) {
-        *found_name = true;
-        return dev->driver_extensions.khr_swapchain_enabled || dev->driver_extensions.khr_device_group_enabled ?
-            (PFN_vkVoidFunction)terminator_GetDeviceGroupSurfacePresentModesKHR : NULL;
-    }
+    case XXH3_vkCreateSwapchainKHR:
+       if (!strcmp(name, "vkCreateSwapchainKHR")) {
+            *found_name = true;
+            return dev->driver_extensions.khr_swapchain_enabled ?
+                (PFN_vkVoidFunction)terminator_CreateSwapchainKHR : NULL;
+        }
+        break;
+    case XXH3_vkGetDeviceGroupSurfacePresentModesKHR:
+       if (!strcmp(name, "vkGetDeviceGroupSurfacePresentModesKHR")) {
+            *found_name = true;
+            return dev->driver_extensions.khr_swapchain_enabled || dev->driver_extensions.khr_device_group_enabled ?
+                (PFN_vkVoidFunction)terminator_GetDeviceGroupSurfacePresentModesKHR : NULL;
+        }
+        break;
     // ---- VK_KHR_display_swapchain extension commands
-    if (!strcmp(name, "CreateSharedSwapchainsKHR")) {
-        *found_name = true;
-        return dev->driver_extensions.khr_display_swapchain_enabled ?
-            (PFN_vkVoidFunction)terminator_CreateSharedSwapchainsKHR : NULL;
-    }
+    case XXH3_vkCreateSharedSwapchainsKHR:
+       if (!strcmp(name, "vkCreateSharedSwapchainsKHR")) {
+            *found_name = true;
+            return dev->driver_extensions.khr_display_swapchain_enabled ?
+                (PFN_vkVoidFunction)terminator_CreateSharedSwapchainsKHR : NULL;
+        }
+        break;
     // ---- VK_EXT_debug_marker extension commands
-    if (!strcmp(name, "DebugMarkerSetObjectTagEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_marker_enabled ?
-            (PFN_vkVoidFunction)terminator_DebugMarkerSetObjectTagEXT : NULL;
-    }
-    if (!strcmp(name, "DebugMarkerSetObjectNameEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_marker_enabled ?
-            (PFN_vkVoidFunction)terminator_DebugMarkerSetObjectNameEXT : NULL;
-    }
+    case XXH3_vkDebugMarkerSetObjectTagEXT:
+       if (!strcmp(name, "vkDebugMarkerSetObjectTagEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_marker_enabled ?
+                (PFN_vkVoidFunction)terminator_DebugMarkerSetObjectTagEXT : NULL;
+        }
+        break;
+    case XXH3_vkDebugMarkerSetObjectNameEXT:
+       if (!strcmp(name, "vkDebugMarkerSetObjectNameEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_marker_enabled ?
+                (PFN_vkVoidFunction)terminator_DebugMarkerSetObjectNameEXT : NULL;
+        }
+        break;
     // ---- VK_EXT_debug_utils extension commands
-    if (!strcmp(name, "SetDebugUtilsObjectNameEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_utils_enabled ?
-            (PFN_vkVoidFunction)terminator_SetDebugUtilsObjectNameEXT : NULL;
-    }
-    if (!strcmp(name, "SetDebugUtilsObjectTagEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_utils_enabled ?
-            (PFN_vkVoidFunction)terminator_SetDebugUtilsObjectTagEXT : NULL;
-    }
-    if (!strcmp(name, "QueueBeginDebugUtilsLabelEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_utils_enabled ?
-            (PFN_vkVoidFunction)terminator_QueueBeginDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(name, "QueueEndDebugUtilsLabelEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_utils_enabled ?
-            (PFN_vkVoidFunction)terminator_QueueEndDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(name, "QueueInsertDebugUtilsLabelEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_utils_enabled ?
-            (PFN_vkVoidFunction)terminator_QueueInsertDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(name, "CmdBeginDebugUtilsLabelEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_utils_enabled ?
-            (PFN_vkVoidFunction)terminator_CmdBeginDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(name, "CmdEndDebugUtilsLabelEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_utils_enabled ?
-            (PFN_vkVoidFunction)terminator_CmdEndDebugUtilsLabelEXT : NULL;
-    }
-    if (!strcmp(name, "CmdInsertDebugUtilsLabelEXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_debug_utils_enabled ?
-            (PFN_vkVoidFunction)terminator_CmdInsertDebugUtilsLabelEXT : NULL;
-    }
+    case XXH3_vkSetDebugUtilsObjectNameEXT:
+       if (!strcmp(name, "vkSetDebugUtilsObjectNameEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_utils_enabled ?
+                (PFN_vkVoidFunction)terminator_SetDebugUtilsObjectNameEXT : NULL;
+        }
+        break;
+    case XXH3_vkSetDebugUtilsObjectTagEXT:
+       if (!strcmp(name, "vkSetDebugUtilsObjectTagEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_utils_enabled ?
+                (PFN_vkVoidFunction)terminator_SetDebugUtilsObjectTagEXT : NULL;
+        }
+        break;
+    case XXH3_vkQueueBeginDebugUtilsLabelEXT:
+       if (!strcmp(name, "vkQueueBeginDebugUtilsLabelEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_utils_enabled ?
+                (PFN_vkVoidFunction)terminator_QueueBeginDebugUtilsLabelEXT : NULL;
+        }
+        break;
+    case XXH3_vkQueueEndDebugUtilsLabelEXT:
+       if (!strcmp(name, "vkQueueEndDebugUtilsLabelEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_utils_enabled ?
+                (PFN_vkVoidFunction)terminator_QueueEndDebugUtilsLabelEXT : NULL;
+        }
+        break;
+    case XXH3_vkQueueInsertDebugUtilsLabelEXT:
+       if (!strcmp(name, "vkQueueInsertDebugUtilsLabelEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_utils_enabled ?
+                (PFN_vkVoidFunction)terminator_QueueInsertDebugUtilsLabelEXT : NULL;
+        }
+        break;
+    case XXH3_vkCmdBeginDebugUtilsLabelEXT:
+       if (!strcmp(name, "vkCmdBeginDebugUtilsLabelEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_utils_enabled ?
+                (PFN_vkVoidFunction)terminator_CmdBeginDebugUtilsLabelEXT : NULL;
+        }
+        break;
+    case XXH3_vkCmdEndDebugUtilsLabelEXT:
+       if (!strcmp(name, "vkCmdEndDebugUtilsLabelEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_utils_enabled ?
+                (PFN_vkVoidFunction)terminator_CmdEndDebugUtilsLabelEXT : NULL;
+        }
+        break;
+    case XXH3_vkCmdInsertDebugUtilsLabelEXT:
+       if (!strcmp(name, "vkCmdInsertDebugUtilsLabelEXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_debug_utils_enabled ?
+                (PFN_vkVoidFunction)terminator_CmdInsertDebugUtilsLabelEXT : NULL;
+        }
+        break;
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     // ---- VK_EXT_full_screen_exclusive extension commands
-    if (!strcmp(name, "GetDeviceGroupSurfacePresentModes2EXT")) {
-        *found_name = true;
-        return dev->driver_extensions.ext_full_screen_exclusive_enabled ?
-            (PFN_vkVoidFunction)terminator_GetDeviceGroupSurfacePresentModes2EXT : NULL;
-    }
+    case XXH3_vkGetDeviceGroupSurfacePresentModes2EXT:
+       if (!strcmp(name, "vkGetDeviceGroupSurfacePresentModes2EXT")) {
+            *found_name = true;
+            return dev->driver_extensions.ext_full_screen_exclusive_enabled ?
+                (PFN_vkVoidFunction)terminator_GetDeviceGroupSurfacePresentModes2EXT : NULL;
+        }
+        break;
 #endif // VK_USE_PLATFORM_WIN32_KHR
+    default:
+        break;
+    }
     return NULL;
 }
 

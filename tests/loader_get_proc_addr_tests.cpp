@@ -29,6 +29,8 @@
 
 extern "C" {
 #include "loader_common.h"
+#include "vk_extension_name_hashes.h"
+#include "vk_command_name_hashes.h"
 }
 
 #include <array>
@@ -1062,24 +1064,6 @@ TEST(GetProcAddr, ExhaustiveCoreInstanceTrampolineNames) {
     }
 }
 
-// Unlike the three generated lookup functions, which get a check_no_hash_collisions() call at generation
-// time, gpa_helper.c is hand-maintained with no equivalent - a real collision there would only ever surface
-// as a bare "duplicate case value" compiler error naming neither string. This test recreates that same
-// diagnostic in C++ over gpa_helper.c's own name list, so a colliding addition fails here with both names
-// named instead of as an inscrutable compiler error.
-TEST(GetProcAddr, GpaHelperCoreInstanceNamesHaveNoHashCollisions) {
-    std::unordered_map<uint32_t, const char*> hash_to_name;
-    for (const auto* name : kGpaHelperCoreInstanceNames) {
-        uint32_t hash = loader_hash_string(name);
-        auto it = hash_to_name.find(hash);
-        if (it != hash_to_name.end()) {
-            FAIL() << "Hash collision between \"" << it->second << "\" and \"" << name << "\" (both hash to 0x" << std::hex << hash
-                   << ") - gpa_helper.c's hand-written switch would fail to compile with a duplicate case label";
-        }
-        hash_to_name.emplace(hash, name);
-    }
-}
-
 // Exhaustively call every core Vulkan 1.0-1.4 name that loader_lookup_device_dispatch_table() (the
 // generated device gpa fast path used by vkGetDeviceProcAddr) hand-checks, confirming the hash-prefilter
 // added in front of each of its ~200 strcmp checks didn't drop or mis-hash any of them.
@@ -1112,60 +1096,6 @@ TEST(GetDeviceProcAddr, ExhaustiveCoreDeviceDispatchNames) {
         ASSERT_TRUE(distinct_pointers.insert(f).second)
             << "Dispatch entry for " << name << " is not distinct from an earlier name's";
     }
-}
-
-// Real, engineered FNV-1a collisions against two of the actual embedded hash constants exercised above -
-// one hitting trampoline_get_proc_addr()'s hand-checked instance chain, one hitting
-// loader_lookup_device_dispatch_table()'s generated device chain - found offline by brute-force search
-// (see loader_hash_string_tests.cpp for the synthetic, hand-simulated version of this same guarantee).
-// Unlike that test, this one drives the collision through the real vkGet{Instance,Device}ProcAddr entry
-// points, proving the switch/case-guarded strcmp actually protects the production lookup, not just the
-// pattern.
-TEST(GetProcAddr, EngineeredHashCollisionsAreRejectedByRealLookup) {
-    // trampoline_get_proc_addr() (instance chain) hashes the full "vk"-prefixed name, so the instance
-    // collider must collide with "vkCreateBuffer" on the FULL name. loader_lookup_device_dispatch_table()
-    // (device chain) strips the "vk" prefix before hashing (see loader/trampoline.c's vkGetDeviceProcAddr),
-    // so the device collider must instead collide with "GetDeviceQueue" on the STRIPPED name - a collider
-    // engineered against the full "vkGetDeviceQueue" name would never reach that hash space at all.
-    const char* kInstanceCollider = "vkZzTs0sr";  // collides with "vkCreateBuffer"
-    const char* kDeviceCollider = "vkF5TyK";      // stripped "F5TyK" collides with stripped "GetDeviceQueue"
-    ASSERT_NE(0, strcmp(kInstanceCollider, "vkCreateBuffer"));
-    ASSERT_NE(0, strcmp(kDeviceCollider + 2, "GetDeviceQueue"));
-    ASSERT_EQ(loader_hash_string(kInstanceCollider), loader_hash_string("vkCreateBuffer"));
-    ASSERT_EQ(loader_hash_string(kDeviceCollider + 2), loader_hash_string("GetDeviceQueue"));
-
-    FrameworkEnvironment env{};
-    auto& test_physical_device = env.add_icd(TEST_ICD_PATH_VERSION_2, {}, ManifestICD{}.set_api_version(VK_API_VERSION_1_4))
-                                     .set_icd_api_version(VK_API_VERSION_1_4)
-                                     .add_and_get_physical_device(PhysicalDevice{}.set_api_version(VK_API_VERSION_1_4));
-    auto queue_ptr = reinterpret_cast<PFN_vkVoidFunction>(static_cast<uintptr_t>(0x2000));
-    test_physical_device.add_device_function(VulkanFunction{"vkGetDeviceQueue", queue_ptr});
-
-    InstWrapper inst{env.vulkan_functions};
-    inst.create_info.set_api_version(VK_API_VERSION_1_4);
-    inst.CheckCreate();
-
-    // Real name still resolves through trampoline_get_proc_addr()'s hash-then-strcmp chain...
-    PFN_vkVoidFunction real_instance_func = inst.load("vkCreateBuffer");
-    ASSERT_NE(nullptr, real_instance_func);
-    // ...but the hash-colliding impostor must not, since the hash match alone is never enough to return a
-    // branch's pointer - strcmp still has to agree.
-    PFN_vkVoidFunction colliding_instance_func = inst.load(kInstanceCollider);
-    ASSERT_EQ(nullptr, colliding_instance_func);
-
-    DeviceWrapper dev{inst};
-    dev.CheckCreate(inst.GetPhysDev());
-
-    // Same guarantee through the generated device dispatch table lookup: the real name still resolves to
-    // something (vkGetDeviceQueue wraps the returned VkQueue, so this isn't necessarily the raw mock
-    // pointer registered above - see ExhaustiveCoreDeviceDispatchNames)...
-    PFN_vkVoidFunction real_device_func = dev->vkGetDeviceProcAddr(dev.dev, "vkGetDeviceQueue");
-    ASSERT_NE(nullptr, real_device_func);
-    // ...while its hash-colliding impostor (colliding on the stripped-name hash actually used by
-    // loader_lookup_device_dispatch_table()) must not resolve to anything, least of all vkGetDeviceQueue's
-    // pointer.
-    PFN_vkVoidFunction colliding_device_func = dev->vkGetDeviceProcAddr(dev.dev, kDeviceCollider);
-    ASSERT_EQ(nullptr, colliding_device_func);
 }
 
 // Names that must never resolve, chosen to specifically probe the hash pre-filter for false positives:
