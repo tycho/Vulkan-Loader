@@ -68,6 +68,8 @@ def RunGenerators(api: str, registry: str, directory: str, styleFile: str, targe
     from generators.loader_extension_generator import LoaderExtensionGenerator
     from generators.vk_result_to_string_generator import VkResultToStringGenerator
     from generators.get_proc_addr_validator_generator import GetProcAddrValidatorGenerator
+    from generators.command_name_hash_generator import CommandNameHashGenerator
+    from generators.extension_name_hash_generator import ExtensionNameHashGenerator
 
     # These set fields that are needed by both OutputGenerator and BaseGenerator,
     # but are uniform and don't need to be set at a per-generated file level
@@ -98,6 +100,16 @@ def RunGenerators(api: str, registry: str, directory: str, styleFile: str, targe
         },
         'vk_object_types.h': {
             'generator' : HelperFileGenerator,
+            'genCombined': True,
+            'directory' : generated_directory,
+        },
+        'vk_command_name_hashes.h': {
+            'generator' : CommandNameHashGenerator,
+            'genCombined': True,
+            'directory' : generated_directory,
+        },
+        'vk_extension_name_hashes.h': {
+            'generator' : ExtensionNameHashGenerator,
             'genCombined': True,
             'directory' : generated_directory,
         },
