@@ -226,7 +226,11 @@ typedef HANDLE loader_platform_thread;
 typedef DWORD loader_platform_thread_id;
 
 // Thread mutex:
-typedef CRITICAL_SECTION loader_platform_thread_mutex;
+typedef struct {
+    SRWLOCK srw_lock;
+    LONG thread_id;  // -1 when unowned
+    int count;       // recursion depth
+} loader_platform_thread_mutex;
 
 typedef CONDITION_VARIABLE loader_platform_thread_cond;
 

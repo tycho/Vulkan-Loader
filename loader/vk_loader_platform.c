@@ -447,10 +447,32 @@ const char *loader_platform_get_proc_address_error(const char *name) {
 }
 
 // Thread mutex:
-void loader_platform_thread_create_mutex(loader_platform_thread_mutex *pMutex) { InitializeCriticalSection(pMutex); }
-void loader_platform_thread_lock_mutex(loader_platform_thread_mutex *pMutex) { EnterCriticalSection(pMutex); }
-void loader_platform_thread_unlock_mutex(loader_platform_thread_mutex *pMutex) { LeaveCriticalSection(pMutex); }
-void loader_platform_thread_delete_mutex(loader_platform_thread_mutex *pMutex) { DeleteCriticalSection(pMutex); }
+void loader_platform_thread_create_mutex(loader_platform_thread_mutex *pMutex) {
+    InitializeSRWLock(&pMutex->srw_lock);
+    pMutex->thread_id = -1;
+    pMutex->count = 0;
+}
+
+void loader_platform_thread_lock_mutex(loader_platform_thread_mutex *pMutex) {
+    LONG current = (LONG)GetCurrentThreadId();
+    if (pMutex->thread_id != current) {
+        AcquireSRWLockExclusive(&pMutex->srw_lock);
+        pMutex->thread_id = current;
+    }
+    ++pMutex->count;
+}
+
+void loader_platform_thread_unlock_mutex(loader_platform_thread_mutex *pMutex) {
+    if (--pMutex->count == 0) {
+        pMutex->thread_id = -1;
+        ReleaseSRWLockExclusive(&pMutex->srw_lock);
+    }
+}
+
+void loader_platform_thread_delete_mutex(loader_platform_thread_mutex *pMutex) {
+    // no-op, SRWLock needs no cleanup
+    (void)pMutex;
+}
 
 void *thread_safe_strtok(char *str, const char *delimiters, char **context) { return strtok_s(str, delimiters, context); }
 
