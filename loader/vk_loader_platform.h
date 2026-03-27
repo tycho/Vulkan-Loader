@@ -226,7 +226,11 @@ typedef HANDLE loader_platform_thread;
 typedef DWORD loader_platform_thread_id;
 
 // Thread mutex:
-typedef CRITICAL_SECTION loader_platform_thread_mutex;
+typedef struct {
+    SRWLOCK srw_lock;
+    LONG thread_id;  // -1 when unowned
+    int count;       // recursion depth
+} loader_platform_thread_mutex;
 
 typedef CONDITION_VARIABLE loader_platform_thread_cond;
 
@@ -647,10 +651,32 @@ static inline const char *loader_platform_get_proc_address_error(const char *nam
 }
 
 // Thread mutex:
-static inline void loader_platform_thread_create_mutex(loader_platform_thread_mutex *pMutex) { InitializeCriticalSection(pMutex); }
-static inline void loader_platform_thread_lock_mutex(loader_platform_thread_mutex *pMutex) { EnterCriticalSection(pMutex); }
-static inline void loader_platform_thread_unlock_mutex(loader_platform_thread_mutex *pMutex) { LeaveCriticalSection(pMutex); }
-static inline void loader_platform_thread_delete_mutex(loader_platform_thread_mutex *pMutex) { DeleteCriticalSection(pMutex); }
+static inline void loader_platform_thread_create_mutex(loader_platform_thread_mutex* m) {
+    InitializeSRWLock(&m->srw_lock);
+    m->thread_id = -1;
+    m->count = 0;
+}
+
+static inline void loader_platform_thread_lock_mutex(loader_platform_thread_mutex* m) {
+    LONG current = (LONG)GetCurrentThreadId();
+    if (m->thread_id != current) {
+        AcquireSRWLockExclusive(&m->srw_lock);
+        m->thread_id = current;
+    }
+    ++m->count;
+}
+
+static inline void loader_platform_thread_unlock_mutex(loader_platform_thread_mutex* m) {
+    if (--m->count == 0) {
+        m->thread_id = -1;
+        ReleaseSRWLockExclusive(&m->srw_lock);
+    }
+}
+
+static inline void loader_platform_thread_delete_mutex(loader_platform_thread_mutex* m) {
+    // no-op, SRWLock needs no cleanup
+    (void)m;
+}
 
 static inline void *thread_safe_strtok(char *str, const char *delimiters, char **context) {
     return strtok_s(str, delimiters, context);
