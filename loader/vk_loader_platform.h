@@ -280,6 +280,7 @@ static inline void loader_platform_thread_win32_once_fn(INIT_ONCE *ctl, PINIT_ON
 #endif
 
 #if COMMON_UNIX_PLATFORMS
+#include <sys/stat.h>
 
 // File IO
 static inline bool loader_platform_file_exists(const char *path) {
@@ -287,6 +288,23 @@ static inline bool loader_platform_file_exists(const char *path) {
         return false;
     else
         return true;
+}
+
+// Get file size and modification time without reading the file.
+// Returns true on success, false on failure (file not found, etc.).
+// file_mtime uses nanosecond resolution where available.
+static inline bool loader_platform_get_file_metadata(const char *path, uint64_t *file_size, uint64_t *file_mtime) {
+    struct stat st;
+    if (stat(path, &st) != 0) return false;
+    *file_size = (uint64_t)st.st_size;
+#if defined(__linux__) || defined(__GNU__) || defined(__CYGWIN__)
+    *file_mtime = (uint64_t)st.st_mtim.tv_sec * 1000000000ULL + (uint64_t)st.st_mtim.tv_nsec;
+#elif defined(__APPLE__)
+    *file_mtime = (uint64_t)st.st_mtimespec.tv_sec * 1000000000ULL + (uint64_t)st.st_mtimespec.tv_nsec;
+#else
+    *file_mtime = (uint64_t)st.st_mtime;
+#endif
+    return true;
 }
 
 // Returns true if the given string appears to be a relative or absolute
@@ -521,6 +539,20 @@ static inline bool loader_platform_file_exists(const char *path) {
         return false;
     else
         return true;
+}
+
+// Get file size and modification time without reading the file.
+// Returns true on success, false on failure (file not found, etc.).
+static inline bool loader_platform_get_file_metadata(const char *path, uint64_t *file_size, uint64_t *file_mtime) {
+    int path_utf16_size = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
+    if (path_utf16_size <= 0) return false;
+    wchar_t *path_utf16 = (wchar_t *)loader_stack_alloc(path_utf16_size * sizeof(wchar_t));
+    if (MultiByteToWideChar(CP_UTF8, 0, path, -1, path_utf16, path_utf16_size) != path_utf16_size) return false;
+    WIN32_FILE_ATTRIBUTE_DATA attr;
+    if (!GetFileAttributesExW(path_utf16, GetFileExInfoStandard, &attr)) return false;
+    *file_size = ((uint64_t)attr.nFileSizeHigh << 32) | (uint64_t)attr.nFileSizeLow;
+    *file_mtime = ((uint64_t)attr.ftLastWriteTime.dwHighDateTime << 32) | (uint64_t)attr.ftLastWriteTime.dwLowDateTime;
+    return true;
 }
 
 // Returns true if the given string appears to be a relative or absolute

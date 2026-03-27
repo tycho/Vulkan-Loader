@@ -73,6 +73,20 @@ struct loader_string_list {
     char **list;
 };
 
+// Per-manifest file metadata for cache invalidation without re-reading the file.
+struct loader_manifest_cache_entry {
+    char *manifest_file_name;  // Heap-allocated path to the JSON manifest
+    uint64_t file_size;        // File size in bytes at the time of last parse
+    uint64_t file_mtime;       // Last modification time at last parse (platform-specific encoding)
+};
+
+// A cache of manifest file metadata, maintained alongside parsed ICD/layer lists.
+struct loader_manifest_cache {
+    uint32_t count;
+    uint32_t capacity;
+    struct loader_manifest_cache_entry *entries;
+};
+
 struct loader_extension_list {
     size_t capacity;
     uint32_t count;
@@ -456,6 +470,7 @@ struct loader_struct {
 
 struct loader_scanned_icd {
     char *lib_name;
+    char *manifest_file_name;  // Path to the JSON manifest that defined this ICD
     loader_platform_dl_handle handle;
     uint32_t api_version;
     uint32_t interface_version;

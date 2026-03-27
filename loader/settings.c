@@ -874,14 +874,16 @@ out:
     return res;
 }
 
-TEST_FUNCTION_EXPORT VkResult update_global_loader_settings(void) {
+TEST_FUNCTION_EXPORT VkResult update_global_loader_settings_with_change(bool *settings_changed) {
     loader_settings settings = {0};
     VkResult res = get_loader_settings(NULL, &settings);
     loader_platform_thread_lock_mutex(&global_loader_settings_lock);
 
+    bool changed = false;
     if (res == VK_SUCCESS) {
         if (!check_if_settings_are_equal(&settings, &global_loader_settings)) {
             log_settings(NULL, &settings);
+            changed = true;
         }
         free_loader_settings(NULL, &global_loader_settings);
         memcpy(&global_loader_settings, &settings, sizeof(loader_settings));
@@ -890,6 +892,7 @@ TEST_FUNCTION_EXPORT VkResult update_global_loader_settings(void) {
         }
     }
     loader_platform_thread_unlock_mutex(&global_loader_settings_lock);
+    if (settings_changed) *settings_changed = changed;
     return res;
 }
 
