@@ -31,6 +31,7 @@
 bool loader_disable_dynamic_library_unloading;
 
 #if COMMON_UNIX_PLATFORMS
+#include <sys/stat.h>
 
 // File IO
 // NOLINTNEXTLINE(readability-non-const-parameter) - oom is only used on Windows but clang-tidy doesn't see that
@@ -39,6 +40,21 @@ bool loader_platform_file_exists(const struct loader_instance *inst, const char 
     (void)oom;
     return access(path, F_OK) == 0;
 }
+
+bool loader_platform_get_file_metadata(const char *path, uint64_t *file_size, uint64_t *file_mtime) {
+    struct stat st;
+    if (stat(path, &st) != 0) return false;
+    *file_size = (uint64_t)st.st_size;
+#if defined(__linux__) || defined(__GNU__) || defined(__CYGWIN__)
+    *file_mtime = (uint64_t)st.st_mtim.tv_sec * 1000000000ULL + (uint64_t)st.st_mtim.tv_nsec;
+#elif defined(__APPLE__)
+    *file_mtime = (uint64_t)st.st_mtimespec.tv_sec * 1000000000ULL + (uint64_t)st.st_mtimespec.tv_nsec;
+#else
+    *file_mtime = (uint64_t)st.st_mtime;
+#endif
+    return true;
+}
+
 // Returns true if the given string appears to be a relative or absolute
 // path, as opposed to a bare filename.
 bool loader_platform_is_path_absolute(const char *path) {
@@ -346,6 +362,21 @@ bool loader_platform_file_exists(const struct loader_instance *inst, const char 
     bool ret = _waccess(path_utf16, 0) != -1;  // -1 means the file doesn't exist
     loader_instance_heap_free(inst, path_utf16);
     return ret;
+}
+
+bool loader_platform_get_file_metadata(const char *path, uint64_t *file_size, uint64_t *file_mtime) {
+    bool oom = false;
+    wchar_t *path_utf16 = loader_convert_char_to_wchar(NULL, path, &oom, VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
+    if (NULL == path_utf16) {
+        return false;
+    }
+    WIN32_FILE_ATTRIBUTE_DATA attr;
+    BOOL ok = GetFileAttributesExW(path_utf16, GetFileExInfoStandard, &attr);
+    loader_instance_heap_free(NULL, path_utf16);
+    if (!ok) return false;
+    *file_size = ((uint64_t)attr.nFileSizeHigh << 32) | (uint64_t)attr.nFileSizeLow;
+    *file_mtime = ((uint64_t)attr.ftLastWriteTime.dwHighDateTime << 32) | (uint64_t)attr.ftLastWriteTime.dwLowDateTime;
+    return true;
 }
 
 // Returns true if the given string appears to be a relative or absolute

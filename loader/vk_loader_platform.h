@@ -287,6 +287,10 @@ struct loader_instance;
 
 // File IO
 bool loader_platform_file_exists(const struct loader_instance *inst, const char *path, bool *oom);
+// Get file size and modification time without reading the file.
+// Returns true on success, false on failure (file not found, etc.).
+// file_mtime uses nanosecond resolution where available.
+bool loader_platform_get_file_metadata(const char *path, uint64_t *file_size, uint64_t *file_mtime);
 // Returns true if the given string appears to be a relative or absolute
 // path, as opposed to a bare filename.
 bool loader_platform_is_path_absolute(const char *path);
