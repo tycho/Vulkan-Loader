@@ -184,7 +184,18 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceExtensionPropert
                                                                                     VkExtensionProperties *pProperties) {
     LOADER_PLATFORM_THREAD_ONCE(&once_init, loader_initialize);
 
-    update_global_loader_settings();
+    bool settings_changed = false;
+    update_global_loader_settings_with_change(&settings_changed);
+    if (settings_changed) {
+        loader_force_layer_rescan_on_next_revalidation();
+    }
+    loader_revalidate_stale_caches();
+
+    // Lazily preload metadata on first call, and demand-load ICD libraries
+    // since the terminator reads from preloaded ICD/layer caches
+    loader_preload_icds();
+    loader_demand_load_icds();
+    loader_preload_layers();
 
     // We know we need to call at least the terminator
     VkResult res = VK_SUCCESS;
@@ -199,6 +210,13 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceExtensionPropert
         .pNextLink = NULL,
     };
     VkEnumerateInstanceExtensionPropertiesChain *chain_head = &chain_tail;
+
+    // Check the preloaded implicit layer cache to see if any layers have pre-instance functions.
+    // If none do (the common case), skip the implicit layer scan entirely and call the terminator directly.
+    if (!loader_preloaded_layers_have_pre_instance_functions()) {
+        res = chain_head->pfnNextLayer(chain_head->pNextLink, pLayerName, pPropertyCount, pProperties);
+        return res;
+    }
 
     // Get the implicit layers
     struct loader_layer_list layers = {0};
@@ -274,7 +292,15 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceLayerProperties(
                                                                                 VkLayerProperties *pProperties) {
     LOADER_PLATFORM_THREAD_ONCE(&once_init, loader_initialize);
 
-    update_global_loader_settings();
+    bool settings_changed = false;
+    update_global_loader_settings_with_change(&settings_changed);
+    if (settings_changed) {
+        loader_force_layer_rescan_on_next_revalidation();
+    }
+    loader_revalidate_stale_caches();
+
+    // Lazily preload layer properties on first call — the terminator reads from preloaded cache
+    loader_preload_layers();
 
     // We know we need to call at least the terminator
     VkResult res = VK_SUCCESS;
@@ -289,6 +315,13 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceLayerProperties(
         .pNextLink = NULL,
     };
     VkEnumerateInstanceLayerPropertiesChain *chain_head = &chain_tail;
+
+    // Check the preloaded implicit layer cache to see if any layers have pre-instance functions.
+    // If none do (the common case), skip the implicit layer scan entirely and call the terminator directly.
+    if (!loader_preloaded_layers_have_pre_instance_functions()) {
+        res = chain_head->pfnNextLayer(chain_head->pNextLink, pPropertyCount, pProperties);
+        return res;
+    }
 
     // Get the implicit layers
     struct loader_layer_list layers;
@@ -363,7 +396,15 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceLayerProperties(
 LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceVersion(uint32_t *pApiVersion) {
     LOADER_PLATFORM_THREAD_ONCE(&once_init, loader_initialize);
 
-    update_global_loader_settings();
+    bool settings_changed = false;
+    update_global_loader_settings_with_change(&settings_changed);
+    if (settings_changed) {
+        loader_force_layer_rescan_on_next_revalidation();
+    }
+    loader_revalidate_stale_caches();
+
+    // Lazily preload layer properties on first call — needed for pre-instance function check
+    loader_preload_layers();
 
     if (NULL == pApiVersion) {
         loader_log(NULL, VULKAN_LOADER_FATAL_ERROR_BIT | VULKAN_LOADER_ERROR_BIT | VULKAN_LOADER_VALIDATION_BIT, 0,
@@ -386,6 +427,13 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceVersion(uint32_t
         .pNextLink = NULL,
     };
     VkEnumerateInstanceVersionChain *chain_head = &chain_tail;
+
+    // Check the preloaded implicit layer cache to see if any layers have pre-instance functions.
+    // If none do (the common case), skip the implicit layer scan entirely and call the terminator directly.
+    if (!loader_preloaded_layers_have_pre_instance_functions()) {
+        res = chain_head->pfnNextLayer(chain_head->pNextLink, pApiVersion);
+        return res;
+    }
 
     // Get the implicit layers
     struct loader_layer_list layers;
@@ -550,6 +598,17 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCr
 
     LOADER_PLATFORM_THREAD_ONCE(&once_init, loader_initialize);
 
+    // Preload ICD manifest metadata (cheap — no library loading). ICD libraries
+    // are loaded by the per-instance loader_icd_scan() below, then promoted to
+    // the preloaded cache by loader_cache_icds_from_instance() so subsequent
+    // instances benefit from cheap dlopen() cache hits.
+    loader_preload_icds();
+
+    // Layer preloading IS needed here because layer code may call pre-instance
+    // functions (e.g., vkEnumerateInstanceLayerProperties) during vkCreateInstance,
+    // and those trampolines rely on the preloaded layer data.
+    loader_preload_layers();
+
     if (pCreateInfo == NULL) {
         loader_log(NULL, VULKAN_LOADER_FATAL_ERROR_BIT | VULKAN_LOADER_ERROR_BIT | VULKAN_LOADER_VALIDATION_BIT, 0,
                    "vkCreateInstance: \'pCreateInfo\' is NULL (VUID-vkCreateInstance-pCreateInfo-parameter)");
@@ -684,6 +743,11 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCr
     if (res == VK_ERROR_OUT_OF_HOST_MEMORY) {
         goto out;
     }
+
+    // Promote loaded ICD handles to the preloaded cache so the libraries stay
+    // resident across instance destroy/recreate cycles. This makes subsequent
+    // dlopen() calls cheap (just a refcount bump) in the persistent path.
+    loader_cache_icds_from_instance(ptr_instance);
 
     if (ptr_instance->icd_tramp_list.count == 0) {
         // No drivers found
@@ -884,9 +948,10 @@ LOADER_EXPORT VKAPI_ATTR void VKAPI_CALL vkDestroyInstance(VkInstance instance, 
     loader_instance_heap_free(ptr_instance, ptr_instance);
     loader_platform_thread_unlock_mutex(&loader_lock);
 
-    // Unload preloaded layers, so if vkEnumerateInstanceExtensionProperties or vkCreateInstance is called again, the ICD's are
-    // up to date
-    loader_unload_preloaded_icds();
+    // Mark preloaded caches as stale so the next pre-instance API call
+    // revalidates them.  We avoid revalidating here because the rescan can
+    // produce log output at the (potentially stale) global debug level.
+    loader_mark_preloaded_caches_stale();
 }
 
 LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumeratePhysicalDevices(VkInstance instance, uint32_t *pPhysicalDeviceCount,

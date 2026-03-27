@@ -101,6 +101,34 @@ loader_platform_thread_mutex loader_preload_icd_lock;
 // significantly. This can have a huge impact when making repeated calls to vkEnumerateInstanceExtensionProperties and
 // vkCreateInstance.
 struct loader_icd_tramp_list preloaded_icds;
+uint32_t preload_refcount;
+
+// Preloaded layer lists - avoids repeated filesystem/registry scanning and JSON parsing for layer enumeration.
+// Parallels the ICD preload above. The "all" list caches loader_scan_for_layers() and the "implicit" list caches
+// loader_scan_for_implicit_layers(). Manifest caches track per-file metadata for partial invalidation.
+loader_platform_thread_mutex loader_preload_layer_lock;
+struct loader_layer_list preloaded_all_layers;
+struct loader_layer_list preloaded_implicit_layers;
+uint32_t layer_preload_refcount;
+// True if any preloaded implicit layer has pre_instance_functions. When false (the common case),
+// the trampoline pre-instance functions can skip the implicit layer scan entirely.
+bool preloaded_layers_have_pre_instance;
+
+// Manifest caches for partial invalidation — track per-manifest file metadata (size + mtime)
+// so revalidation can skip re-parsing unchanged manifests.
+struct loader_manifest_cache preloaded_icd_cache;
+struct loader_manifest_cache preloaded_all_layers_cache;
+struct loader_manifest_cache preloaded_implicit_layers_cache;
+
+// Set to true by vkDestroyInstance to indicate that the preloaded caches should
+// be revalidated on the next pre-instance API call.  This avoids performing
+// potentially verbose rescans during instance destruction.
+bool preloaded_icds_stale;
+bool preloaded_layers_stale;
+// When true, the next layer revalidation must do a full rescan (e.g. because
+// loader settings changed).  When false, revalidation can use the quick
+// manifest-metadata check and skip the rescan if nothing changed on disk.
+bool preloaded_layers_force_full_rescan;
 
 // controls whether loader_platform_close_library() closes the libraries or not - controlled by an environment
 // variables - this is just the definition of the variable, usage is in vk_loader_platform.h
@@ -1826,6 +1854,7 @@ void loader_unload_scanned_icd(struct loader_instance *inst, struct loader_scann
         scanned_icd->handle = NULL;
     }
     loader_instance_heap_free(inst, scanned_icd->lib_name);
+    loader_instance_heap_free(inst, scanned_icd->manifest_file_name);
     memset(scanned_icd, 0, sizeof(struct loader_scanned_icd));
 }
 
@@ -1871,6 +1900,7 @@ void loader_clear_scanned_icd_list(const struct loader_instance *inst, struct lo
                 icd_tramp_list->scanned_list[i].handle = NULL;
             }
             loader_instance_heap_free(inst, icd_tramp_list->scanned_list[i].lib_name);
+            loader_instance_heap_free(inst, icd_tramp_list->scanned_list[i].manifest_file_name);
         }
         loader_instance_heap_free(inst, icd_tramp_list->scanned_list);
     }
@@ -2014,6 +2044,7 @@ VkResult loader_add_direct_driver(const struct loader_instance *inst, uint32_t i
     new_scanned_icd->interface_version = interface_version;
 
     new_scanned_icd->lib_name = NULL;
+    new_scanned_icd->manifest_file_name = NULL;
     icd_tramp_list->count++;
 
     loader_log(inst, VULKAN_LOADER_INFO_BIT | VULKAN_LOADER_DRIVER_BIT, 0,
@@ -2296,6 +2327,7 @@ VkResult loader_scanned_icd_add(const struct loader_instance *inst, struct loade
 
     new_scanned_icd = &(icd_tramp_list->scanned_list[icd_tramp_list->count]);
     new_scanned_icd->handle = handle;
+    new_scanned_icd->manifest_file_name = NULL;  // Set by caller if needed for caching
     new_scanned_icd->api_version = api_version;
     new_scanned_icd->GetInstanceProcAddr = fp_get_proc_addr;
     new_scanned_icd->GetPhysicalDeviceProcAddr = fp_get_phys_dev_proc_addr;
@@ -2338,10 +2370,11 @@ BOOL __stdcall loader_initialize(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *Co
     (void)Context;
 #else
 void loader_initialize(void) {
+#endif
     loader_platform_thread_create_mutex(&loader_lock);
     loader_platform_thread_create_mutex(&loader_preload_icd_lock);
+    loader_platform_thread_create_mutex(&loader_preload_layer_lock);
     init_global_loader_settings();
-#endif
 
     // initialize logging
     loader_init_global_debug_level();
@@ -2368,6 +2401,23 @@ void loader_initialize(void) {
 #if defined(LOADER_USE_UNSAFE_FILE_SEARCH)
     loader_log(NULL, VULKAN_LOADER_WARN_BIT, 0, "Vulkan Loader: unsafe searching is enabled");
 #endif
+
+    // Increment preload refcounts under their respective locks. These track libvulkan
+    // load/unload cycles — cleanup only happens when the last reference is released
+    // in loader_release().
+    loader_platform_thread_lock_mutex(&loader_preload_icd_lock);
+    ++preload_refcount;
+    loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
+
+    loader_platform_thread_lock_mutex(&loader_preload_layer_lock);
+    ++layer_preload_refcount;
+    loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+
+    // Neither ICD nor layer preloading is done here in the constructor/init path.
+    // The constructor may run before the application has set up its environment
+    // (e.g., VK_LAYER_PATH, VK_ICD_FILENAMES), so scanning here would cache
+    // stale data. Both preloads happen lazily on the first API call that needs them.
+
 #if defined(_WIN32)
     return TRUE;
 #endif
@@ -2377,17 +2427,43 @@ void loader_release(void) {
     // Guarantee release of the preloaded ICD libraries. This may have already been called in vkDestroyInstance.
     loader_unload_preloaded_icds();
 
+    // Guarantee release of the preloaded layer properties.
+    loader_unload_preloaded_layers();
+
     // release mutexes
     teardown_global_loader_settings();
     loader_platform_thread_delete_mutex(&loader_lock);
     loader_platform_thread_delete_mutex(&loader_preload_icd_lock);
+    loader_platform_thread_delete_mutex(&loader_preload_layer_lock);
 }
 
-// Preload the ICD libraries that are likely to be needed so we don't repeatedly load/unload them later
+// Forward declarations of cache helpers (defined below)
+static void loader_clear_manifest_cache(struct loader_manifest_cache *cache);
+static void loader_populate_icd_manifest_cache_from_disk(struct loader_manifest_cache *cache);
+
+// Preload ICD manifest metadata (file paths, sizes, mtimes) without loading ICD libraries.
+// This is cheap — just a filesystem walk and stat() calls. The actual library loading is
+// deferred to loader_demand_load_icds() which is called lazily when loaded ICDs are needed.
+// Safe to call multiple times — returns immediately if already cached.
 void loader_preload_icds(void) {
     loader_platform_thread_lock_mutex(&loader_preload_icd_lock);
+    // Already have metadata or loaded ICDs — skip.
+    if (preloaded_icd_cache.count > 0 || preloaded_icds.scanned_list != NULL) {
+        loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
+        return;
+    }
 
-    // Already preloaded, skip loading again.
+    loader_populate_icd_manifest_cache_from_disk(&preloaded_icd_cache);
+    loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
+}
+
+// Demand-load ICD libraries into the preloaded cache. Called lazily the first time
+// loaded ICDs are actually needed (e.g., by vkEnumerateInstanceExtensionProperties
+// terminator which queries extension properties from loaded ICDs).
+// Safe to call multiple times — returns immediately if already loaded.
+void loader_demand_load_icds(void) {
+    loader_platform_thread_lock_mutex(&loader_preload_icd_lock);
+    // Already loaded, skip.
     if (preloaded_icds.scanned_list != NULL) {
         loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
         return;
@@ -2397,14 +2473,430 @@ void loader_preload_icds(void) {
     if (result != VK_SUCCESS) {
         loader_clear_scanned_icd_list(NULL, &preloaded_icds);
     }
+    // Populate/refresh the manifest cache from the loaded ICDs' manifest paths.
+    // Only if the cache is empty (not yet populated by loader_preload_icds).
+    if (preloaded_icd_cache.count == 0) {
+        loader_populate_icd_manifest_cache_from_disk(&preloaded_icd_cache);
+    }
+    loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
+}
+
+// Promote per-instance loaded ICDs into the preloaded cache for handle caching.
+// Called after a successful per-instance loader_icd_scan() in vkCreateInstance.
+// This keeps the ICD libraries loaded across instance destroy/recreate cycles,
+// so subsequent dlopen() calls are cheap (just a refcount bump).
+void loader_cache_icds_from_instance(const struct loader_instance *inst) {
+    loader_platform_thread_lock_mutex(&loader_preload_icd_lock);
+    // Already have preloaded ICDs — nothing to promote.
+    if (preloaded_icds.scanned_list != NULL) {
+        loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
+        return;
+    }
+
+    // Open a second handle to each ICD library to keep it loaded after the
+    // per-instance handles are closed in vkDestroyInstance.
+    VkResult res = loader_init_scanned_icd_list(NULL, &preloaded_icds);
+    if (res != VK_SUCCESS) {
+        loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
+        return;
+    }
+    for (uint32_t i = 0; i < inst->icd_tramp_list.count; i++) {
+        struct loader_scanned_icd *src = &inst->icd_tramp_list.scanned_list[i];
+        if (src->lib_name == NULL) continue;
+        enum loader_layer_library_status lib_status;
+        uint32_t count_before = preloaded_icds.count;
+        res = loader_scanned_icd_add(NULL, &preloaded_icds, src->lib_name, src->api_version, &lib_status);
+        if (res == VK_SUCCESS && preloaded_icds.count > count_before && src->manifest_file_name) {
+            loader_copy_to_new_str(NULL, src->manifest_file_name,
+                                   &preloaded_icds.scanned_list[preloaded_icds.count - 1].manifest_file_name);
+        }
+    }
     loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
 }
 
 // Release the ICD libraries that were preloaded
 void loader_unload_preloaded_icds(void) {
     loader_platform_thread_lock_mutex(&loader_preload_icd_lock);
-    loader_clear_scanned_icd_list(NULL, &preloaded_icds);
+    if (--preload_refcount == 0) {
+        loader_clear_scanned_icd_list(NULL, &preloaded_icds);
+        loader_clear_manifest_cache(&preloaded_icd_cache);
+    }
     loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
+}
+
+// Forward declarations and types needed by the revalidation code
+struct ICDManifestInfo {
+    char *full_library_path;
+    uint32_t version;
+};
+VkResult loader_parse_icd_manifest(const struct loader_instance *inst, char *file_str, struct ICDManifestInfo *icd,
+                                   bool *skipped_portability_drivers);
+VkResult loader_get_data_files(const struct loader_instance *inst, enum loader_data_files_type manifest_type,
+                               const struct loader_string_list *path_overrides, struct loader_string_list *out_files);
+
+// --- Manifest cache helpers ---
+
+static void loader_clear_manifest_cache(struct loader_manifest_cache *cache) {
+    if (cache->entries) {
+        for (uint32_t i = 0; i < cache->count; i++) {
+            loader_instance_heap_free(NULL, cache->entries[i].manifest_file_name);
+        }
+        loader_instance_heap_free(NULL, cache->entries);
+    }
+    memset(cache, 0, sizeof(*cache));
+}
+
+// Add an entry to the cache. Queries file metadata from disk. Returns VK_SUCCESS or VK_ERROR_OUT_OF_HOST_MEMORY.
+static VkResult loader_manifest_cache_add(struct loader_manifest_cache *cache, const char *manifest_path) {
+    if (cache->count >= cache->capacity) {
+        uint32_t new_cap = cache->capacity ? cache->capacity * 2 : 8;
+        void *new_entries = loader_instance_heap_realloc(NULL, cache->entries,
+                                                         cache->capacity * sizeof(struct loader_manifest_cache_entry),
+                                                         new_cap * sizeof(struct loader_manifest_cache_entry),
+                                                         VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
+        if (!new_entries) return VK_ERROR_OUT_OF_HOST_MEMORY;
+        cache->entries = new_entries;
+        cache->capacity = new_cap;
+    }
+    struct loader_manifest_cache_entry *entry = &cache->entries[cache->count];
+    entry->manifest_file_name = NULL;
+    VkResult res = loader_copy_to_new_str(NULL, manifest_path, &entry->manifest_file_name);
+    if (res != VK_SUCCESS) return res;
+
+    if (!loader_platform_get_file_metadata(manifest_path, &entry->file_size, &entry->file_mtime)) {
+        entry->file_size = 0;
+        entry->file_mtime = 0;
+    }
+    cache->count++;
+    return VK_SUCCESS;
+}
+
+// Remove an entry at the given index, compacting the array.
+static void loader_manifest_cache_remove(struct loader_manifest_cache *cache, uint32_t index) {
+    if (index >= cache->count) return;
+    loader_instance_heap_free(NULL, cache->entries[index].manifest_file_name);
+    if (index < cache->count - 1) {
+        memmove(&cache->entries[index], &cache->entries[index + 1],
+                (cache->count - 1 - index) * sizeof(struct loader_manifest_cache_entry));
+    }
+    cache->count--;
+}
+
+// Find an entry by manifest path. Returns the index or UINT32_MAX if not found.
+static uint32_t loader_manifest_cache_find(const struct loader_manifest_cache *cache, const char *manifest_path) {
+    for (uint32_t i = 0; i < cache->count; i++) {
+        if (cache->entries[i].manifest_file_name && strcmp(cache->entries[i].manifest_file_name, manifest_path) == 0) {
+            return i;
+        }
+    }
+    return UINT32_MAX;
+}
+
+// Check if a cached entry is still valid (file exists and size+mtime match).
+static bool loader_manifest_cache_entry_is_valid(const struct loader_manifest_cache_entry *entry) {
+    uint64_t current_size, current_mtime;
+    if (!loader_platform_get_file_metadata(entry->manifest_file_name, &current_size, &current_mtime)) {
+        return false;  // File no longer exists
+    }
+    return current_size == entry->file_size && current_mtime == entry->file_mtime;
+}
+
+// Populate the ICD manifest cache from all discovered manifest files on disk.
+// This includes manifests for ICDs whose binaries cannot be loaded (e.g., cross-architecture),
+// so that the revalidation path doesn't repeatedly try to re-parse them.
+static void loader_populate_icd_manifest_cache_from_disk(struct loader_manifest_cache *cache) {
+    struct loader_string_list manifest_files = {0};
+    VkResult res = loader_get_data_files(NULL, LOADER_DATA_FILE_MANIFEST_DRIVER, NULL, &manifest_files);
+    if (res != VK_SUCCESS) {
+        return;
+    }
+    for (uint32_t i = 0; i < manifest_files.count; i++) {
+        loader_manifest_cache_add(cache, manifest_files.list[i]);
+    }
+    free_string_list(NULL, &manifest_files);
+}
+
+// Populate a manifest cache from the manifest_file_name fields in a layer list.
+static void loader_populate_layer_manifest_cache(struct loader_manifest_cache *cache,
+                                                  const struct loader_layer_list *layer_list) {
+    for (uint32_t i = 0; i < layer_list->count; i++) {
+        if (layer_list->list[i].manifest_file_name) {
+            loader_manifest_cache_add(cache, layer_list->list[i].manifest_file_name);
+        }
+    }
+}
+
+// --- Recompute the pre-instance flag from the preloaded implicit layers ---
+
+static void loader_update_pre_instance_flag(void) {
+    preloaded_layers_have_pre_instance = false;
+    for (uint32_t i = 0; i < preloaded_implicit_layers.count; i++) {
+        if (preloaded_implicit_layers.list[i].pre_instance_functions.enumerate_instance_extension_properties != NULL ||
+            preloaded_implicit_layers.list[i].pre_instance_functions.enumerate_instance_layer_properties != NULL ||
+            preloaded_implicit_layers.list[i].pre_instance_functions.enumerate_instance_version != NULL) {
+            preloaded_layers_have_pre_instance = true;
+            break;
+        }
+    }
+}
+
+// --- Full rescan (used for initial population) ---
+
+// Perform a full scan of layers and populate caches. Must be called with loader_preload_layer_lock held.
+static void loader_full_scan_preloaded_layers(void) {
+    struct loader_envvar_all_filters layer_filters = {0};
+
+    // Ensure global settings are loaded so that settings_control_value is
+    // correctly applied to layers during scanning (e.g. layers set to OFF).
+    // Temporarily populate global settings so layer scanning can read
+    // settings_control_value correctly.  Afterwards, reinitialize the global
+    // debug level from environment variables so that the settings file's
+    // debug_level does not permanently leak into unrelated code paths
+    // (vkCreateInstance logging, etc.).
+    update_global_loader_settings();
+    loader_set_global_debug_level(0);
+    loader_init_global_debug_level();
+
+    loader_delete_layer_list_and_properties(NULL, &preloaded_all_layers);
+    loader_delete_layer_list_and_properties(NULL, &preloaded_implicit_layers);
+    loader_clear_manifest_cache(&preloaded_all_layers_cache);
+    loader_clear_manifest_cache(&preloaded_implicit_layers_cache);
+
+    VkResult res = parse_layer_environment_var_filters(NULL, &layer_filters);
+    if (res != VK_SUCCESS) return;
+
+    res = loader_scan_for_layers(NULL, &preloaded_all_layers, &layer_filters);
+    if (res != VK_SUCCESS) {
+        loader_delete_layer_list_and_properties(NULL, &preloaded_all_layers);
+    }
+
+    res = loader_scan_for_implicit_layers(NULL, &preloaded_implicit_layers, &layer_filters);
+    if (res != VK_SUCCESS) {
+        loader_delete_layer_list_and_properties(NULL, &preloaded_implicit_layers);
+    }
+
+    // Populate manifest caches from the scan results
+    loader_populate_layer_manifest_cache(&preloaded_all_layers_cache, &preloaded_all_layers);
+    loader_populate_layer_manifest_cache(&preloaded_implicit_layers_cache, &preloaded_implicit_layers);
+
+    loader_update_pre_instance_flag();
+}
+
+// --- Revalidation (used on vkDestroyInstance) ---
+
+// Revalidate the preloaded ICD metadata cache and loaded ICD list.
+// Must be called with loader_preload_icd_lock held.
+// Only updates the manifest metadata cache — does NOT load new ICD libraries.
+// If manifests changed, the loaded ICD cache is invalidated so that
+// loader_demand_load_icds() will re-scan on next use.
+void loader_revalidate_preloaded_icds(void) {
+    struct loader_string_list new_paths = {0};
+    VkResult res;
+
+    // Re-discover manifest files with current env state
+    res = loader_get_data_files(NULL, LOADER_DATA_FILE_MANIFEST_DRIVER, NULL, &new_paths);
+    if (res != VK_SUCCESS) {
+        // On failure, invalidate everything so next demand-load does a full rescan
+        loader_clear_scanned_icd_list(NULL, &preloaded_icds);
+        loader_clear_manifest_cache(&preloaded_icd_cache);
+        return;
+    }
+
+    bool any_changed = false;
+
+    // Check for removed or modified manifests
+    for (uint32_t i = 0; i < preloaded_icd_cache.count; /* no increment */) {
+        // Is this cached manifest still in the new discovery?
+        bool found = false;
+        for (uint32_t j = 0; j < new_paths.count; j++) {
+            if (new_paths.list[j] && strcmp(preloaded_icd_cache.entries[i].manifest_file_name, new_paths.list[j]) == 0) {
+                found = true;
+                break;
+            }
+        }
+        if (!found || !loader_manifest_cache_entry_is_valid(&preloaded_icd_cache.entries[i])) {
+            // Find and remove the corresponding loaded ICD (if any) by manifest file name.
+            if (preloaded_icds.scanned_list != NULL) {
+                for (uint32_t k = 0; k < preloaded_icds.count; k++) {
+                    if (preloaded_icds.scanned_list[k].manifest_file_name &&
+                        strcmp(preloaded_icds.scanned_list[k].manifest_file_name,
+                               preloaded_icd_cache.entries[i].manifest_file_name) == 0) {
+                        loader_unload_scanned_icd(NULL, &preloaded_icds.scanned_list[k]);
+                        if (k < preloaded_icds.count - 1) {
+                            memmove(&preloaded_icds.scanned_list[k], &preloaded_icds.scanned_list[k + 1],
+                                    (preloaded_icds.count - 1 - k) * sizeof(struct loader_scanned_icd));
+                        }
+                        memset(&preloaded_icds.scanned_list[preloaded_icds.count - 1], 0, sizeof(struct loader_scanned_icd));
+                        preloaded_icds.count--;
+                        break;
+                    }
+                }
+            }
+            loader_manifest_cache_remove(&preloaded_icd_cache, i);
+            any_changed = true;
+            // Don't increment i — next entry shifted into this slot
+        } else {
+            i++;
+        }
+    }
+
+    // Check for new manifests (in new_paths but not in cache)
+    for (uint32_t j = 0; j < new_paths.count; j++) {
+        if (!new_paths.list[j]) continue;
+        if (loader_manifest_cache_find(&preloaded_icd_cache, new_paths.list[j]) != UINT32_MAX) continue;
+
+        // New manifest found — just add it to the metadata cache.
+        // The actual ICD library loading is deferred to loader_demand_load_icds().
+        loader_manifest_cache_add(&preloaded_icd_cache, new_paths.list[j]);
+        any_changed = true;
+    }
+
+    // If manifests changed and we have loaded ICDs, invalidate the loaded cache
+    // so loader_demand_load_icds() will reload with the updated manifest set.
+    if (any_changed && preloaded_icds.scanned_list != NULL) {
+        loader_clear_scanned_icd_list(NULL, &preloaded_icds);
+    }
+
+    free_string_list(NULL, &new_paths);
+}
+
+// Revalidate the preloaded layer lists. Must be called with loader_preload_layer_lock held.
+// Checks cached manifest file metadata (size + mtime) first — if nothing changed,
+// skips the expensive full rescan.  Falls back to a full rescan if any manifest
+// was modified, deleted, or if the caches were never populated.
+void loader_revalidate_preloaded_layers(void) {
+    // If a settings change or other event requires a full rescan, skip the
+    // quick check and go straight to the full scan path.
+    if (preloaded_layers_force_full_rescan) {
+        preloaded_layers_force_full_rescan = false;
+        loader_full_scan_preloaded_layers();
+        return;
+    }
+
+    // Quick check: if all cached manifest files are unchanged (size + mtime),
+    // skip the expensive full rescan.  This is the common case in tight
+    // create/destroy loops where no manifests change between iterations.
+    bool all_valid = true;
+    for (uint32_t i = 0; i < preloaded_all_layers_cache.count && all_valid; i++) {
+        if (!loader_manifest_cache_entry_is_valid(&preloaded_all_layers_cache.entries[i])) {
+            all_valid = false;
+        }
+    }
+    for (uint32_t i = 0; i < preloaded_implicit_layers_cache.count && all_valid; i++) {
+        if (!loader_manifest_cache_entry_is_valid(&preloaded_implicit_layers_cache.entries[i])) {
+            all_valid = false;
+        }
+    }
+    if (!all_valid || (preloaded_all_layers_cache.count == 0 && preloaded_implicit_layers_cache.count == 0)) {
+        loader_full_scan_preloaded_layers();
+        return;
+    }
+
+    // Manifest files are unchanged, but implicit layer enable/disable env vars
+    // may have changed.  Count how many implicit layers would currently be
+    // enabled and compare with the cached implicit layer list.
+    uint32_t currently_enabled = 0;
+    for (uint32_t i = 0; i < preloaded_all_layers.count; i++) {
+        struct loader_layer_properties *prop = &preloaded_all_layers.list[i];
+        if (0 != (prop->type_flags & VK_LAYER_TYPE_FLAG_EXPLICIT_LAYER)) continue;
+
+        bool enabled = true;
+        if (prop->enable_env_var.name != NULL) {
+            char *env_value = loader_getenv(prop->enable_env_var.name, NULL);
+            enabled = (env_value && strcmp(prop->enable_env_var.value, env_value) == 0);
+            loader_free_getenv(env_value, NULL);
+        }
+        if (enabled && prop->disable_env_var.name != NULL) {
+            char *env_value = loader_getenv(prop->disable_env_var.name, NULL);
+            if (env_value) enabled = false;
+            loader_free_getenv(env_value, NULL);
+        }
+        if (enabled) currently_enabled++;
+    }
+    if (currently_enabled != preloaded_implicit_layers.count) {
+        loader_full_scan_preloaded_layers();
+        return;
+    }
+
+    // All manifests unchanged and implicit layer env var state matches — skip rescan
+}
+
+// --- Preload lifecycle ---
+
+// Preload layer properties so subsequent calls to EnumerateInstanceLayerProperties and
+// EnumerateInstanceExtensionProperties don't have to rescan the filesystem and registry.
+// Safe to call multiple times — returns immediately if already loaded.
+void loader_preload_layers(void) {
+    loader_platform_thread_lock_mutex(&loader_preload_layer_lock);
+    // Already preloaded, skip scanning again.
+    if (preloaded_all_layers.list != NULL) {
+        loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+        return;
+    }
+    loader_full_scan_preloaded_layers();
+    loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+}
+
+// Release the preloaded layer properties
+void loader_unload_preloaded_layers(void) {
+    loader_platform_thread_lock_mutex(&loader_preload_layer_lock);
+    if (--layer_preload_refcount == 0) {
+        loader_delete_layer_list_and_properties(NULL, &preloaded_all_layers);
+        loader_delete_layer_list_and_properties(NULL, &preloaded_implicit_layers);
+        loader_clear_manifest_cache(&preloaded_all_layers_cache);
+        loader_clear_manifest_cache(&preloaded_implicit_layers_cache);
+    }
+    loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+}
+
+// Returns whether any preloaded implicit layer has pre_instance_functions.
+bool loader_preloaded_layers_have_pre_instance_functions(void) {
+    loader_platform_thread_lock_mutex(&loader_preload_layer_lock);
+    bool result = preloaded_layers_have_pre_instance;
+    loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+    return result;
+}
+
+// Mark preloaded caches as needing revalidation on the next pre-instance call.
+void loader_mark_preloaded_caches_stale(void) {
+    preloaded_icds_stale = true;
+    preloaded_layers_stale = true;
+}
+
+// Mark preloaded caches stale AND force a full layer rescan (not just a
+// manifest-metadata check).  Used when loader settings change, since settings
+// affect which layers are enabled/disabled without changing manifest files.
+void loader_force_layer_rescan_on_next_revalidation(void) {
+    preloaded_icds_stale = true;
+    preloaded_layers_stale = true;
+    preloaded_layers_force_full_rescan = true;
+}
+
+// Revalidate any stale preloaded caches.  Called from pre-instance trampolines.
+// Only revalidates caches that have been populated — if a cache hasn't been
+// preloaded yet (lazy init), we clear the stale flag and let the subsequent
+// preload call pick up the current state.
+void loader_revalidate_stale_caches(void) {
+    if (preloaded_icds_stale) {
+        loader_platform_thread_lock_mutex(&loader_preload_icd_lock);
+        if (preloaded_icds_stale) {
+            preloaded_icds_stale = false;
+            if (preloaded_icds.scanned_list != NULL || preloaded_icd_cache.count > 0) {
+                loader_revalidate_preloaded_icds();
+            }
+        }
+        loader_platform_thread_unlock_mutex(&loader_preload_icd_lock);
+    }
+    if (preloaded_layers_stale) {
+        loader_platform_thread_lock_mutex(&loader_preload_layer_lock);
+        if (preloaded_layers_stale) {
+            preloaded_layers_stale = false;
+            if (preloaded_all_layers.list != NULL) {
+                loader_revalidate_preloaded_layers();
+            }
+        }
+        loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+    }
 }
 
 #if !defined(_WIN32)
@@ -3893,11 +4385,6 @@ out:
     return res;
 }
 
-struct ICDManifestInfo {
-    char *full_library_path;
-    uint32_t version;
-};
-
 // Takes a json file, opens, reads, and parses an ICD Manifest out of it.
 // Should only return VK_SUCCESS, VK_ERROR_INCOMPATIBLE_DRIVER, or VK_ERROR_OUT_OF_HOST_MEMORY
 VkResult loader_parse_icd_manifest(const struct loader_instance *inst, char *file_str, struct ICDManifestInfo *icd,
@@ -4155,8 +4642,14 @@ VkResult loader_icd_scan(const struct loader_instance *inst, struct loader_icd_t
         }
 
         enum loader_layer_library_status lib_status;
+        uint32_t count_before = icd_tramp_list->count;
         icd_res =
             loader_scanned_icd_add(inst, icd_tramp_list, icd_details[i].full_library_path, icd_details[i].version, &lib_status);
+        // Store the manifest file name on the newly added ICD for cache tracking
+        if (icd_res == VK_SUCCESS && icd_tramp_list->count > count_before) {
+            loader_copy_to_new_str(inst, manifest_files.list[i],
+                                   &icd_tramp_list->scanned_list[icd_tramp_list->count - 1].manifest_file_name);
+        }
         if (VK_ERROR_OUT_OF_HOST_MEMORY == icd_res) {
             res = icd_res;
             goto out;
@@ -7606,21 +8099,11 @@ VKAPI_ATTR VkResult VKAPI_CALL terminator_pre_instance_EnumerateInstanceVersion(
 VKAPI_ATTR VkResult VKAPI_CALL terminator_EnumerateInstanceExtensionProperties(const char *pLayerName, uint32_t *pPropertyCount,
                                                                                VkExtensionProperties *pProperties) {
     struct loader_extension_list *global_ext_list = NULL;
-    struct loader_layer_list instance_layers;
     struct loader_extension_list local_ext_list;
-    struct loader_icd_tramp_list icd_tramp_list;
     uint32_t copy_size;
     VkResult res = VK_SUCCESS;
-    struct loader_envvar_all_filters layer_filters = {0};
 
     memset(&local_ext_list, 0, sizeof(local_ext_list));
-    memset(&instance_layers, 0, sizeof(instance_layers));
-    memset(&icd_tramp_list, 0, sizeof(icd_tramp_list));
-
-    res = parse_layer_environment_var_filters(NULL, &layer_filters);
-    if (VK_SUCCESS != res) {
-        goto out;
-    }
 
     // Get layer libraries if needed
     if (pLayerName && strlen(pLayerName) != 0) {
@@ -7630,75 +8113,75 @@ VKAPI_ATTR VkResult VKAPI_CALL terminator_EnumerateInstanceExtensionProperties(c
             goto out;
         }
 
-        res = loader_scan_for_layers(NULL, &instance_layers, &layer_filters);
-        if (VK_SUCCESS != res) {
-            goto out;
-        }
-        for (uint32_t i = 0; i < instance_layers.count; i++) {
-            struct loader_layer_properties *props = &instance_layers.list[i];
+        loader_platform_thread_lock_mutex(&loader_preload_layer_lock);
+        for (uint32_t i = 0; i < preloaded_all_layers.count; i++) {
+            struct loader_layer_properties *props = &preloaded_all_layers.list[i];
             if (strcmp(props->info.layerName, pLayerName) == 0) {
                 global_ext_list = &props->instance_extension_list;
                 break;
             }
         }
+        // Note: lock is held through the copy below and released at out_unlock
+        if (global_ext_list == NULL) {
+            loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+            res = VK_ERROR_LAYER_NOT_PRESENT;
+            goto out;
+        }
+
+        if (pProperties == NULL) {
+            *pPropertyCount = global_ext_list->count;
+            loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+            goto out;
+        }
+
+        copy_size = *pPropertyCount < global_ext_list->count ? *pPropertyCount : global_ext_list->count;
+        for (uint32_t i = 0; i < copy_size; i++) {
+            memcpy(&pProperties[i], &global_ext_list->list[i], sizeof(VkExtensionProperties));
+        }
+        *pPropertyCount = copy_size;
+        if (copy_size < global_ext_list->count) {
+            res = VK_INCOMPLETE;
+        }
+        loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
+
     } else {
-        // Preload ICD libraries so subsequent calls to EnumerateInstanceExtensionProperties don't have to load them
-        loader_preload_icds();
-
-        // Scan/discover all ICD libraries
-        res = loader_icd_scan(NULL, &icd_tramp_list, NULL, NULL);
-        // EnumerateInstanceExtensionProperties can't return anything other than OOM or VK_ERROR_LAYER_NOT_PRESENT
-        if ((VK_SUCCESS != res && icd_tramp_list.count > 0) || res == VK_ERROR_OUT_OF_HOST_MEMORY) {
-            goto out;
-        }
         // Get extensions from all ICD's, merge so no duplicates
-        res = loader_get_icd_loader_instance_extensions(NULL, &icd_tramp_list, &local_ext_list);
+        res = loader_get_icd_loader_instance_extensions(NULL, &preloaded_icds, &local_ext_list);
         if (VK_SUCCESS != res) {
             goto out;
         }
-        loader_clear_scanned_icd_list(NULL, &icd_tramp_list);
 
-        // Append enabled implicit layers.
-        res = loader_scan_for_implicit_layers(NULL, &instance_layers, &layer_filters);
-        if (VK_SUCCESS != res) {
-            goto out;
-        }
-        for (uint32_t i = 0; i < instance_layers.count; i++) {
-            struct loader_extension_list *ext_list = &instance_layers.list[i].instance_extension_list;
+        // Append enabled implicit layers from preloaded list.
+        loader_platform_thread_lock_mutex(&loader_preload_layer_lock);
+        for (uint32_t i = 0; i < preloaded_implicit_layers.count; i++) {
+            struct loader_extension_list *ext_list = &preloaded_implicit_layers.list[i].instance_extension_list;
             res = loader_add_to_ext_list(NULL, &local_ext_list, ext_list->count, ext_list->list);
             if (VK_SUCCESS != res) {
                 goto out;
             }
         }
+        loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
 
         global_ext_list = &local_ext_list;
-    }
 
-    if (global_ext_list == NULL) {
-        res = VK_ERROR_LAYER_NOT_PRESENT;
-        goto out;
-    }
+        if (pProperties == NULL) {
+            *pPropertyCount = global_ext_list->count;
+            goto out;
+        }
 
-    if (pProperties == NULL) {
-        *pPropertyCount = global_ext_list->count;
-        goto out;
-    }
+        copy_size = *pPropertyCount < global_ext_list->count ? *pPropertyCount : global_ext_list->count;
+        for (uint32_t i = 0; i < copy_size; i++) {
+            memcpy(&pProperties[i], &global_ext_list->list[i], sizeof(VkExtensionProperties));
+        }
+        *pPropertyCount = copy_size;
 
-    copy_size = *pPropertyCount < global_ext_list->count ? *pPropertyCount : global_ext_list->count;
-    for (uint32_t i = 0; i < copy_size; i++) {
-        memcpy(&pProperties[i], &global_ext_list->list[i], sizeof(VkExtensionProperties));
-    }
-    *pPropertyCount = copy_size;
-
-    if (copy_size < global_ext_list->count) {
-        res = VK_INCOMPLETE;
-        goto out;
+        if (copy_size < global_ext_list->count) {
+            res = VK_INCOMPLETE;
+        }
     }
 
 out:
-    loader_destroy_generic_list(NULL, (struct loader_generic_list *)&icd_tramp_list);
     loader_destroy_generic_list(NULL, (struct loader_generic_list *)&local_ext_list);
-    loader_delete_layer_list_and_properties(NULL, &instance_layers);
     return res;
 }
 
@@ -7712,26 +8195,15 @@ VKAPI_ATTR VkResult VKAPI_CALL terminator_pre_instance_EnumerateInstanceExtensio
 VKAPI_ATTR VkResult VKAPI_CALL terminator_EnumerateInstanceLayerProperties(uint32_t *pPropertyCount,
                                                                            VkLayerProperties *pProperties) {
     VkResult result = VK_SUCCESS;
-    struct loader_layer_list instance_layer_list = {0};
-    struct loader_envvar_all_filters layer_filters = {0};
 
     LOADER_PLATFORM_THREAD_ONCE(&once_init, loader_initialize);
 
-    result = parse_layer_environment_var_filters(NULL, &layer_filters);
-    if (VK_SUCCESS != result) {
-        goto out;
-    }
-
-    // Get layer libraries
-    result = loader_scan_for_layers(NULL, &instance_layer_list, &layer_filters);
-    if (VK_SUCCESS != result) {
-        goto out;
-    }
+    loader_platform_thread_lock_mutex(&loader_preload_layer_lock);
 
     uint32_t layers_to_write_out = 0;
-    for (uint32_t i = 0; i < instance_layer_list.count; i++) {
-        if (instance_layer_list.list[i].settings_control_value == LOADER_SETTINGS_LAYER_CONTROL_ON ||
-            instance_layer_list.list[i].settings_control_value == LOADER_SETTINGS_LAYER_CONTROL_DEFAULT) {
+    for (uint32_t i = 0; i < preloaded_all_layers.count; i++) {
+        if (preloaded_all_layers.list[i].settings_control_value == LOADER_SETTINGS_LAYER_CONTROL_ON ||
+            preloaded_all_layers.list[i].settings_control_value == LOADER_SETTINGS_LAYER_CONTROL_DEFAULT) {
             layers_to_write_out++;
         }
     }
@@ -7742,11 +8214,11 @@ VKAPI_ATTR VkResult VKAPI_CALL terminator_EnumerateInstanceLayerProperties(uint3
     }
 
     uint32_t output_properties_index = 0;
-    for (uint32_t i = 0; i < instance_layer_list.count; i++) {
+    for (uint32_t i = 0; i < preloaded_all_layers.count; i++) {
         if (output_properties_index < *pPropertyCount &&
-            (instance_layer_list.list[i].settings_control_value == LOADER_SETTINGS_LAYER_CONTROL_ON ||
-             instance_layer_list.list[i].settings_control_value == LOADER_SETTINGS_LAYER_CONTROL_DEFAULT)) {
-            memcpy(&pProperties[output_properties_index], &instance_layer_list.list[i].info, sizeof(VkLayerProperties));
+            (preloaded_all_layers.list[i].settings_control_value == LOADER_SETTINGS_LAYER_CONTROL_ON ||
+             preloaded_all_layers.list[i].settings_control_value == LOADER_SETTINGS_LAYER_CONTROL_DEFAULT)) {
+            memcpy(&pProperties[output_properties_index], &preloaded_all_layers.list[i].info, sizeof(VkLayerProperties));
             output_properties_index++;
         }
     }
@@ -7758,8 +8230,7 @@ VKAPI_ATTR VkResult VKAPI_CALL terminator_EnumerateInstanceLayerProperties(uint3
     *pPropertyCount = output_properties_index;
 
 out:
-
-    loader_delete_layer_list_and_properties(NULL, &instance_layer_list);
+    loader_platform_thread_unlock_mutex(&loader_preload_layer_lock);
     return result;
 }
 
