@@ -81,6 +81,7 @@ static inline void loader_init_dispatch(void *obj, const void *data) {
 extern struct loader_struct loader;
 extern loader_platform_thread_mutex loader_lock;
 extern loader_platform_thread_mutex loader_preload_icd_lock;
+extern loader_platform_thread_mutex loader_preload_layer_lock;
 
 bool compare_vk_extension_properties(const VkExtensionProperties *op1, const VkExtensionProperties *op2);
 
@@ -99,7 +100,17 @@ void loader_initialize(void);
 #endif
 void loader_release(void);
 void loader_preload_icds(void);
+void loader_demand_load_icds(void);
+void loader_cache_icds_from_instance(const struct loader_instance *inst);
 void loader_unload_preloaded_icds(void);
+void loader_preload_layers(void);
+void loader_unload_preloaded_layers(void);
+bool loader_preloaded_layers_have_pre_instance_functions(void);
+void loader_revalidate_preloaded_icds(void);
+void loader_revalidate_preloaded_layers(void);
+void loader_mark_preloaded_caches_stale(void);
+void loader_force_layer_rescan_on_next_revalidation(void);
+void loader_revalidate_stale_caches(void);
 VkResult loader_init_library_list(struct loader_layer_list *instance_layers, loader_platform_dl_handle **libs);
 
 // Allocate a new string able to hold source_str and place it in dest_str
