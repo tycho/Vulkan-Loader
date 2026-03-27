@@ -544,6 +544,10 @@ if (APPLE_STATIC_LOADER)
     return()
 endif()
 
+if (MSVC)
+	install(FILES $<TARGET_PDB_FILE:vulkan> DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
 # Generate CMake Configuration File (IE: VulkanLoaderConfig.cmake)
 install(TARGETS vulkan EXPORT VulkanLoaderConfig)
 set_target_properties(vulkan PROPERTIES EXPORT_NAME "Loader")
