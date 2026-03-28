@@ -47,6 +47,10 @@
 
 static PlatformShim platform_shim;
 
+// Convenience macro — every shimmed function that touches platform_shim must
+// hold this lock so the shim is thread-safe (matching the real OS APIs).
+#define SHIM_LOCK() std::lock_guard<std::recursive_mutex> _shim_lg(platform_shim.mutex)
+
 extern "C" {
 
 static LibraryWrapper gdi32_dll;
@@ -54,12 +58,16 @@ static LibraryWrapper gdi32_dll;
 using PFN_GetSidSubAuthority = PDWORD(__stdcall *)(PSID pSid, DWORD nSubAuthority);
 static PFN_GetSidSubAuthority fpGetSidSubAuthority = GetSidSubAuthority;
 
-PDWORD __stdcall ShimGetSidSubAuthority(PSID, DWORD) { return &platform_shim.elevation_level; }
+PDWORD __stdcall ShimGetSidSubAuthority(PSID, DWORD) {
+    SHIM_LOCK();
+    return &platform_shim.elevation_level;
+}
 
 static PFN_LoaderEnumAdapters2 fpEnumAdapters2 = nullptr;
 static PFN_LoaderQueryAdapterInfo fpQueryAdapterInfo = nullptr;
 
 NTSTATUS APIENTRY ShimEnumAdapters2(LoaderEnumAdapters2 *adapters) {
+    SHIM_LOCK();
     if (adapters == nullptr) {
         return STATUS_INVALID_PARAMETER;
     }
@@ -79,6 +87,7 @@ NTSTATUS APIENTRY ShimEnumAdapters2(LoaderEnumAdapters2 *adapters) {
     return STATUS_SUCCESS;
 }
 NTSTATUS APIENTRY ShimQueryAdapterInfo(const LoaderQueryAdapterInfo *query_info) {
+    SHIM_LOCK();
     if (query_info == nullptr || query_info->private_data == nullptr) {
         return STATUS_INVALID_PARAMETER;
     }
@@ -142,6 +151,7 @@ static CONFIGRET(WINAPI *REAL_CM_Get_Sibling)(PDEVINST pdnDevInst, DEVINST dnDev
 
 CONFIGRET WINAPI SHIM_CM_Get_Device_ID_List_SizeW(PULONG pulLen, [[maybe_unused]] PCWSTR pszFilter,
                                                   [[maybe_unused]] ULONG ulFlags) {
+    SHIM_LOCK();
     if (pulLen == nullptr) {
         return CR_INVALID_POINTER;
     }
@@ -150,6 +160,7 @@ CONFIGRET WINAPI SHIM_CM_Get_Device_ID_List_SizeW(PULONG pulLen, [[maybe_unused]
 }
 CONFIGRET WINAPI SHIM_CM_Get_Device_ID_ListW([[maybe_unused]] PCWSTR pszFilter, PZZWSTR Buffer, ULONG BufferLen,
                                              [[maybe_unused]] ULONG ulFlags) {
+    SHIM_LOCK();
     if (Buffer != NULL) {
         if (BufferLen < platform_shim.CM_device_ID_list.size()) return CR_BUFFER_SMALL;
         for (size_t i = 0; i < BufferLen; i++) {
@@ -179,6 +190,7 @@ PFN_CreateDXGIFactory1 RealCreateDXGIFactory1;
 HRESULT __stdcall ShimGetDesc1(IDXGIAdapter1 *pAdapter,
                                /* [annotation][out] */
                                _Out_ DXGI_ADAPTER_DESC1 *pDesc) {
+    SHIM_LOCK();
     if (pAdapter == nullptr || pDesc == nullptr) return DXGI_ERROR_INVALID_CALL;
 
     for (const auto &[index, adapter] : platform_shim.dxgi_adapters) {
@@ -204,6 +216,7 @@ HRESULT __stdcall ShimEnumAdapters1_1([[maybe_unused]] IDXGIFactory1 *This,
                                       /* [in] */ UINT Adapter,
                                       /* [annotation][out] */
                                       _COM_Outptr_ IDXGIAdapter1 **ppAdapter) {
+    SHIM_LOCK();
     if (Adapter >= platform_shim.dxgi_adapters.size()) {
         return DXGI_ERROR_INVALID_CALL;
     }
@@ -217,6 +230,7 @@ HRESULT __stdcall ShimEnumAdapters1_6([[maybe_unused]] IDXGIFactory6 *This,
                                       /* [in] */ UINT Adapter,
                                       /* [annotation][out] */
                                       _COM_Outptr_ IDXGIAdapter1 **ppAdapter) {
+    SHIM_LOCK();
     if (Adapter >= platform_shim.dxgi_adapters.size()) {
         return DXGI_ERROR_INVALID_CALL;
     }
@@ -229,6 +243,7 @@ HRESULT __stdcall ShimEnumAdapters1_6([[maybe_unused]] IDXGIFactory6 *This,
 HRESULT __stdcall ShimEnumAdapterByGpuPreference([[maybe_unused]] IDXGIFactory6 *This, _In_ UINT Adapter,
                                                  [[maybe_unused]] _In_ DXGI_GPU_PREFERENCE GpuPreference,
                                                  [[maybe_unused]] _In_ REFIID riid, _COM_Outptr_ void **ppvAdapter) {
+    SHIM_LOCK();
     if (Adapter >= platform_shim.dxgi_adapters.size()) {
         return DXGI_ERROR_NOT_FOUND;
     }
@@ -291,6 +306,7 @@ static PFN_RegCloseKey fpRegCloseKey = RegCloseKey;
 
 LSTATUS __stdcall ShimRegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, [[maybe_unused]] DWORD ulOptions,
                                     [[maybe_unused]] REGSAM samDesired, PHKEY phkResult) {
+    SHIM_LOCK();
     if (HKEY_LOCAL_MACHINE != hKey && HKEY_CURRENT_USER != hKey) return ERROR_BADKEY;
     std::string hive = "";
     if (HKEY_LOCAL_MACHINE == hKey)
@@ -304,6 +320,7 @@ LSTATUS __stdcall ShimRegOpenKeyExA(HKEY hKey, LPCSTR lpSubKey, [[maybe_unused]]
     return 0;
 }
 const std::string *get_path_of_created_key(HKEY hKey) {
+    // Caller must hold SHIM_LOCK()
     for (const auto &key : platform_shim.created_keys) {
         if (key.key == hKey) {
             return &key.path;
@@ -322,12 +339,14 @@ std::vector<RegistryEntry> *get_registry_vector(std::string const &path) {
     return nullptr;
 }
 LSTATUS __stdcall ShimRegQueryValueExA(HKEY, LPCSTR, LPDWORD, LPDWORD, LPBYTE, LPDWORD) {
+    SHIM_LOCK();
     // TODO:
     return ERROR_SUCCESS;
 }
 LSTATUS __stdcall ShimRegEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpValueName, LPDWORD lpcchValueName,
                                     [[maybe_unused]] LPDWORD lpReserved, [[maybe_unused]] LPDWORD lpType, LPBYTE lpData,
                                     LPDWORD lpcbData) {
+    SHIM_LOCK();
     const std::string *path = get_path_of_created_key(hKey);
     if (path == nullptr) return ERROR_NO_MORE_ITEMS;
 
@@ -350,6 +369,7 @@ LSTATUS __stdcall ShimRegEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpValueName,
     return ERROR_SUCCESS;
 }
 LSTATUS __stdcall ShimRegCloseKey(HKEY hKey) {
+    SHIM_LOCK();
     for (size_t i = 0; i < platform_shim.created_keys.size(); i++) {
         if (platform_shim.created_keys[i].get() == hKey) {
             platform_shim.created_keys.erase(platform_shim.created_keys.begin() + i);
@@ -370,6 +390,7 @@ static constexpr wchar_t package_full_name[] = L"ThisIsARandomStringSinceTheName
 LONG WINAPI ShimGetPackagesByPackageFamily(_In_ PCWSTR packageFamilyName, _Inout_ UINT32 *count,
                                            _Out_writes_opt_(*count) PWSTR *packageFullNames, _Inout_ UINT32 *bufferLength,
                                            _Out_writes_opt_(*bufferLength) WCHAR *buffer) {
+    SHIM_LOCK();
     if (!packageFamilyName || !count || !bufferLength) return ERROR_INVALID_PARAMETER;
     if (!platform_shim.app_package_path.empty() && wcscmp(packageFamilyName, L"Microsoft.D3DMappingLayers_8wekyb3d8bbwe") == 0) {
         if (*count > 0 && !packageFullNames) return ERROR_INVALID_PARAMETER;
@@ -396,6 +417,7 @@ LONG WINAPI ShimGetPackagesByPackageFamily(_In_ PCWSTR packageFamilyName, _Inout
 
 LONG WINAPI ShimGetPackagePathByFullName(_In_ PCWSTR packageFullName, _Inout_ UINT32 *pathLength,
                                          _Out_writes_opt_(*pathLength) PWSTR path) {
+    SHIM_LOCK();
     if (!packageFullName || !pathLength) return ERROR_INVALID_PARAMETER;
     if (*pathLength > 0 && !path) return ERROR_INVALID_PARAMETER;
     if (wcscmp(packageFullName, package_full_name) != 0) {
@@ -419,6 +441,7 @@ using PFN_OutputDebugStringA = void(__stdcall *)(LPCSTR lpOutputString);
 static PFN_OutputDebugStringA fp_OutputDebugStringA = OutputDebugStringA;
 
 void __stdcall intercept_OutputDebugStringA(LPCSTR lpOutputString) {
+    SHIM_LOCK();
     if (lpOutputString != nullptr) {
         platform_shim.fputs_stderr_log += lpOutputString;
     }
