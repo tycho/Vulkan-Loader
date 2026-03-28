@@ -34,6 +34,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
 #include <vector>
 
 #if defined(_WIN32)
@@ -178,6 +179,13 @@ struct PlatformShim {
 
 // platform specific shim interface
 #if defined(_WIN32)
+    // Protects all mutable state in this struct from concurrent access.
+    // The loader may scan for ICDs and layers concurrently (e.g. preloading
+    // outside loader_lock while another thread does a per-instance scan
+    // inside loader_lock).  The real OS APIs (registry, D3DKMT, filesystem)
+    // are thread-safe; this mutex makes the test shim match that contract.
+    std::recursive_mutex mutex;
+
     // Control Platform Elevation Level
     void set_elevated_privilege(bool elev) { elevation_level = (elev) ? SECURITY_MANDATORY_HIGH_RID : SECURITY_MANDATORY_LOW_RID; }
     unsigned long elevation_level = SECURITY_MANDATORY_LOW_RID;
