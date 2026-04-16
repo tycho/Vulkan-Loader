@@ -24,7 +24,7 @@
 # VkPhysicalDevice or a dispatchable object it can unwrap the object, possibly overwriting the wrapped physical device, and then
 # jump to the next function in the call chain
 
-# The .hidden directive is only supported in ELF executables so in APPLE builds, the directive is removed
+# The .hidden directive is only supported in ELF executables. On Mach-O (Apple), .private_extern is equivalent.
 
 #if defined(HAVE_CET_H)
 #include <cet.h>
@@ -41,6 +41,8 @@
 .global vkPhysDevExtTramp\num
 #if defined(__ELF__)
 .hidden vkPhysDevExtTramp\num
+#elif defined(__APPLE__)
+.private_extern vkPhysDevExtTramp\num
 #endif
 vkPhysDevExtTramp\num:
     _CET_ENDBR
@@ -53,6 +55,8 @@ vkPhysDevExtTramp\num:
 .global vkPhysDevExtTermin\num
 #if defined(__ELF__)
 .hidden vkPhysDevExtTermin\num
+#elif defined(__APPLE__)
+.private_extern vkPhysDevExtTermin\num
 #endif
 vkPhysDevExtTermin\num:
     _CET_ENDBR
@@ -78,6 +82,8 @@ terminError\num:
 .global vkdev_ext\num
 #if defined(__ELF__)
 .hidden vkdev_ext\num
+#elif defined(__APPLE__)
+.private_extern vkdev_ext\num
 #endif
 vkdev_ext\num:
     _CET_ENDBR
@@ -95,6 +101,8 @@ vkdev_ext\num:
 .global vkPhysDevExtTramp\num
 #if defined(__ELF__)
 .hidden vkPhysDevExtTramp\num
+#elif defined(__APPLE__)
+.private_extern vkPhysDevExtTramp\num
 #endif
 vkPhysDevExtTramp\num:
 #endif
@@ -114,6 +122,8 @@ vkPhysDevExtTramp\num:
 .global vkPhysDevExtTermin\num
 #if defined(__ELF__)
 .hidden vkPhysDevExtTermin\num
+#elif defined(__APPLE__)
+.private_extern vkPhysDevExtTermin\num
 #endif
 vkPhysDevExtTermin\num:
 #endif
@@ -149,6 +159,8 @@ terminError\num:
 .global vkdev_ext\num
 #if defined(__ELF__)
 .hidden vkdev_ext\num
+#elif defined(__APPLE__)
+.private_extern vkdev_ext\num
 #endif
 vkdev_ext\num:
 #endif

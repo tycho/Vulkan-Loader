@@ -58,6 +58,8 @@
 #if defined(__ELF__)
  .type vkPhysDevExtTramp\num, @function
  .hidden vkPhysDevExtTramp\num
+#elif defined(__APPLE__)
+ .private_extern vkPhysDevExtTramp\num
 #endif
 .balign 4
 
@@ -80,6 +82,8 @@ vkPhysDevExtTramp\num:
 #if defined(__ELF__)
  .type vkPhysDevExtTermin\num, @function
  .hidden vkPhysDevExtTermin\num
+#elif defined(__APPLE__)
+ .private_extern vkPhysDevExtTermin\num
 #endif
 .balign 4
 vkPhysDevExtTermin\num:
@@ -107,6 +111,8 @@ terminError\num:
 .global vkdev_ext\num
 #if defined(__ELF__)
  .hidden vkdev_ext\num
+#elif defined(__APPLE__)
+ .private_extern vkdev_ext\num
 #endif
 .balign 4
 vkdev_ext\num:
@@ -123,6 +129,8 @@ vkdev_ext\num:
 .global vkPhysDevExtTramp\num
 #if defined(__ELF__)
  .hidden vkPhysDevExtTramp\num
+#elif defined(__APPLE__)
+ .private_extern vkPhysDevExtTramp\num
 #endif
 .balign 4
 
@@ -140,6 +148,8 @@ vkPhysDevExtTramp\num:
 .global vkPhysDevExtTermin\num
 #if defined(__ELF__)
  .hidden vkPhysDevExtTermin\num
+#elif defined(__APPLE__)
+ .private_extern vkPhysDevExtTermin\num
 #endif
 .balign 4
 vkPhysDevExtTerminDispatchEntry\num: .word DISPATCH_OFFSET_ICD_TERM + (PTR_SIZE * \num)
@@ -168,6 +178,8 @@ terminError\num:
 .global vkdev_ext\num
 #if defined(__ELF__)
  .hidden vkdev_ext\num
+#elif defined(__APPLE__)
+ .private_extern vkdev_ext\num
 #endif
 .balign 4
 vkdev_ext_dispatch_entry\num: .word EXT_OFFSET_DEVICE_DISPATCH + (PTR_SIZE * \num)
