@@ -28,7 +28,14 @@ import os
 import sys
 from base_generator import BaseGenerator
 from vulkan_object import Version
-from xxhash import xxh3_64_hexdigest
+
+try:
+    from xxhash import xxh3_64_hexdigest
+except ImportError:
+    print("ModuleNotFoundError: No module named 'xxhash'") # normal python error message
+    print('The xxhash package is required to generate the name hash tables.')
+    print('Install it with: pip install -r scripts/requirements.txt')
+    sys.exit(1) # Return without call stack so easy to spot error
 
 
 class CommandNameHashGenerator(BaseGenerator):

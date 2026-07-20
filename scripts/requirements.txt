@@ -1,0 +1,7 @@
+# Python dependencies for scripts/generate_source.py
+#
+# pyparsing is used by the Vulkan-Headers registry scripts (imported via reg.py)
+pyparsing
+# xxhash provides the XXH3 hashes used in the generated command/extension name
+# lookup tables (vk_command_name_hashes.h, vk_extension_name_hashes.h)
+xxhash
