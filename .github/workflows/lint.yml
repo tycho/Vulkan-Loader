@@ -28,6 +28,7 @@ jobs:
     - name: Check formatting
       run: |
         for f in $(git ls-files -- ${CLANG_FORMAT_FILES}); do
+          [[ "$f" == "loader/xxhash.h" ]] && continue
           echo "Checking $f"
           clang-format-${CLANG_FORMAT_VERSION} -i --Werror "$f"
         done
