@@ -26,6 +26,11 @@ if (CODE_COVERAGE)
     add_code_coverage_all_targets()
 endif()
 
+if (MSVC)
+    # Enable multi-processor compilation when building with MSVC
+    add_compile_options(/MP)
+endif()
+
 
 # This variable enables downstream users to customize the target API
 # variant (e.g. Vulkan SC)
