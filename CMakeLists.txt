@@ -35,6 +35,11 @@ if (USE_CLANG_TIDY)
     set(CLANG_TIDY_COMMAND "${CLANG_TIDY_EXE}")
 endif()
 
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+    # Enable multi-processor compilation when building with MSVC
+    add_compile_options(/MP)
+endif()
+
 # This variable enables downstream users to customize the target API
 # variant (e.g. Vulkan SC)
 set(API_TYPE "vulkan")
